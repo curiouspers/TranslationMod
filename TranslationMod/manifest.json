@@ -1,0 +1,8 @@
+{
+    "displayName": "TranslationMod",
+    "author": "WarFollowsMe",
+    "version": "0.0.0.1",
+    "description": "Translate original text in the game",
+
+    "assemblyFileName": "TranslationMod.dll"
+}
