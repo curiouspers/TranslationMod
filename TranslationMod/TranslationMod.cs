@@ -23,6 +23,7 @@ namespace TranslationMod
     {
         public Config ModConfig { get; private set; }
         public Dictionary<string, Person> Data { get; set; }
+        public Dictionary<string, string> Characters { get; set; }
         private bool _isConfigLoaded = false;
 
         [Subscribe]
@@ -34,7 +35,7 @@ namespace TranslationMod
         [Subscribe]
         public void PastGameLoadedCallback(PostGameLoadedEvent @event)
         {
-            var characters = ((Game1)@event.Root.Underlying)._GetLocations().OfType<StardewValley.GameLocation>().SelectMany(l => l.getCharacters());
+            var characters = @event.Root.Locations.SelectMany(l => l.Characters);
             foreach (var npc in characters)
             {
                 if (npc.Dialogue != null)
@@ -42,7 +43,7 @@ namespace TranslationMod
                     var dialogues = npc.Dialogue.AsEnumerable().ToArray();
                     foreach (var dialog in dialogues)
                     {
-                        var newValue = Data[npc.name].Dialogues.Where(d => d.Key == dialog.Value).Select(d => d.Value).FirstOrDefault();
+                        var newValue = Data[npc.Name].Dialogues.Where(d => d.Key == dialog.Value).Select(d => d.Value).FirstOrDefault();
                         if (!string.IsNullOrEmpty(newValue))
                             npc.Dialogue[dialog.Key] = newValue;
                     }
@@ -110,24 +111,26 @@ namespace TranslationMod
         [Subscribe]
         public void onDrawDialogue(DrawDialogueEvent @event)
         {
-            var translateDialogues = new List<Dialogue>();
-            var speaker = @event.NPC;
-            if(Data.ContainsKey(speaker.Name))
-            {
-                foreach (var dialogue in speaker.CurrentDialogue.Cast<Dialogue>().Select((o, i) => new { Value = o, Index = i }))
-                {
-                    var translation = Data[speaker.Name].Dialogues.Where(d => d.Key == dialogue.Value.getCurrentDialogue()).Select(d => d.Value).FirstOrDefault();
-                    if (!string.IsNullOrEmpty(translation))
-                        dialogue.Value.setCurrentDialogue(translation);
-                    translateDialogues.Add(dialogue.Value);
-                }
-            }
-            if(translateDialogues.Count > 0)
-            {
-                speaker.CurrentDialogue = new System.Collections.Stack(translateDialogues);
-                @event.Root.DrawDialogue(speaker);
-                @event.ReturnEarly = true;
-            }
+            //var translateDialogues = new List<Dialogue>();
+            //var speaker = @event.NPC;
+            //if(Data.ContainsKey(speaker.Name))
+            //{
+            //    foreach (var dialogue in speaker.CurrentDialogue.Cast<Dialogue>().Select((o, i) => new { Value = o, Index = i }))
+            //    {
+            //        var translation = Data[speaker.Name].Dialogues.Where(d => d.Key == dialogue.Value.getCurrentDialogue()).Select(d => d.Value).FirstOrDefault();
+            //        if (!string.IsNullOrEmpty(translation))
+            //        {
+            //            dialogue.Value.setCurrentDialogue(translation);
+            //            translateDialogues.Add(dialogue.Value);
+            //        }
+            //    }
+            //}
+            //if(translateDialogues.Count > 0)
+            //{
+            //    speaker.CurrentDialogue = new System.Collections.Stack(translateDialogues);
+            //    @event.Root.DrawDialogue(speaker);
+            //    @event.ReturnEarly = true;
+            //}
         }
 
         [Subscribe]
@@ -224,6 +227,10 @@ namespace TranslationMod
         public void onDrawSpriteText(PreSpriteTextDrawStringEvent @event)
         {
             WriteToScan(@event.Text);
+            if(Characters.ContainsKey(@event.Text))
+            {
+                @event.Text = Characters[@event.Text];
+            }
             drawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition,
                 @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
                 @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
@@ -239,12 +246,12 @@ namespace TranslationMod
                 width = Game1.graphics.GraphicsDevice.Viewport.Width - x;
                 if (drawBGScroll == 1)
                 {
-                    width = SpriteText.getWidthOfString(s) * 2;
+                    width = StardewValley.BellsAndWhistles.SpriteText.getWidthOfString(s) * 2;
                 }
             }
-            if (SpriteText.fontPixelZoom < 4)
+            if (StardewValley.BellsAndWhistles.SpriteText.fontPixelZoom < 4)
             {
-                y = y + (4 - SpriteText.fontPixelZoom) * Game1.pixelZoom;
+                y = y + (4 - StardewValley.BellsAndWhistles.SpriteText.fontPixelZoom) * Game1.pixelZoom;
             }
             Vector2 position = new Vector2((float)x, (float)y);
             int accumulatedHorizontalSpaceBetweenCharacters = 0;
@@ -407,7 +414,7 @@ namespace TranslationMod
             {
                 ModConfig = new Config();
                 ModConfig.LanguageName = "RU";
-                ModConfig.LanguagePath = Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName + ".json");
+                ModConfig.LanguagePath = Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName + ".json");                
                 File.WriteAllBytes(configLocation, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(ModConfig)));
             }
             else
@@ -415,6 +422,7 @@ namespace TranslationMod
                 ModConfig = JsonConvert.DeserializeObject<Config>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
             }
             Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(ModConfig.LanguagePath)));
+            Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "Characters." + ModConfig.LanguageName + ".json"))));
             _isConfigLoaded = true;
         }
         void WriteToScan(string line)
