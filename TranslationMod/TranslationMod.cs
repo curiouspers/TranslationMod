@@ -13,19 +13,22 @@ using Newtonsoft.Json.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley.BellsAndWhistles;
+using Storm.StardewValley;
+using System.Reflection;
 
 namespace TranslationMod
 {
     [Mod]
     public class TranslationMod : DiskResource
     {
-        public Dictionary<string, Person> Data { get; private set; }
+        public Config ModConfig { get; private set; }
+        public Dictionary<string, Person> Data { get; set; }
+        private bool _isConfigLoaded = false;
 
         [Subscribe]
         public void InitializeCallback(InitializeEvent @event)
         {
-            var configLocation = Path.Combine(PathOnDisk, "Data.json");
-            Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
+            if (!_isConfigLoaded) LoadConfig();
         }
 
         [Subscribe]
@@ -50,39 +53,89 @@ namespace TranslationMod
         [Subscribe]
         public void onAssetLoad(AssetLoadEvent @event)
         {
+            if (!_isConfigLoaded) LoadConfig();
             if (@event.Name.Contains("Fonts"))
             {
                 var font_name = @event.Name.Split('\\').Last();
-                var fontFolder = Path.Combine(PathOnDisk, "content\\fonts");
-                foreach (var font in Directory.EnumerateFiles(fontFolder).Select(f => Path.GetFileNameWithoutExtension(f)))
+                var fontFolder = Path.Combine(PathOnDisk, "content", "Fonts");
+                var fonts = Directory.EnumerateFiles(fontFolder).Select(f => Path.GetFileNameWithoutExtension(f));
+                foreach (var font in fonts)
                 {
-                    if (font == font_name)
+                    if (font == font_name + ModConfig.LanguageName)
                     {
-                        @event.ReturnValue = @event.Root.LoadResource(Path.Combine(fontFolder, font + ".png"));
+                        try
+                        {
+                            var spriteFont = @event.Root.Content.Load<SpriteFont>(@event.Name + ModConfig.LanguageName);
+                            @event.ReturnValue = spriteFont;
+                        }
+                        catch (Exception e)
+                        {
+                            if (e.Message.Contains("File not found"))
+                            {
+                                Uri assetPath = new Uri(Path.Combine(fontFolder, font + ".xnb"), UriKind.Absolute);
+                                Uri execPath = new Uri(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory));
+                                var contentDir = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), @event.Root.Content.RootDirectory, "Fonts");
+                                File.Copy(Path.Combine(fontFolder, font + ".xnb"), Path.Combine(contentDir, font + ".xnb"));
+                                var spriteFont = @event.Root.Content.Load<SpriteFont>(@event.Name + ModConfig.LanguageName);
+                                @event.ReturnValue = spriteFont;
+                            }
+                            else throw e;
+                        }
                     }
                 }
             }
-            else if (@event.Name == "LooseSprites\\font_bold")
+            else
             {
-                @event.ReturnValue = @event.Root.LoadResource(Path.Combine(Path.Combine(PathOnDisk, "content\\fonts"), "font_bold.png"));
+                var splitNames = @event.Name.Split('\\');
+                if (splitNames.Length > 1)
+                {
+                    var sprite_name = splitNames.Last();
+                    var sprite_subdirectory = splitNames[splitNames.Length - 2];
+                    var spriteFolder = Path.Combine(PathOnDisk, "content", sprite_subdirectory);
+                    if (Directory.Exists(spriteFolder))
+                    {
+                        var sprites = Directory.EnumerateFiles(spriteFolder).Select(f => Path.GetFileNameWithoutExtension(f));
+                        foreach (var sprite in sprites)
+                        {
+                            if (sprite == sprite_name)
+                            {
+                                @event.ReturnValue = @event.Root.LoadResource(Path.Combine(spriteFolder, sprite + ".png"));
+                            }
+                        }
+                    }
+                }
             }
         }
 
         [Subscribe]
-        public void onAddHUDMeesage(AddHUDMessageEvent @event)
+        public void onDrawDialogue(DrawDialogueEvent @event)
         {
-
+            var translateDialogues = new List<Dialogue>();
+            var speaker = @event.NPC;
+            if(Data.ContainsKey(speaker.Name))
+            {
+                foreach (var dialogue in speaker.CurrentDialogue.Cast<Dialogue>().Select((o, i) => new { Value = o, Index = i }))
+                {
+                    var translation = Data[speaker.Name].Dialogues.Where(d => d.Key == dialogue.Value.getCurrentDialogue()).Select(d => d.Value).FirstOrDefault();
+                    if (!string.IsNullOrEmpty(translation))
+                        dialogue.Value.setCurrentDialogue(translation);
+                    translateDialogues.Add(dialogue.Value);
+                }
+            }
+            if(translateDialogues.Count > 0)
+            {
+                speaker.CurrentDialogue = new System.Collections.Stack(translateDialogues);
+                @event.Root.DrawDialogue(speaker);
+                @event.ReturnEarly = true;
+            }
         }
 
         [Subscribe]
         public void onDrawWithBorder(DrawWithBorderEvent @event)
         {
-            if (@event.Message.Length > 1)
-            {
-
-            }
             #region game function drawWithBorder
             var message = @event.Message;
+            WriteToScan(message);
             var borderColor = @event.BorderColor;
             var insideColor = @event.InsideColor;
             var position = @event.Position;
@@ -93,39 +146,40 @@ namespace TranslationMod
             string[] strArray = message.Split(' ');
             int num1 = 0;
             int num2 = 0;
-            for (int index = 0; index < Enumerable.Count<string>((IEnumerable<string>)strArray); ++index)
+            for (int index = 0; index < Enumerable.Count(strArray); ++index)
             {
                 if (strArray[index].Contains("="))
                 {
                     Game1.spriteBatch.DrawString(tiny ? Game1.tinyFont : Game1.dialogueFont, strArray[index],
-                        new Vector2(position.X + (float)num1, position.Y), Color.Purple, rotate, Vector2.Zero, scale,
+                        new Vector2(position.X + num1, position.Y), Color.Purple, rotate, Vector2.Zero, scale,
                         SpriteEffects.None, layerDepth);
-                    num1 +=
-                        (int)
-                            ((double)(tiny ? Game1.tinyFont : Game1.dialogueFont).MeasureString(strArray[index]).X +
-                             8.0);
+                    num1 += (int)((tiny ? Game1.tinyFont : Game1.dialogueFont).MeasureString(strArray[index]).X + 8.0);
                 }
                 else
                 {
                     if (index == 0)
+                    {
                         Game1.spriteBatch.DrawString(tiny ? Game1.tinyFontBorder : Game1.borderFont, strArray[index],
                             new Vector2(
                                 (float)
-                                    ((double)position.X + (double)num1 + (double)num2 +
-                                     (tiny ? -2.0 * (double)scale : 0.0)), position.Y - (tiny ? 0.0f : 1f)), borderColor,
+                                    (position.X + num1 + num2 +
+                                     (tiny ? -2.0 * scale : 0.0)), position.Y - (tiny ? 0.0f : 1f)), borderColor,
                             rotate, Vector2.Zero, scale, SpriteEffects.None, layerDepth);
+                    }
                     else
+                    {
                         Game1.spriteBatch.DrawString(tiny ? Game1.tinyFontBorder : Game1.borderFont, strArray[index],
                             new Vector2(
-                                (float)((double)position.X + (double)num1 + (tiny ? -2.0 * (double)scale : 0.0)),
+                                (float)(position.X + num1 + (tiny ? -2.0 * scale : 0.0)),
                                 position.Y - (tiny ? 0.0f : 1f)), borderColor, rotate, Vector2.Zero, scale,
                             SpriteEffects.None, layerDepth);
+                    }
                     Game1.spriteBatch.DrawString(tiny ? Game1.tinyFont : Game1.dialogueFont, strArray[index],
-                        new Vector2(position.X + (float)num1, position.Y), insideColor, rotate, Vector2.Zero, scale,
+                        new Vector2(position.X + num1, position.Y), insideColor, rotate, Vector2.Zero, scale,
                         SpriteEffects.None, layerDepth);
                     num1 +=
                         (int)
-                            ((double)(tiny ? Game1.tinyFont : Game1.dialogueFont).MeasureString(strArray[index]).X +
+                            ((tiny ? Game1.tinyFont : Game1.dialogueFont).MeasureString(strArray[index]).X +
                              8.0);
                 }
             }
@@ -160,6 +214,8 @@ namespace TranslationMod
                 str1 = str1 + str4 + " ";
             }
             @event.ReturnValue = str2 + str1;
+
+            WriteToScan(@event.ReturnValue.ToString());
             #endregion
             @event.ReturnEarly = true;
         }
@@ -167,58 +223,12 @@ namespace TranslationMod
         [Subscribe]
         public void onDrawSpriteText(PreSpriteTextDrawStringEvent @event)
         {
-            if(@event.Text.Contains("Loading"))
-            {
-                @event.Text = @event.Text.Replace("Loading", "Загрузка");
-            }
-            else if(@event.Text.Contains("Anton"))
-            {
-
-            }
-            drawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition, 
-                @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText, 
+            WriteToScan(@event.Text);
+            drawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition,
+                @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
                 @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
             @event.ReturnEarly = true;
-        }
-
-        [Subscribe]
-        public void DialogueCallback(DrawDialogueEvent @event)
-        {
-            //var speaker = @event.NPC;
-            //var speakerCOntent = new List<KeyValuePair<string, string>>();
-            //foreach (var dialog in Data[speaker.Name].Dialogues)
-            //{
-            //    var speakerUnderline = speaker.Underlying as StardewValley.NPC;
-            //    var originalSpeacker = new StardewValley.NPC(speakerUnderline.Sprite, speakerUnderline.Position, speakerUnderline.FacingDirection, speakerUnderline.name);
-            //    var translateSpeaker = new StardewValley.NPC(speakerUnderline.Sprite, speakerUnderline.Position, speakerUnderline.FacingDirection, speakerUnderline.name);
-            //    var originalDialog = new Dialogue(dialog.Key, originalSpeacker);
-            //    originalDialog.getCurrentDialogue();
-            //    var translateDialog = new Dialogue(dialog.Value, translateSpeaker);
-            //    if (!string.IsNullOrEmpty(translateDialog.getCurrentDialogue()))
-            //        speakerCOntent.Add(new KeyValuePair<string, string>(originalDialog.getCurrentDialogue(), translateDialog.getCurrentDialogue()));
-            //}
-            //try
-            //{
-            //    var count = speaker.CurrentDialogue.Count;
-            //    var translateDialogues = new List<Dialogue>();
-            //    foreach (var dialogue in speaker.CurrentDialogue.Cast<Dialogue>().Select((o, i) => new { Value = o, Index = i }))
-            //    {
-            //        //if(speakerCOntent.ContainsKey(speaker.Name))
-            //        //{
-            //        var translation = speakerCOntent.Where(d => d.Key == dialogue.Value.getCurrentDialogue()).Select(d => d.Value).FirstOrDefault();
-            //        if (!string.IsNullOrEmpty(translation))
-            //            dialogue.Value.setCurrentDialogue(translation);
-            //        translateDialogues.Add(dialogue.Value);
-            //        //}
-            //    }
-            //    speaker.CurrentDialogue = new System.Collections.Stack(translateDialogues);
-            //    //speaker.Name = "Линус";
-            //}
-            //catch (Exception exc)
-            //{
-
-            //}
-        }
+        }        
 
         public void drawString(SpriteBatch b, string s, int x, int y, int characterPosition,
             int width, int height, float alpha, float layerDepth, bool junimoText,
@@ -388,12 +398,55 @@ namespace TranslationMod
         {
             int num = (int)c - 32;
             return new Rectangle(num * 8 % SpriteText.spriteTexture.Width, num * 8 / SpriteText.spriteTexture.Width * 16 + (junimoText ? 96 : 0), 8, 16);
+        }        
+
+        private void LoadConfig()
+        {
+            var configLocation = Path.Combine(PathOnDisk, "Config.json");
+            if (!File.Exists(configLocation))
+            {
+                ModConfig = new Config();
+                ModConfig.LanguageName = "RU";
+                ModConfig.LanguagePath = Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName + ".json");
+                File.WriteAllBytes(configLocation, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(ModConfig)));
+            }
+            else
+            {
+                ModConfig = JsonConvert.DeserializeObject<Config>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
+            }
+            Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(ModConfig.LanguagePath)));
+            _isConfigLoaded = true;
         }
+        void WriteToScan(string line)
+        {
+            string scanFile = "upload.json";
+            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, scanFile)))
+            {
+                var lines = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(scanFile));
+                if (!lines.Contains(line))
+                {
+                    lines.Add(line);
+                    File.WriteAllText(scanFile, JsonConvert.SerializeObject(lines));
+                }
+            }
+            else
+            {
+                var lines = new List<string>();
+                lines.Add(line);
+                File.WriteAllText(scanFile, JsonConvert.SerializeObject(lines));
+            }
+        }        
     }
 
     public class Person
     {
         public string Name { get; set; }
         public List<KeyValuePair<string, string>> Dialogues { get; set; }
+    }
+
+    public class Config
+    {
+        public string LanguagePath { get; set; }
+        public string LanguageName { get; set; }
     }
 }
