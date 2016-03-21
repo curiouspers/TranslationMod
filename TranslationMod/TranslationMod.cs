@@ -15,6 +15,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewValley.BellsAndWhistles;
 using Storm.StardewValley;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace TranslationMod
 {
@@ -23,6 +24,7 @@ namespace TranslationMod
     {
         public Config ModConfig { get; private set; }
         public Dictionary<string, Person> Data { get; set; }
+        public Dictionary<string, string> DataExe { get; set; }
         private bool _isConfigLoaded = false;
 
         [Subscribe]
@@ -107,10 +109,38 @@ namespace TranslationMod
             }
         }
 
+       // [Subscribe]
+        public static void onShowReceiveNewItemMessage(showReceiveNewItemMessageEvent @event)
+        {
+            Storm.StardewValley.Wrapper.Farmer who = @event.farmer;
+            #region game function drawWithBorder
+            /*string str = who.mostRecentlyGrabbedItem.checkForSpecialItemHoldUpMeessage();
+            if (str != null)
+            {
+                Game1.drawObjectDialogue(str);
+            }
+            else if (who.mostRecentlyGrabbedItem.parentSheetIndex != 472 || who.mostRecentlyGrabbedItem.Stack != 15)
+            {
+                string[] name = new string[] { "You received ", null, null, null, null, null };
+                name[1] = (who.mostRecentlyGrabbedItem.Stack > 1 ? string.Concat(who.mostRecentlyGrabbedItem.Stack) : Game1.getProperArticleForWord(who.mostRecentlyGrabbedItem.Name));
+                name[2] = " ";
+                name[3] = who.mostRecentlyGrabbedItem.Name;
+                name[4] = (who.mostRecentlyGrabbedItem.Stack <= 1 || who.mostRecentlyGrabbedItem.Name.Last<char>() == 's' ? "" : "s");
+                name[5] = "!";
+                Game1.drawObjectDialogue(string.Concat(name));
+            }
+            else
+            {
+                Game1.drawObjectDialogue("You received 15 Parsnip Seeds!^^'Here's a little something to get you started.^-Mayor Lewis'");
+            }
+            who.completelyStopAnimatingOrDoingAction();*/
+            #endregion
+        }
+
         [Subscribe]
         public void onDrawDialogue(DrawDialogueEvent @event)
         {
-            var translateDialogues = new List<Dialogue>();
+           /* var translateDialogues = new List<Dialogue>();
             var speaker = @event.NPC;
             if(Data.ContainsKey(speaker.Name))
             {
@@ -127,7 +157,7 @@ namespace TranslationMod
                 speaker.CurrentDialogue = new System.Collections.Stack(translateDialogues);
                 @event.Root.DrawDialogue(speaker);
                 @event.ReturnEarly = true;
-            }
+            }*/
         }
 
         [Subscribe]
@@ -190,6 +220,10 @@ namespace TranslationMod
         [Subscribe]
         public void onParseText(ParseTextEvent @event)
         {
+
+            if (DataExe.ContainsKey(@event.Text))
+                @event.Text = DataExe[@event.Text];
+            
             #region game function parseText
             var text = @event.Text;
             var whichFont = @event.WhichFont;
@@ -223,7 +257,19 @@ namespace TranslationMod
         [Subscribe]
         public void onDrawSpriteText(PreSpriteTextDrawStringEvent @event)
         {
-            WriteToScan(@event.Text);
+            /*
+            \p{IsCyrillic} matches any cyrillic character
+            \p{P} is the unicode category for punctuation
+            \p{N} is the unicode category for a number in any language
+            \s matches a whitespace
+            */
+            //Match match = Regex.Match(@event.Text, @"([\P{IsCyrillic}|\P{IsBasicLatin}\p{P}\p{N}\s]{2,})", RegexOptions.IgnoreCase);
+            Match match = Regex.Match(@event.Text, @"\p{IsCyrillic}{2,}", RegexOptions.IgnoreCase);
+            
+            if (!match.Success && DataExe.ContainsKey(@event.Text))
+                @event.Text = DataExe[@event.Text];
+            else if (!match.Success)
+                WriteToScan(@event.Text);
             drawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition,
                 @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
                 @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
@@ -403,11 +449,12 @@ namespace TranslationMod
         private void LoadConfig()
         {
             var configLocation = Path.Combine(PathOnDisk, "Config.json");
-            if (!File.Exists(configLocation))
+            if (File.Exists(configLocation))
             {
                 ModConfig = new Config();
                 ModConfig.LanguageName = "RU";
                 ModConfig.LanguagePath = Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName + ".json");
+                ModConfig.ExeLanguagePath = Path.Combine(PathOnDisk, "languages", "StupidoDictionary.json");
                 File.WriteAllBytes(configLocation, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(ModConfig)));
             }
             else
@@ -415,6 +462,7 @@ namespace TranslationMod
                 ModConfig = JsonConvert.DeserializeObject<Config>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
             }
             Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(ModConfig.LanguagePath)));
+            DataExe = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(ModConfig.ExeLanguagePath)));
             _isConfigLoaded = true;
         }
         void WriteToScan(string line)
@@ -447,6 +495,7 @@ namespace TranslationMod
     public class Config
     {
         public string LanguagePath { get; set; }
+        public string ExeLanguagePath { get; set; }
         public string LanguageName { get; set; }
     }
 }
