@@ -1,5 +1,4 @@
-﻿using StardewValley;
-using Storm.ExternalEvent;
+﻿using Storm.ExternalEvent;
 using Storm.StardewValley.Event;
 using Storm.StardewValley.Wrapper;
 using System;
@@ -16,6 +15,9 @@ using StardewValley.BellsAndWhistles;
 using Storm.StardewValley;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using StardewValley.Buildings;
+using Storm.StardewValley.Accessor;
+using StardewValley;
 
 namespace TranslationMod
 {
@@ -25,6 +27,7 @@ namespace TranslationMod
         public Config ModConfig { get; private set; }
         public Dictionary<string, Person> Data { get; set; }
         public Dictionary<string, string> DataExe { get; set; }
+        public Dictionary<string, string> Characters { get; set; }
         private bool _isConfigLoaded = false;
 
         [Subscribe]
@@ -36,7 +39,7 @@ namespace TranslationMod
         [Subscribe]
         public void PastGameLoadedCallback(PostGameLoadedEvent @event)
         {
-            var characters = ((Game1)@event.Root.Underlying)._GetLocations().OfType<StardewValley.GameLocation>().SelectMany(l => l.getCharacters());
+            var characters = @event.Root.AllCharacters;
             foreach (var npc in characters)
             {
                 if (npc.Dialogue != null)
@@ -44,7 +47,7 @@ namespace TranslationMod
                     var dialogues = npc.Dialogue.AsEnumerable().ToArray();
                     foreach (var dialog in dialogues)
                     {
-                        var newValue = Data[npc.name].Dialogues.Where(d => d.Key == dialog.Value).Select(d => d.Value).FirstOrDefault();
+                        var newValue = Data[npc.Name].Dialogues.Where(d => d.Key == dialog.Value).Select(d => d.Value).FirstOrDefault();
                         if (!string.IsNullOrEmpty(newValue))
                             npc.Dialogue[dialog.Key] = newValue;
                     }
@@ -138,9 +141,9 @@ namespace TranslationMod
         }
 
         [Subscribe]
-        public void onDrawDialogue(DrawDialogueEvent @event)
+        public void onAddHUDMessage(AddHUDMessageEvent @event)
         {
-           /* var translateDialogues = new List<Dialogue>();
+            var translateDialogues = new List<Dialogue>();
             var speaker = @event.NPC;
             if(Data.ContainsKey(speaker.Name))
             {
@@ -157,9 +160,11 @@ namespace TranslationMod
                 speaker.CurrentDialogue = new System.Collections.Stack(translateDialogues);
                 @event.Root.DrawDialogue(speaker);
                 @event.ReturnEarly = true;
-            }*/
+            }
+            var message = (@event.HUDMessage.Underlying as StardewValley.HUDMessage).Message;
+            WriteToScan(message);
         }
-
+        
         [Subscribe]
         public void onDrawWithBorder(DrawWithBorderEvent @event)
         {
@@ -268,13 +273,54 @@ namespace TranslationMod
             
             if (!match.Success && DataExe.ContainsKey(@event.Text))
                 @event.Text = DataExe[@event.Text];
-            else if (!match.Success)
+            else 
+            if(Characters.ContainsKey(@event.Text))
+            {
+                @event.Text = Characters[@event.Text];
+            } else
+            if (!match.Success)
                 WriteToScan(@event.Text);
+
+
+
             drawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition,
                 @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
                 @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
             @event.ReturnEarly = true;
-        }        
+        }
+
+        [Subscribe]
+        public void onSetNewDialgue(SetNewDialogueEvent @event)
+        {
+            var npc = @event.NPC;
+            var dialogue = "";
+            var original = "";
+            if (string.IsNullOrEmpty(@event.Dialogue))
+            {
+                if (!@event.Add) @event.NPC.CurrentDialogue.Clear();
+                var content = StormContentManager.Load<Dictionary<string, string>>(@event.Root.Content,
+                    "Characters\\Dialogue\\" + @event.DialogueSheetName);
+                string str = @event.NumberToAppend == -1 ? npc.Name : "";
+                string key = @event.DialogueSheetKey + (@event.NumberToAppend != -1 ?
+                    string.Concat(@event.NumberToAppend) :
+                    "") + str;
+                if (!content.ContainsKey(key)) return;
+                else
+                {
+                    original = content[key];
+                }
+            }
+            else original = @event.Dialogue;
+            var newValue = Data[npc.Name].Dialogues.Where(d => d.Key == original).Select(d => d.Value).FirstOrDefault();
+            if (!string.IsNullOrEmpty(newValue))
+                dialogue = newValue;
+            else dialogue = original;
+            @event.NPC.CurrentDialogue.Push(new Dialogue(dialogue, (StardewValley.NPC)@event.NPC.Underlying)
+            {
+                removeOnNextMove = @event.ClearOnMovement
+            });
+            @event.ReturnEarly = true;
+        }
 
         public void drawString(SpriteBatch b, string s, int x, int y, int characterPosition,
             int width, int height, float alpha, float layerDepth, bool junimoText,
@@ -285,12 +331,12 @@ namespace TranslationMod
                 width = Game1.graphics.GraphicsDevice.Viewport.Width - x;
                 if (drawBGScroll == 1)
                 {
-                    width = SpriteText.getWidthOfString(s) * 2;
+                    width = StardewValley.BellsAndWhistles.SpriteText.getWidthOfString(s) * 2;
                 }
             }
-            if (SpriteText.fontPixelZoom < 4)
+            if (StardewValley.BellsAndWhistles.SpriteText.fontPixelZoom < 4)
             {
-                y = y + (4 - SpriteText.fontPixelZoom) * Game1.pixelZoom;
+                y = y + (4 - StardewValley.BellsAndWhistles.SpriteText.fontPixelZoom) * Game1.pixelZoom;
             }
             Vector2 position = new Vector2((float)x, (float)y);
             int accumulatedHorizontalSpaceBetweenCharacters = 0;
@@ -463,6 +509,7 @@ namespace TranslationMod
             }
             Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(ModConfig.LanguagePath)));
             DataExe = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(ModConfig.ExeLanguagePath)));
+            Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "Characters." + ModConfig.LanguageName + ".json"))));
             _isConfigLoaded = true;
         }
         void WriteToScan(string line)
@@ -483,7 +530,7 @@ namespace TranslationMod
                 lines.Add(line);
                 File.WriteAllText(scanFile, JsonConvert.SerializeObject(lines));
             }
-        }        
+        }
     }
 
     public class Person
