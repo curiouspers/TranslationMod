@@ -203,6 +203,10 @@ namespace TranslationMod
             }
             #endregion
             @event.ReturnEarly = true;
+            if(@event.Message.Length > 2)
+            {
+
+            }
         }
 
         [Subscribe]
@@ -272,6 +276,12 @@ namespace TranslationMod
                 @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
                 @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
             @event.ReturnEarly = true;
+        }
+
+        [Subscribe]
+        public void onSpriteBatchDrawString(SpriteBatchDrawStringEvent @event)
+        {
+
         }
 
         [Subscribe]
@@ -502,14 +512,15 @@ namespace TranslationMod
             {
                 ModConfig = new Config();
                 ModConfig.LanguageName = "RU";
-                ModConfig.LanguagePath = Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName + ".json");
+                ModConfig.LanguagePath = Path.Combine("languages", ModConfig.LanguageName + ".json");                
                 File.WriteAllBytes(configLocation, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(ModConfig)));
             }
             else
             {
                 ModConfig = JsonConvert.DeserializeObject<Config>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
             }
-            Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(ModConfig.LanguagePath)));
+
+            Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, ModConfig.LanguagePath))));
             DataExe = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "StupidoDictionary.json"))));
             Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "Characters." + ModConfig.LanguageName + ".json"))));
             _isConfigLoaded = true;
