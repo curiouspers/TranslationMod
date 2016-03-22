@@ -16,7 +16,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>C:\Users\WarFollowsMe\AppData\Roaming\StardewValley\Mods\TranslationMod\</OutputPath>
+    <OutputPath>C:\Users\vaa\AppData\Roaming\StardewValley\Mods\TranslationMod\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -41,12 +41,11 @@
     </Reference>
     <Reference Include="Microsoft.Xna.Framework.Xact, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\Storm\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\StormOriginal\Storm\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Storm-Hooked-Game, Version=1.0.5912.42429, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Storm\Storm-Hooked-Game.exe</HintPath>
+    <Reference Include="Storm-Hooked-Game">
+      <HintPath>..\..\StormOriginal\Storm\Storm\bin\Debug\Storm-Hooked-Game.exe</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -83,12 +82,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Storm\Storm\Storm\Storm.csproj">
-      <Project>{3ae6190c-1cc7-4fa4-b859-5eabc8ec0614}</Project>
-      <Name>Storm</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="content\LooseSprites\Billboard.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -113,6 +106,12 @@
     <Content Include="content\Minigames\TitleButtons.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\StormOriginal\Storm\Storm\Storm.csproj">
+      <Project>{3ae6190c-1cc7-4fa4-b859-5eabc8ec0614}</Project>
+      <Name>Storm</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
