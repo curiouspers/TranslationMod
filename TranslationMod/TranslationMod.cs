@@ -89,6 +89,9 @@ namespace TranslationMod
                     }
                 }
             }
+            else if (@event.Name.Contains("Events")) {
+                Console.WriteLine(@event.Name);
+            }
             else
             {
                 var splitNames = @event.Name.Split('\\');
@@ -143,10 +146,10 @@ namespace TranslationMod
         [Subscribe]
         public void onDrawWithBorder(DrawWithBorderEvent @event)
         {
-            Match match = Regex.Match(@event.Message, @"\p{IsCyrillic}{2,}", RegexOptions.IgnoreCase);
+            //Match match = Regex.Match(@event.Message, @"\p{IsCyrillic}{2,}", RegexOptions.IgnoreCase);
 
-            if (!match.Success && DataExe.ContainsKey(@event.Message) && !string.IsNullOrEmpty(DataExe[@event.Message]))
-                @event.Message = DataExe[@event.Message];
+            //if (!match.Success && DataExe.ContainsKey(@event.Message) && !string.IsNullOrEmpty(DataExe[@event.Message]))
+            //    @event.Message = DataExe[@event.Message];
 
             #region game function drawWithBorder
             var message = @event.Message;
@@ -312,7 +315,9 @@ namespace TranslationMod
             if (!match.Success && DataExe.ContainsKey(@event.Text) && !string.IsNullOrEmpty(DataExe[@event.Text]))
             {
                 @event.Text = DataExe[@event.Text].ToString();
-                @event.Root.DrawTextWithShadow(@event.B, @event.Text, @event.Font, @event.Position, @event.Color, @event.Scale, @event.LayerDepth, @event.HorizontalShadowOffset, @event.VerticalShadowOffset, @event.ShadowIntensity, @event.NumShadows);
+                if (@event.Root == null || @event.B == null || @event.Text == null || @event.Font == null || @event.Position == null || @event.Color == null || @event.Scale == null || @event.LayerDepth == null || @event.HorizontalShadowOffset == null || @event.VerticalShadowOffset == null || @event.ShadowIntensity == null || @event.NumShadows == null)
+                    Console.WriteLine("something is empty!");
+                //@event.Root.DrawTextWithShadow(@event.B, @event.Text, @event.Font, @event.Position, @event.Color, @event.Scale, @event.LayerDepth, @event.HorizontalShadowOffset, @event.VerticalShadowOffset, @event.ShadowIntensity, @event.NumShadows);
                 @event.ReturnEarly = true;
             }
             else
