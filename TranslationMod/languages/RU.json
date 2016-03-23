@@ -24139,5 +24139,50 @@
             }
         ],
         "Name": "winter8"
+    },
+    "GrandpaStory": {
+        "Dialogues": [
+            {
+                "Key": "...and for my very special grandson:",
+                "Value": "...и для моего очень особенного внука:"
+            },
+            {
+                "Key": "...and for my very special granddaughter:",
+                "Value": "...и для моей очень особенной внучки:"
+            },
+            {
+                "Key": "I want you to have this sealed envelope.",
+                "Value": "Я хочу дать тебе этот запечатанный конверт."
+            },
+            {
+                "Key": "No, no, don't open it yet... have patience.",
+                "Value": "Нет, нет, не открывай его пока... потерпи."
+            },
+            {
+                "Key": "Now, listen close...",
+                "Value": "Теперь, слушай внимательно..."
+            },
+            {
+                "Key": "There will come a day when you feel crushed by the burden of modern life...",
+                "Value": "Придет день, когда ты почувствуешь себя разбитым бременем современной жизни..."
+            },
+            {
+                "Key": "...and your bright spirit will fade before a growing emptiness.",
+                "Value": "...и твой яркий дух исчезнет перед растущей пустотой."
+            },
+            {
+                "Key": "When that happens, my boy, you'll be ready for this gift.",
+                "Value": "Когда это случится,  мой мальчик, ты будешь готов к этому подарку."
+            },
+            {
+                "Key": "When that happens, my dear, you'll be ready for this gift.",
+                "Value": "Когда это случится, моя дорогая, ты будешь готова к этому подарку."
+            },
+            {
+                "Key": "Now, let Grandpa rest...",
+                "Value": "А пока, дай Дедушке отдохнуть..."
+            },
+        ],
+        "Name": "GrandpaStory"
     }
 }

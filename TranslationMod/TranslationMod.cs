@@ -228,7 +228,11 @@ namespace TranslationMod
         [Subscribe]
         public void onSpriteBatchDrawString(SpriteBatchDrawStringEvent @event)
         {
-
+            if(Data["GrandpaStory"].Dialogues.Where(d => d.Key == @event.Message && !string.IsNullOrEmpty(d.Value)).Count()>0)
+            {
+                @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
+            }
+            WriteToScan(@event.Message);
         }
 
         [Subscribe]
