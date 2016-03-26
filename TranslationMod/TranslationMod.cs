@@ -60,7 +60,7 @@ namespace TranslationMod
             if (@event.Name.Contains("Fonts"))
             {
                 var font_name = @event.Name.Split('\\').Last();
-                var fontFolder = Path.Combine(PathOnDisk, "content", "Fonts");
+                var fontFolder = Path.Combine(PathOnDisk,"languages",ModConfig.LanguageName, "content", "Fonts");
                 var fonts = Directory.EnumerateFiles(fontFolder).Select(f => Path.GetFileNameWithoutExtension(f));
                 foreach (var font in fonts)
                 {
@@ -94,7 +94,11 @@ namespace TranslationMod
                 {
                     var sprite_name = splitNames.Last();
                     var sprite_subdirectory = splitNames[splitNames.Length - 2];
-                    var spriteFolder = Path.Combine(PathOnDisk, "content", sprite_subdirectory);
+                    var spriteFolder = Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "content", sprite_subdirectory);
+                    if(sprite_name.Contains("beach"))
+                    {
+
+                    }
                     if (Directory.Exists(spriteFolder))
                     {
                         var sprites = Directory.EnumerateFiles(spriteFolder).Select(f => Path.GetFileNameWithoutExtension(f));
@@ -440,16 +444,15 @@ namespace TranslationMod
             if (!File.Exists(configLocation))
             {
                 ModConfig = new Config();
-                ModConfig.LanguageName = "RU";
-                ModConfig.LanguagePath = Path.Combine("languages", ModConfig.LanguageName + ".json");                
+                ModConfig.LanguageName = "RU";               
                 File.WriteAllBytes(configLocation, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(ModConfig)));
             }
             else
             {
                 ModConfig = JsonConvert.DeserializeObject<Config>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
             }
-            Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, ModConfig.LanguagePath))));
-            Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "Characters." + ModConfig.LanguageName + ".json"))));
+            Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "MainDictionary.json"))));
+            Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages",ModConfig.LanguageName, "dictionaries", "Characters.json"))));
             _isConfigLoaded = true;
         }
         void WriteToScan(string line)
@@ -481,7 +484,6 @@ namespace TranslationMod
 
     public class Config
     {
-        public string LanguagePath { get; set; }
         public string LanguageName { get; set; }
     }
 }
