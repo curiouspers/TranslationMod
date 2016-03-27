@@ -27,6 +27,7 @@ namespace TranslationMod
         public Dictionary<string, Person> Data { get; set; }
         public Dictionary<string, string> Characters { get; set; }
         private bool _isConfigLoaded = false;
+        public List<String> LoadedResources;
 
         [Subscribe]
         public void InitializeCallback(InitializeEvent @event)
@@ -106,137 +107,14 @@ namespace TranslationMod
                         {
                             if (sprite == sprite_name)
                             {
-                                @event.ReturnValue = @event.Root.LoadResource(Path.Combine(spriteFolder, sprite + ".png"));
+                                LoadedResources.Add(sprite);
+                                if(sprite != "Cursors")
+                                    @event.ReturnValue = @event.Root.LoadResource(Path.Combine(spriteFolder, sprite + ".png"));
                             }
                         }
                     }
                 }
             }
-        }
-
-        [Subscribe]
-        public void onAddHUDMessage(AddHUDMessageEvent @event)
-        {
-            var message = (@event.HUDMessage.Underlying as StardewValley.HUDMessage).Message;
-            WriteToScan(message);
-        }
-        
-        [Subscribe]
-        public void onDrawWithBorder(DrawWithBorderEvent @event)
-        {
-            #region game function drawWithBorder
-            var message = @event.Message;
-            WriteToScan(message);
-            var borderColor = @event.BorderColor;
-            var insideColor = @event.InsideColor;
-            var position = @event.Position;
-            var rotate = @event.Rotate;
-            var scale = @event.Scale;
-            var layerDepth = @event.LayerDepth;
-            var tiny = @event.Tiny;
-            string[] strArray = message.Split(' ');
-            int num1 = 0;
-            int num2 = 0;
-            for (int index = 0; index < Enumerable.Count(strArray); ++index)
-            {
-                if (strArray[index].Contains("="))
-                {
-                    Game1.spriteBatch.DrawString(tiny ? Game1.tinyFont : Game1.dialogueFont, strArray[index],
-                        new Vector2(position.X + num1, position.Y), Color.Purple, rotate, Vector2.Zero, scale,
-                        SpriteEffects.None, layerDepth);
-                    num1 += (int)((tiny ? Game1.tinyFont : Game1.dialogueFont).MeasureString(strArray[index]).X + 8.0);
-                }
-                else
-                {
-                    if (index == 0)
-                    {
-                        Game1.spriteBatch.DrawString(tiny ? Game1.tinyFontBorder : Game1.borderFont, strArray[index],
-                            new Vector2(
-                                (float)
-                                    (position.X + num1 + num2 +
-                                     (tiny ? -2.0 * scale : 0.0)), position.Y - (tiny ? 0.0f : 1f)), borderColor,
-                            rotate, Vector2.Zero, scale, SpriteEffects.None, layerDepth);
-                    }
-                    else
-                    {
-                        Game1.spriteBatch.DrawString(tiny ? Game1.tinyFontBorder : Game1.borderFont, strArray[index],
-                            new Vector2(
-                                (float)(position.X + num1 + (tiny ? -2.0 * scale : 0.0)),
-                                position.Y - (tiny ? 0.0f : 1f)), borderColor, rotate, Vector2.Zero, scale,
-                            SpriteEffects.None, layerDepth);
-                    }
-                    Game1.spriteBatch.DrawString(tiny ? Game1.tinyFont : Game1.dialogueFont, strArray[index],
-                        new Vector2(position.X + num1, position.Y), insideColor, rotate, Vector2.Zero, scale,
-                        SpriteEffects.None, layerDepth);
-                    num1 +=
-                        (int)
-                            ((tiny ? Game1.tinyFont : Game1.dialogueFont).MeasureString(strArray[index]).X +
-                             8.0);
-                }
-            }
-            #endregion
-            @event.ReturnEarly = true;
-            if(@event.Message.Length > 2)
-            {
-
-            }
-        }
-
-        [Subscribe]
-        public void onParseText(ParseTextEvent @event)
-        {
-            #region game function parseText
-            var text = @event.Text;
-            var whichFont = @event.WhichFont;
-            var width = @event.Width;
-
-            if (text == null)
-            {
-                @event.ReturnValue = "";
-                return;
-            }
-            string str1 = string.Empty;
-            string str2 = string.Empty;
-            string str3 = text;
-            foreach (string str4 in str3.Split(' '))
-            {
-                if (whichFont.MeasureString(str1 + str4).Length() > width ||
-                    str4.Equals(Environment.NewLine))
-                {
-                    str2 = str2 + str1 + Environment.NewLine;
-                    str1 = string.Empty;
-                }
-                str1 = str1 + str4 + " ";
-            }
-            @event.ReturnValue = str2 + str1;
-
-            WriteToScan(@event.ReturnValue.ToString());
-            #endregion
-            @event.ReturnEarly = true;
-        }
-
-        [Subscribe]
-        public void onDrawSpriteText(PreSpriteTextDrawStringEvent @event)
-        {
-            WriteToScan(@event.Text);
-            if(Characters.ContainsKey(@event.Text))
-            {
-                @event.Text = Characters[@event.Text];
-            }
-            drawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition,
-                @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
-                @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
-            @event.ReturnEarly = true;
-        }
-
-        [Subscribe]
-        public void onSpriteBatchDrawString(SpriteBatchDrawStringEvent @event)
-        {
-            if(Data["GrandpaStory"].Dialogues.Where(d => d.Key == @event.Message && !string.IsNullOrEmpty(d.Value)).Count()>0)
-            {
-                @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
-            }
-            WriteToScan(@event.Message);
         }
 
         [Subscribe]
@@ -272,6 +150,106 @@ namespace TranslationMod
             @event.ReturnEarly = true;
         }
 
+        [Subscribe]
+        public void onDrawSpriteText(PreSpriteTextDrawStringEvent @event)
+        {
+            WriteToScan(@event.Text);
+            if (Characters.ContainsKey(@event.Text))
+            {
+                @event.Text = Characters[@event.Text];
+            }
+            drawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition,
+                @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
+                @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
+            @event.ReturnEarly = true;
+            //WriteToScan(@event.Text);
+            //if(Characters.ContainsKey(@event.Text))
+            //{
+            //    @event.Text = Characters[@event.Text];
+            //    @event.Root.DrawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition, @event.Width, @event.Height, 
+            //        @event.Alpha, @event.LayerDepth, @event.JunimoText, @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
+            //    @event.ReturnEarly = true;
+            //}
+        }
+
+        [Subscribe]
+        public void onGetWidthSpriteText(SpriteTextGetWidthOfStringEvent @event)
+        {
+            WriteToScan(@event.Text);
+            if (Characters.ContainsKey(@event.Text))
+            {
+                @event.Text = Characters[@event.Text];
+                @event.ReturnValue = @event.Root.GetWidthOfString(@event.Text);
+                @event.ReturnEarly = true;
+            }
+        }
+
+        [Subscribe]
+        public void onSpriteBatchDrawString(SpriteBatchDrawStringEvent @event)
+        {
+            if (@event.Message == "Map")
+            {
+                @event.ReturnValue = "Карта";
+            }
+            if (Data["GrandpaStory"].Dialogues.Where(d => d.Key == @event.Message && !string.IsNullOrEmpty(d.Value)).Count()>0)
+            {
+                @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
+            }
+            WriteToScan(@event.Message);
+        }
+
+        [Subscribe]
+        public void onSpriteFontMeasureString(SpriteFontMeasureStringEvent @event)
+        {
+            if(@event.Message == "Map")
+            {
+                @event.ReturnValue = "Карта";
+            }
+            if (Data["GrandpaStory"].Dialogues.Where(d => d.Key == @event.Message && !string.IsNullOrEmpty(d.Value)).Count() > 0)
+            {
+                @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
+            }
+            WriteToScan(@event.Message);
+        }
+
+        private void LoadConfig()
+        {
+            LoadedResources = new List<string>();
+               var configLocation = Path.Combine(PathOnDisk, "Config.json");
+            if (!File.Exists(configLocation))
+            {
+                ModConfig = new Config();
+                ModConfig.LanguageName = "RU";               
+                File.WriteAllBytes(configLocation, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(ModConfig)));
+            }
+            else
+            {
+                ModConfig = JsonConvert.DeserializeObject<Config>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
+            }
+            Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "MainDictionary.json"))));
+            Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages",ModConfig.LanguageName, "dictionaries", "Characters.json"))));
+            _isConfigLoaded = true;
+        }
+        void WriteToScan(string line)
+        {
+            string scanFile = "upload.json";
+            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, scanFile)))
+            {
+                var lines = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(scanFile));
+                if (!lines.Contains(line))
+                {
+                    lines.Add(line);
+                    File.WriteAllText(scanFile, JsonConvert.SerializeObject(lines));
+                }
+            }
+            else
+            {
+                var lines = new List<string>();
+                lines.Add(line);
+                File.WriteAllText(scanFile, JsonConvert.SerializeObject(lines));
+            }
+        }
+
         public void drawString(SpriteBatch b, string s, int x, int y, int characterPosition,
             int width, int height, float alpha, float layerDepth, bool junimoText,
             int drawBGScroll, string placeHolderScrollWidthText, int color)
@@ -281,12 +259,12 @@ namespace TranslationMod
                 width = Game1.graphics.GraphicsDevice.Viewport.Width - x;
                 if (drawBGScroll == 1)
                 {
-                    width = StardewValley.BellsAndWhistles.SpriteText.getWidthOfString(s) * 2;
+                    width = SpriteText.getWidthOfString(s) * 2;
                 }
             }
-            if (StardewValley.BellsAndWhistles.SpriteText.fontPixelZoom < 4)
+            if (SpriteText.fontPixelZoom < 4)
             {
-                y = y + (4 - StardewValley.BellsAndWhistles.SpriteText.fontPixelZoom) * Game1.pixelZoom;
+                y = y + (4 - SpriteText.fontPixelZoom) * Game1.pixelZoom;
             }
             Vector2 position = new Vector2((float)x, (float)y);
             int accumulatedHorizontalSpaceBetweenCharacters = 0;
@@ -440,43 +418,6 @@ namespace TranslationMod
         {
             int num = (int)c - 32;
             return new Rectangle(num * 8 % SpriteText.spriteTexture.Width, num * 8 / SpriteText.spriteTexture.Width * 16 + (junimoText ? 96 : 0), 8, 16);
-        }        
-
-        private void LoadConfig()
-        {
-            var configLocation = Path.Combine(PathOnDisk, "Config.json");
-            if (!File.Exists(configLocation))
-            {
-                ModConfig = new Config();
-                ModConfig.LanguageName = "RU";               
-                File.WriteAllBytes(configLocation, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(ModConfig)));
-            }
-            else
-            {
-                ModConfig = JsonConvert.DeserializeObject<Config>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
-            }
-            Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "MainDictionary.json"))));
-            Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages",ModConfig.LanguageName, "dictionaries", "Characters.json"))));
-            _isConfigLoaded = true;
-        }
-        void WriteToScan(string line)
-        {
-            string scanFile = "upload.json";
-            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, scanFile)))
-            {
-                var lines = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(scanFile));
-                if (!lines.Contains(line))
-                {
-                    lines.Add(line);
-                    File.WriteAllText(scanFile, JsonConvert.SerializeObject(lines));
-                }
-            }
-            else
-            {
-                var lines = new List<string>();
-                lines.Add(line);
-                File.WriteAllText(scanFile, JsonConvert.SerializeObject(lines));
-            }
         }
     }
 
