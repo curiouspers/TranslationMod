@@ -118,6 +118,22 @@ namespace TranslationMod
         }
 
         [Subscribe]
+        public void onGetRandomName(GetRandomNameEvent @event)
+        {
+            //ЗДЕСЬ АЛГОРИТМ ГЕНЕРАЦИИ ИМЕН НА РУССКОМ!
+            //Возвращаемый объект - string
+            //@event.ReturnEarly = true;
+        }
+
+        [Subscribe]
+        public void onOtherFarmerNames(GetOtherFarmerNamesEvent @event)
+        {
+            //ЗДЕСЬ АЛГОРИТМ ГЕНЕРАЦИИ СПИСКА ИМЕН ФЕРМЕРОВ НА РУССКОМ! 
+            //Возвращаемый объект - List<string>
+            //@event.ReturnEarly = true;
+        }
+
+        [Subscribe]
         public void onSetNewDialgue(SetNewDialogueEvent @event)
         {
             var npc = @event.NPC;
@@ -162,14 +178,6 @@ namespace TranslationMod
                 @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
                 @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
             @event.ReturnEarly = true;
-            //WriteToScan(@event.Text);
-            //if(Characters.ContainsKey(@event.Text))
-            //{
-            //    @event.Text = Characters[@event.Text];
-            //    @event.Root.DrawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition, @event.Width, @event.Height, 
-            //        @event.Alpha, @event.LayerDepth, @event.JunimoText, @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
-            //    @event.ReturnEarly = true;
-            //}
         }
 
         [Subscribe]
