@@ -32,7 +32,7 @@ namespace TranslationMod
         [Subscribe]
         public void InitializeCallback(InitializeEvent @event)
         {
-            if (!_isConfigLoaded) LoadConfig();
+            if (!_isConfigLoaded) LoadConfig(@event.Root.Content.RootDirectory);
         }
 
         [Subscribe]
@@ -46,9 +46,12 @@ namespace TranslationMod
                     var dialogues = npc.Dialogue.AsEnumerable().ToArray();
                     foreach (var dialog in dialogues)
                     {
-                        var newValue = Data[npc.Name].Dialogues.Where(d => d.Key == dialog.Value).Select(d => d.Value).FirstOrDefault();
-                        if (!string.IsNullOrEmpty(newValue))
-                            npc.Dialogue[dialog.Key] = newValue;
+                        if(Data.ContainsKey(npc.Name))
+                        {
+                            var newValue = Data[npc.Name].Dialogues.Where(d => d.Key == dialog.Value).Select(d => d.Value).FirstOrDefault();
+                            if (!string.IsNullOrEmpty(newValue))
+                                npc.Dialogue[dialog.Key] = newValue;
+                        }
                     }
                 }
             }
@@ -57,64 +60,7 @@ namespace TranslationMod
         [Subscribe]
         public void onAssetLoad(AssetLoadEvent @event)
         {
-            if (!_isConfigLoaded) LoadConfig();
-            if (@event.Name.Contains("Fonts"))
-            {
-                var font_name = @event.Name.Split('\\').Last();
-                var fontFolder = Path.Combine(PathOnDisk,"languages",ModConfig.LanguageName, "content", "Fonts");
-                var fonts = Directory.EnumerateFiles(fontFolder).Select(f => Path.GetFileNameWithoutExtension(f));
-                foreach (var font in fonts)
-                {
-                    if (font == font_name + ModConfig.LanguageName)
-                    {
-                        try
-                        {
-                            var spriteFont = @event.Root.Content.Load<SpriteFont>(@event.Name + ModConfig.LanguageName);
-                            @event.ReturnValue = spriteFont;
-                        }
-                        catch (Exception e)
-                        {
-                            if (e.Message.Contains("File not found"))
-                            {
-                                Uri assetPath = new Uri(Path.Combine(fontFolder, font + ".xnb"), UriKind.Absolute);
-                                Uri execPath = new Uri(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory));
-                                var contentDir = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), @event.Root.Content.RootDirectory, "Fonts");
-                                File.Copy(Path.Combine(fontFolder, font + ".xnb"), Path.Combine(contentDir, font + ".xnb"));
-                                var spriteFont = @event.Root.Content.Load<SpriteFont>(@event.Name + ModConfig.LanguageName);
-                                @event.ReturnValue = spriteFont;
-                            }
-                            else throw e;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                var splitNames = @event.Name.Split('\\');
-                if (splitNames.Length > 1)
-                {
-                    var sprite_name = splitNames.Last();
-                    var sprite_subdirectory = splitNames[splitNames.Length - 2];
-                    var spriteFolder = Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "content", sprite_subdirectory);
-                    if(sprite_name.Contains("beach"))
-                    {
-
-                    }
-                    if (Directory.Exists(spriteFolder))
-                    {
-                        var sprites = Directory.EnumerateFiles(spriteFolder).Select(f => Path.GetFileNameWithoutExtension(f));
-                        foreach (var sprite in sprites)
-                        {
-                            if (sprite == sprite_name)
-                            {
-                                LoadedResources.Add(sprite);
-                                if(sprite != "Cursors")
-                                    @event.ReturnValue = @event.Root.LoadResource(Path.Combine(spriteFolder, sprite + ".png"));
-                            }
-                        }
-                    }
-                }
-            }
+            if (!_isConfigLoaded) LoadConfig(@event.Root.Content.RootDirectory);
         }
 
         [Subscribe]
@@ -195,11 +141,11 @@ namespace TranslationMod
         [Subscribe]
         public void onSpriteBatchDrawString(SpriteBatchDrawStringEvent @event)
         {
-            if (@event.Message == "Map")
+            if (@event.Message == "Map" && ModConfig.LanguageName == "RU")
             {
                 @event.ReturnValue = "Карта";
             }
-            if (Data["GrandpaStory"].Dialogues.Where(d => d.Key == @event.Message && !string.IsNullOrEmpty(d.Value)).Count()>0)
+            if (Data.ContainsKey("GrandpaStory") && Data["GrandpaStory"].Dialogues.Where(d => d.Key == @event.Message && !string.IsNullOrEmpty(d.Value)).Count()>0)
             {
                 @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
             }
@@ -209,33 +155,64 @@ namespace TranslationMod
         [Subscribe]
         public void onSpriteFontMeasureString(SpriteFontMeasureStringEvent @event)
         {
-            if(@event.Message == "Map")
+            if(@event.Message == "Map" && ModConfig.LanguageName == "RU")
             {
                 @event.ReturnValue = "Карта";
             }
-            if (Data["GrandpaStory"].Dialogues.Where(d => d.Key == @event.Message && !string.IsNullOrEmpty(d.Value)).Count() > 0)
+            if (Data.ContainsKey("GrandpaStory") && Data["GrandpaStory"].Dialogues.Where(d => d.Key == @event.Message && !string.IsNullOrEmpty(d.Value)).Count() > 0)
             {
                 @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
             }
             WriteToScan(@event.Message);
         }
 
-        private void LoadConfig()
+        private void LoadConfig(string ContentRoot)
         {
             LoadedResources = new List<string>();
                var configLocation = Path.Combine(PathOnDisk, "Config.json");
             if (!File.Exists(configLocation))
             {
                 ModConfig = new Config();
-                ModConfig.LanguageName = "RU";               
+                ModConfig.LanguageName = "EN";
                 File.WriteAllBytes(configLocation, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(ModConfig)));
             }
             else
             {
                 ModConfig = JsonConvert.DeserializeObject<Config>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
             }
-            Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "MainDictionary.json"))));
-            Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages",ModConfig.LanguageName, "dictionaries", "Characters.json"))));
+            if (Directory.Exists(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries")) && Directory.GetFiles(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries")).Count() > 0)
+            {
+                Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "MainDictionary.json"))));
+                Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "Characters.json"))));
+            }
+            else
+            {
+                Data = new Dictionary<string, Person>();
+                Characters = new Dictionary<string, string>();
+            }
+
+            #region upload content to the game
+            var modeContentFolder = Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "content");
+            var gameContentFolder = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), ContentRoot);
+            foreach (var directory in Directory.GetDirectories(modeContentFolder))
+            {
+                var files = Directory.GetFiles(directory).Where(f => Path.GetExtension(f) == ".xnb");
+                foreach(var file in files)
+                {
+                    var fileName = Path.GetFileName(file);
+                    var gameFile = new FileInfo(Path.Combine(gameContentFolder, directory.Split('\\').Last(), fileName));
+                    var modeFile = new FileInfo(Path.Combine(directory, fileName));
+                    if (gameFile.Exists)
+                    {
+                        if (gameFile.LastWriteTime != modeFile.LastWriteTime)
+                        {
+                            modeFile.CopyTo(gameFile.FullName, true);
+                        }
+                    }
+                }
+            }
+            #endregion
+
             _isConfigLoaded = true;
         }
         void WriteToScan(string line)
