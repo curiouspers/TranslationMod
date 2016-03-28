@@ -36,6 +36,31 @@ namespace TranslationMod
         }
 
         [Subscribe]
+        public void onUpdate(PostUpdateEvent @event)
+        {
+            //if(@event.Root.ActiveClickableMenu != null && @event.Root.ActiveClickableMenu is GameMenu)
+            //{
+            //    var menu = @event.Root.ActiveClickableMenu as GameMenu;
+            //    var optionPage = menu.Pages.FirstOrDefault(p => p is OptionsPage);
+            //    if(optionPage != null)
+            //    {
+            //        var options = (optionPage as OptionsPage).Options.Cast<StardewValley.Menus.OptionsElement>().ToList();
+            //        var newOptions = new List<StardewValley.Menus.OptionsElement>();
+            //        foreach (var option in options)
+            //        {
+            //            if(option.label == "Sound:")
+            //            {
+            //                var languageDropDown = new StardewValley.Menus.OptionsDropDown("Language", 5);
+            //                newOptions.Add(languageDropDown);
+            //            }
+            //            newOptions.Add(option);
+            //        }
+            //        (optionPage as OptionsPage).Options = newOptions;
+            //    }
+            //}
+        }
+
+        [Subscribe]
         public void PastGameLoadedCallback(PostGameLoadedEvent @event)
         {
             var characters = @event.Root.AllCharacters;
