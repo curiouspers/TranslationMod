@@ -26,8 +26,11 @@ namespace TranslationMod
         public Config ModConfig { get; private set; }
         public Dictionary<string, Person> Data { get; set; }
         public Dictionary<string, string> Characters { get; set; }
+        private Dictionary<string,int> _languages;
+        private string _selectedLanguage;
         private bool _isConfigLoaded = false;
         public List<String> LoadedResources;
+        private bool _isMenuDrawing;
 
         [Subscribe]
         public void InitializeCallback(InitializeEvent @event)
@@ -36,28 +39,71 @@ namespace TranslationMod
         }
 
         [Subscribe]
+        public void onWindowsSizeChanged(ClientSizeChangedEvent @event)
+        {
+            if (_isMenuDrawing)
+                _isMenuDrawing = false;
+        }
+
+        [Subscribe]
         public void onUpdate(PostUpdateEvent @event)
         {
-            //if(@event.Root.ActiveClickableMenu != null && @event.Root.ActiveClickableMenu is GameMenu)
-            //{
-            //    var menu = @event.Root.ActiveClickableMenu as GameMenu;
-            //    var optionPage = menu.Pages.FirstOrDefault(p => p is OptionsPage);
-            //    if(optionPage != null)
-            //    {
-            //        var options = (optionPage as OptionsPage).Options.Cast<StardewValley.Menus.OptionsElement>().ToList();
-            //        var newOptions = new List<StardewValley.Menus.OptionsElement>();
-            //        foreach (var option in options)
-            //        {
-            //            if(option.label == "Sound:")
-            //            {
-            //                var languageDropDown = new StardewValley.Menus.OptionsDropDown("Language", 5);
-            //                newOptions.Add(languageDropDown);
-            //            }
-            //            newOptions.Add(option);
-            //        }
-            //        (optionPage as OptionsPage).Options = newOptions;
-            //    }
-            //}
+            if (@event.Root.ActiveClickableMenu != null && @event.Root.ActiveClickableMenu is GameMenu)
+            {
+                var menu = @event.Root.ActiveClickableMenu as GameMenu;
+                var optionPage = menu.Pages.FirstOrDefault(p => p is OptionsPage);
+                if (optionPage != null)
+                {
+                    var options = (optionPage as OptionsPage).Options.Cast<StardewValley.Menus.OptionsElement>().ToList();
+                    if(!_isMenuDrawing)
+                    {
+                        var newOptions = new List<StardewValley.Menus.OptionsElement>();
+                        var dropdownoption = options.Find(o => o is StardewValley.Menus.OptionsDropDown);
+                        foreach (var option in options)
+                        {
+                            if (option.label == "Sound:")
+                            {
+                                var languageDropDown = new StardewValley.Menus.OptionsDropDown("Language", 55);                               
+                                //languageDropDown.dropDownOptions.AddRange(_languages.Keys);
+                                languageDropDown.selectedOption = _languages[_selectedLanguage];
+                                newOptions.Add(languageDropDown);
+                            }
+                            newOptions.Add(option);
+                        }
+                        (optionPage as OptionsPage).Options = newOptions;
+                        _isMenuDrawing = true;
+                    }
+                }                
+            }
+            else if(@event.Root.ActiveClickableMenu == null)
+            {
+                if(_isMenuDrawing)
+                    _isMenuDrawing = false;
+            }
+        }
+
+        [Subscribe]
+        public void onChangeLanguage(ChangeDropDownOptionsEvent @event)
+        {
+            if(@event.Which == 55)
+            {
+                var selectedLang = @event.Options[@event.Selection];
+                if (selectedLang != _selectedLanguage)
+                {
+                    File.WriteAllBytes(Path.Combine(PathOnDisk, "Config.json"),
+                        Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new Config { LanguageName = selectedLang })));
+                    _selectedLanguage = selectedLang;
+                }
+            }
+        }
+
+        [Subscribe]
+        public void onSetDropDownPropertyValue(SetDropDownToProperValueEvent @event)
+        {
+            if(@event.DropDown.WhichOption == 55)
+            {
+                @event.DropDown.DropDownOptions = _languages.Keys.ToList();
+            }
         }
 
         [Subscribe]
@@ -193,8 +239,13 @@ namespace TranslationMod
 
         private void LoadConfig(string ContentRoot)
         {
+            _languages = new Dictionary<string,int>();
+            foreach (var directory in Directory.GetDirectories(Path.Combine(PathOnDisk, "languages")).Select((o,i)=> new { Value = o, Index = i }))
+            {
+                _languages.Add(directory.Value.Split('\\').Last(), directory.Index);
+            }
             LoadedResources = new List<string>();
-               var configLocation = Path.Combine(PathOnDisk, "Config.json");
+            var configLocation = Path.Combine(PathOnDisk, "Config.json");
             if (!File.Exists(configLocation))
             {
                 ModConfig = new Config();
@@ -205,6 +256,7 @@ namespace TranslationMod
             {
                 ModConfig = JsonConvert.DeserializeObject<Config>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
             }
+            _selectedLanguage = ModConfig.LanguageName;
             if (Directory.Exists(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries")) && Directory.GetFiles(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries")).Count() > 0)
             {
                 Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "MainDictionary.json"))));

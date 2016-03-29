@@ -16,7 +16,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>C:\Users\vaa\AppData\Roaming\StardewValley\Mods\TranslationMod\</OutputPath>
+    <OutputPath>C:\Users\WarFollowsMe\AppData\Roaming\StardewValley\Mods\TranslationMod\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -49,7 +49,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Storm-Hooked-Game">
-      <HintPath>..\..\StormOriginal\Storm\Storm\bin\Debug\Storm-Hooked-Game.exe</HintPath>
+      <HintPath>..\..\Storm\Storm\Storm\bin\Debug\Storm-Hooked-Game.exe</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
