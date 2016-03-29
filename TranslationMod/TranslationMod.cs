@@ -27,7 +27,8 @@ namespace TranslationMod
         public Dictionary<string, Person> Data { get; set; }
         public Dictionary<string, string> Characters { get; set; }
         private Dictionary<string,int> _languages;
-        private string _selectedLanguage;
+        private Dictionary<string, string> _languageDescriptions;
+        private string _currentLanguage;
         private bool _isConfigLoaded = false;
         public List<String> LoadedResources;
         private bool _isMenuDrawing;
@@ -63,9 +64,8 @@ namespace TranslationMod
                         {
                             if (option.label == "Sound:")
                             {
-                                var languageDropDown = new StardewValley.Menus.OptionsDropDown("Language", 55);                               
-                                //languageDropDown.dropDownOptions.AddRange(_languages.Keys);
-                                languageDropDown.selectedOption = _languages[_selectedLanguage];
+                                var languageDropDown = new StardewValley.Menus.OptionsDropDown("Language", 55);
+                                languageDropDown.selectedOption = _languages[_currentLanguage];
                                 newOptions.Add(languageDropDown);
                             }
                             newOptions.Add(option);
@@ -84,15 +84,15 @@ namespace TranslationMod
 
         [Subscribe]
         public void onChangeLanguage(ChangeDropDownOptionsEvent @event)
-        {
+        {            
             if(@event.Which == 55)
             {
-                var selectedLang = @event.Options[@event.Selection];
-                if (selectedLang != _selectedLanguage)
+                var selectedLang = _languageDescriptions[@event.Options[@event.Selection]];
+                if (selectedLang != _currentLanguage)
                 {
                     File.WriteAllBytes(Path.Combine(PathOnDisk, "Config.json"),
                         Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new Config { LanguageName = selectedLang })));
-                    _selectedLanguage = selectedLang;
+                    _currentLanguage = selectedLang;
                 }
             }
         }
@@ -100,9 +100,10 @@ namespace TranslationMod
         [Subscribe]
         public void onSetDropDownPropertyValue(SetDropDownToProperValueEvent @event)
         {
-            if(@event.DropDown.WhichOption == 55)
+            if(@event.DropDown.Underlying is StardewValley.Menus.OptionsDropDown && 
+                (@event.DropDown.Underlying as StardewValley.Menus.OptionsDropDown).whichOption == 55)
             {
-                @event.DropDown.DropDownOptions = _languages.Keys.ToList();
+                (@event.DropDown.Underlying as StardewValley.Menus.OptionsDropDown).dropDownOptions = _languageDescriptions.Keys.ToList();
             }
         }
 
@@ -240,9 +241,13 @@ namespace TranslationMod
         private void LoadConfig(string ContentRoot)
         {
             _languages = new Dictionary<string,int>();
+            var jobj = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "descriptions.json"))));
+            _languageDescriptions = new Dictionary<string, string>();
             foreach (var directory in Directory.GetDirectories(Path.Combine(PathOnDisk, "languages")).Select((o,i)=> new { Value = o, Index = i }))
             {
-                _languages.Add(directory.Value.Split('\\').Last(), directory.Index);
+                var shortName = directory.Value.Split('\\').Last();
+                _languageDescriptions.Add(jobj[shortName].ToString(), shortName);
+                _languages.Add(shortName, directory.Index);
             }
             LoadedResources = new List<string>();
             var configLocation = Path.Combine(PathOnDisk, "Config.json");
@@ -256,7 +261,7 @@ namespace TranslationMod
             {
                 ModConfig = JsonConvert.DeserializeObject<Config>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
             }
-            _selectedLanguage = ModConfig.LanguageName;
+            _currentLanguage = ModConfig.LanguageName;
             if (Directory.Exists(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries")) && Directory.GetFiles(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries")).Count() > 0)
             {
                 Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "MainDictionary.json"))));
@@ -292,6 +297,7 @@ namespace TranslationMod
 
             _isConfigLoaded = true;
         }
+
         void WriteToScan(string line)
         {
             string scanFile = "upload.json";
@@ -476,6 +482,7 @@ namespace TranslationMod
                 }
             }
         }
+
         Rectangle getSourceRectForChar(char c, bool junimoText)
         {
             int num = (int)c - 32;
