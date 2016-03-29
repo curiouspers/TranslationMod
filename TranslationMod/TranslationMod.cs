@@ -85,7 +85,7 @@ namespace TranslationMod
             }
         }
 
-        [Subscribe]
+       /* [Subscribe]
         public void onChangeLanguage(ChangeDropDownOptionsEvent @event)
         {
             if(@event.Which == 55)
@@ -109,7 +109,7 @@ namespace TranslationMod
             {
                 (@event.DropDown.Underlying as StardewValley.Menus.OptionsDropDown).dropDownOptions = _languageDescriptions.Keys.ToList();
             }
-        }
+        }*/
 
         [Subscribe]
         public void PastGameLoadedCallback(PostGameLoadedEvent @event)
@@ -153,7 +153,8 @@ namespace TranslationMod
         {
             //ЗДЕСЬ АЛГОРИТМ ГЕНЕРАЦИИ СПИСКА ИМЕН ФЕРМЕРОВ НА РУССКОМ!
             //Возвращаемый объект - List<string>
-            //@event.ReturnEarly = true;
+            @event.ReturnValue = getOtherFarmerNames();
+            @event.ReturnEarly = true;
         }
 
         //private const string Cyrillic = "AaБбВвГг...";
@@ -293,6 +294,76 @@ namespace TranslationMod
             return str1;
         }
 
+        public List<string> getOtherFarmerNames()
+        {
+            List<string> strs = new List<string>();
+            Random random = new Random((int)Game1.uniqueIDForThisGame);
+            Random random1 = new Random((int)((int)Game1.uniqueIDForThisGame + Game1.stats.DaysPlayed));
+            string[] strArrays = new string[] { DataRandName["n1"]["Ron"].ToString(), DataRandName["n1"]["Desmond"].ToString(), DataRandName["n1"]["Gary"].ToString(), DataRandName["n1"]["Bart"].ToString(), DataRandName["n1"]["Willy"].ToString(), DataRandName["n1"]["Tex"].ToString(), DataRandName["n1"]["Chris"].ToString(), DataRandName["n1"]["Lenny"].ToString(), DataRandName["n1"]["Patrick"].ToString(), DataRandName["n1"]["Marty"].ToString(), DataRandName["n1"]["Jared"].ToString(), DataRandName["n1"]["Kyle"].ToString(), DataRandName["n1"]["Mitch"].ToString(), DataRandName["n1"]["Dale"].ToString(), DataRandName["n1"]["Leland"].ToString(), DataRandName["n1"]["Hunt"].ToString(), DataRandName["n1"]["Curtis"].ToString(), DataRandName["n1"]["Leone"].ToString(), DataRandName["n1"]["Andy"].ToString(), DataRandName["n1"]["Steve"].ToString(), DataRandName["n1"]["Frank"].ToString(), DataRandName["n1"]["Zach"].ToString(), DataRandName["n1"]["Bert"].ToString(), DataRandName["n1"]["Lucas"].ToString(), DataRandName["n1"]["Logan"].ToString(), DataRandName["n1"]["Stu"].ToString(), DataRandName["n1"]["Mike"].ToString(), DataRandName["n1"]["Jake"].ToString(), DataRandName["n1"]["Nick"].ToString(), DataRandName["n1"]["Ben"].ToString(), DataRandName["n1"]["Daniel"].ToString(), DataRandName["n1"]["Bubs"].ToString(), DataRandName["n1"]["Jack"].ToString() };
+            string[] strArrays1 = strArrays;
+            string[] strArrays2 = new string[] { DataRandName["n2"]["Susan"].ToString(), DataRandName["n2"]["Danielle"].ToString(), DataRandName["n2"]["Rosie"].ToString(), DataRandName["n2"]["Joanie"].ToString(), DataRandName["n2"]["Emma"].ToString(), DataRandName["n2"]["Kate"].ToString(), DataRandName["n2"]["Pauline"].ToString(), DataRandName["n2"]["Bev"].ToString(), DataRandName["n2"]["Melissa"].ToString(), DataRandName["n2"]["Penny"].ToString(), DataRandName["n2"]["Nancy"].ToString(), DataRandName["n2"]["Betty"].ToString(), DataRandName["n2"]["Minnie"].ToString(), DataRandName["n2"]["Rebecca"].ToString(), DataRandName["n2"]["Holly"].ToString(), DataRandName["n2"]["Ashley"].ToString(), DataRandName["n2"]["Jasmine"].ToString(), DataRandName["n2"]["Nina"].ToString(), DataRandName["n2"]["Carly"].ToString(), DataRandName["n2"]["Jessica"].ToString(), DataRandName["n2"]["Samantha"].ToString(), DataRandName["n2"]["Amanda"].ToString(), DataRandName["n2"]["Brittany"].ToString(), DataRandName["n2"]["Liz"].ToString(), DataRandName["n2"]["Taylor"].ToString(), DataRandName["n2"]["Megan"].ToString(), DataRandName["n2"]["Hannah"].ToString(), DataRandName["n2"]["Lauren"].ToString(), DataRandName["n2"]["Stephanie"].ToString() };
+            string[] strArrays3 = strArrays2;
+            string[] strArrays4 = new string[] { DataRandName["n3"]["Farmer"].ToString(), DataRandName["n3"]["Prospector"].ToString(), DataRandName["n3"]["Fisherman"].ToString(), DataRandName["n3"]["Woodsman"].ToString(), DataRandName["n3"]["Lumberjack"].ToString(), DataRandName["n3"]["Explorer"].ToString(), DataRandName["n3"]["Swordsman"].ToString(), DataRandName["n3"]["Rancher"].ToString(), DataRandName["n3"]["Cowboy"].ToString(), DataRandName["n3"]["Slick"].ToString(), DataRandName["n3"]["'King'"].ToString(), DataRandName["n3"]["Professor"].ToString(), DataRandName["n3"]["Seafarer"].ToString(), DataRandName["n3"]["Sailor"].ToString(), DataRandName["n3"]["Hotshot"].ToString(), DataRandName["n3"]["Hunter"].ToString(), DataRandName["n3"]["Warlock"].ToString() };
+            string[] strArrays5 = strArrays4;
+            string[] strArrays6 = new string[] { DataRandName["n4"]["Farmer"].ToString(), DataRandName["n4"]["Prospector"].ToString(), DataRandName["n4"]["Seafarer"].ToString(), DataRandName["n4"]["Herbalist"].ToString(), DataRandName["n4"]["Explorer"].ToString(), DataRandName["n4"]["Swordmaiden"].ToString(), DataRandName["n4"]["Rancher"].ToString(), DataRandName["n4"]["Cowgirl"].ToString(), DataRandName["n4"]["Sweet"].ToString(), DataRandName["n4"]["Cheerleader"].ToString(), DataRandName["n4"]["Sorceress"].ToString(), DataRandName["n4"]["Floralist"].ToString() };
+            string[] strArrays7 = strArrays6;
+            string[] strArrays8 = new string[] { DataRandName["n5"]["Geezer"].ToString(), DataRandName["n5"]["'Daddy'"].ToString(), DataRandName["n5"]["Big"].ToString(), DataRandName["n5"]["Lil'"].ToString(), DataRandName["n5"]["Plumber"].ToString(), DataRandName["n5"]["Great-Grandpa"].ToString(), DataRandName["n5"]["Bubba"].ToString(), DataRandName["n5"]["Doughboy"].ToString(), DataRandName["n5"]["Bag Boy"].ToString(), DataRandName["n5"]["Courtesy Clerk"].ToString(), DataRandName["n5"]["Banker"].ToString(), DataRandName["n5"]["Grocer"].ToString(), DataRandName["n5"]["Golf Pro"].ToString(), DataRandName["n5"]["Pirate"].ToString(), DataRandName["n5"]["Burglar"].ToString(), DataRandName["n5"]["Hamburger"].ToString(), DataRandName["n5"]["Cool Guy"].ToString(), DataRandName["n5"]["Simple"].ToString(), DataRandName["n5"]["Good Guy"].ToString(), DataRandName["n5"]["'Garbage'"].ToString(), DataRandName["n5"]["Math Whiz"].ToString(), DataRandName["n5"]["'Lucky'"].ToString(), DataRandName["n5"]["Middle Aged"].ToString(), DataRandName["n5"]["Software Developer"].ToString(), DataRandName["n5"]["Baker"].ToString(), DataRandName["n5"]["Business Major"].ToString(), DataRandName["n5"]["Pony Master"].ToString(), DataRandName["n5"]["Ol'"].ToString() };
+            string[] strArrays9 = strArrays8;
+            string[] strArrays10 = new string[] { DataRandName["n6"]["Granny"].ToString(), DataRandName["n6"]["Old Mother"].ToString(), DataRandName["n6"]["Tiny"].ToString(), DataRandName["n6"]["Simple"].ToString(), DataRandName["n6"]["Scrapbook"].ToString(), DataRandName["n6"]["Log Lady"].ToString(), DataRandName["n6"]["Miss"].ToString(), DataRandName["n6"]["Clever"].ToString(), DataRandName["n6"]["Gossiping"].ToString(), DataRandName["n6"]["Prom Queen"].ToString(), DataRandName["n6"]["Diva"].ToString(), DataRandName["n6"]["Sweet Lil'"].ToString(), DataRandName["n6"]["Blushing"].ToString(), DataRandName["n6"]["Bashful"].ToString(), DataRandName["n6"]["Cat Lady"].ToString(), DataRandName["n6"]["Astronomer"].ToString(), DataRandName["n6"]["Housewife"].ToString(), DataRandName["n6"]["Gardener"].ToString(), DataRandName["n6"]["Computer Whiz"].ToString(), DataRandName["n6"]["Lunch Lady"].ToString(), DataRandName["n6"]["Bumpkin"].ToString() };
+            string[] strArrays11 = strArrays10;
+            string[] strArrays12 = new string[] { DataRandName["n7"]["'The Meatloaf'"].ToString(), DataRandName["n7"]["'The Boy Wonder'"].ToString(), DataRandName["n7"]["'The Wiz'"].ToString(), DataRandName["n7"]["'Super Legs'"].ToString(), DataRandName["n7"]["'The Nose'"].ToString(), DataRandName["n7"]["'The Duck'"].ToString(), DataRandName["n7"]["'Spoonface'"].ToString(), DataRandName["n7"]["'The Brain'"].ToString(), DataRandName["n7"]["'The Shark'"].ToString() };
+            string[] strArrays13 = strArrays12;
+            string[] strArrays14 = new string[] { DataRandName["n8"]["Farmer"].ToString(), DataRandName["n8"]["Rancher"].ToString(), DataRandName["n8"]["Cowboy"].ToString(), DataRandName["n8"]["Farmboy"].ToString() };
+            string[] strArrays15 = new string[] { DataRandName["n9"]["Farmer"].ToString(), DataRandName["n9"]["Rancher"].ToString(), DataRandName["n9"]["Cowgirl"].ToString(), DataRandName["n9"]["Farmgirl"].ToString() };
+            string str = "";
+            if (!Game1.player.isMale)
+            {
+                str = strArrays3[random.Next(strArrays3.Count<string>())];
+                for (int i = 0; i < 2; i++)
+                {
+                    while (strs.Contains(str) || Game1.player.name.Equals(str))
+                    {
+                        str = (i != 0 ? strArrays3[random1.Next(strArrays3.Count<string>())] : strArrays3[random.Next(strArrays3.Count<string>())]);
+                    }
+                    str = (i != 0 ? string.Concat(strArrays7[random1.Next(strArrays7.Count<string>())], " ", str) : string.Concat(strArrays15[random.Next(strArrays15.Count<string>())], " ", str));
+                    strs.Add(str);
+                }
+            }
+            else
+            {
+                str = strArrays1[random.Next(strArrays1.Count<string>())];
+                for (int j = 0; j < 2; j++)
+                {
+                    while (strs.Contains(str) || Game1.player.name.Equals(str))
+                    {
+                        str = (j != 0 ? strArrays1[random1.Next(strArrays1.Count<string>())] : strArrays1[random.Next(strArrays1.Count<string>())]);
+                    }
+                    str = (j != 0 ? string.Concat(strArrays5[random1.Next(strArrays5.Count<string>())], " ", str) : string.Concat(strArrays14[random.Next(strArrays14.Count<string>())], " ", str));
+                    strs.Add(str);
+                }
+            }
+            if (random1.NextDouble() >= 0.5)
+            {
+                str = strArrays3[random1.Next(strArrays3.Count<string>())];
+                while (Game1.player.name.Equals(str))
+                {
+                    str = strArrays3[random1.Next(strArrays3.Count<string>())];
+                }
+                str = string.Concat(strArrays11[random1.Next(strArrays11.Count<string>())], " ", str);
+            }
+            else
+            {
+                str = strArrays1[random1.Next(strArrays1.Count<string>())];
+                while (Game1.player.name.Equals(str))
+                {
+                    str = strArrays1[random1.Next(strArrays1.Count<string>())];
+                }
+                str = (random1.NextDouble() >= 0.5 ? string.Concat(str, " ", strArrays13[random1.Next(strArrays13.Count<string>())]) : string.Concat(strArrays9[random1.Next(strArrays9.Count<string>())], " ", str));
+            }
+            strs.Add(str);
+            return strs;
+        }
+
         [Subscribe]
         public void onSetNewDialgue(SetNewDialogueEvent @event)
         {
@@ -326,12 +397,16 @@ namespace TranslationMod
             @event.ReturnEarly = true;
         }
 
+        // Draws bold texts
         [Subscribe]
         public void onDrawSpriteText(PreSpriteTextDrawStringEvent @event)
         {
             WriteToScan(@event.Text);
             if (Characters.ContainsKey(@event.Text))
             {
+                //if (@event.Text == "Shane")
+                //    @event.Text = StardewValley.Dialogue.randomName();
+                //else
                 @event.Text = Characters[@event.Text];
             }
             drawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition,
@@ -377,7 +452,9 @@ namespace TranslationMod
             {
                 @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
             }
-            WriteToScan(@event.Message);
+            //Regex rx = new Regex("^[0-9]+$");
+            if (!string.IsNullOrEmpty(@event.Message) && @event.ReturnValue == null && !new Regex("^[0-9А-Яа-я:]+$").IsMatch(@event.Message))
+               WriteToScan(@event.Message);
         }
 
         private void LoadConfig(string ContentRoot)
@@ -407,7 +484,7 @@ namespace TranslationMod
             if (Directory.Exists(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries")) && Directory.GetFiles(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries")).Count() > 0)
             {
                 Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "MainDictionary.json"))));
-                DataRandName = Newtonsoft.Json.Linq.JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName + "nameGen.json"))));
+                DataRandName = Newtonsoft.Json.Linq.JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "nameGen.json"))));
                 Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "Characters.json"))));
             }
             else
@@ -443,6 +520,8 @@ namespace TranslationMod
 
         void WriteToScan(string line)
         {
+            if (string.IsNullOrEmpty(line))
+                return;
             string scanFile = "upload.json";
             if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, scanFile)))
             {
