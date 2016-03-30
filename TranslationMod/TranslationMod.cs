@@ -408,20 +408,23 @@ namespace TranslationMod
         [Subscribe]
         public void onDrawSpriteText(PreSpriteTextDrawStringEvent @event)
         {
-            //WriteToScan(@event.Text);var tramslateMessage = Translate(@event.Text);
-            var tramslateMessage = Translate(@event.Text);
-            if (!string.IsNullOrEmpty(tramslateMessage))
-            {
-                @event.ReturnValue = tramslateMessage;
-                @event.ReturnEarly = true;
-            }
-            else if (Characters.ContainsKey(@event.Text))
+            if (Characters.ContainsKey(@event.Text))
             {
                 //if (@event.Text == "Shane")
                 //    //    @event.Text = StardewValley.Dialogue.randomName();
                 //    @event.Text = StardewValley.Utility.getOtherFarmerNames()[0];
                 //else
-                    @event.Text = Characters[@event.Text];
+                @event.Text = Characters[@event.Text];
+            }
+            else {
+                //WriteToScan(@event.Text);var tramslateMessage = Translate(@event.Text);
+                
+                var tramslateMessage = Translate(@event.Text);
+                if (!string.IsNullOrEmpty(tramslateMessage))
+                {
+                    @event.ReturnValue = tramslateMessage;
+                    @event.ReturnEarly = true;
+                }
             }
             drawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition,
                 @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
@@ -454,6 +457,7 @@ namespace TranslationMod
             if (!string.IsNullOrEmpty(tramslateMessage))
             {
                 @event.ReturnValue = tramslateMessage;
+                //HERE MAYBE WE WANT TO @event.returnEarly = true; ??
             }
             //if (@event.Message == "Map" && ModConfig.LanguageName == "RU")
             //{
@@ -487,6 +491,8 @@ namespace TranslationMod
 
         private string Translate(string message)
         {
+            if (string.IsNullOrEmpty(message) || new Regex("^[0-9А-Яа-я: -=.g]+$").IsMatch(message))
+                return "";
             if (_mainDictionary.ContainsKey(message))
             {
                 return _mainDictionary[message];

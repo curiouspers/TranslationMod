@@ -315,6 +315,9 @@
     <None Include="languages\RU\content\TileSheets\HospitalTiles.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="languages\RU\dictionaries\aDateStrings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="languages\RU\dictionaries\Characters.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

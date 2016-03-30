@@ -115,8 +115,55 @@ namespace TranslationMod
             string resultString = "";
             foreach (var item in _dictionary)
             {
-                var tempScore = Convert.ToDouble((source.LongestCommonSubsequence(item.Key).Length) / Convert.ToDouble(Math.Min(source.Length, item.Key.Length)));
-                if (tempScore > 0.85 && tempScore > score)
+                if (source.Contains("@"))
+                {
+                    if (source != item.Key)
+                        continue;
+                }
+
+                var strS = source.Split(' ');
+                var strI = item.Key.Split(' ');
+                if (strS.Length < strI.Length)
+                    continue;
+                string keyWord = "";
+                string keyWordKey = "";
+                int prevKeyWordIndex = -1;
+                int j = 0;
+                double tempScore = 0;
+                double exceptKeyWordsScore = 0;
+                for (int i = 0; i < strI.Length; i++)
+                {
+
+                    if (!string.IsNullOrEmpty(strI[i]) && strI[i][0] == '@')
+                    {
+                        //if (keyWord.Length && prevKeyWordIndex > -1)
+                        //{
+                        //      // FOUND KEYWORD, MAYBE REPLACED RIGHT HERE FROM KEYWORDS DICTIONARY!
+                        //      // OR CREATE AN ARRAY OF EVERY KEYWORD AND REPLACE AT THE END. 1st case is better though
+                        //}
+                        keyWordKey = strI[i];
+                        keyWord = strS[j];
+                        j++;
+                        prevKeyWordIndex = i;
+                        continue;
+                    }
+                    else if (strI[i] == strS[j])
+                    {
+                        tempScore += strI[i].Length;
+                        exceptKeyWordsScore += strS[i].Length;
+                        prevKeyWordIndex = -1;
+                        j++;
+                    }
+                    else
+                    {
+                        exceptKeyWordsScore += strS[i].Length;
+                        keyWord += " " + strS[i];
+                        j++;
+                    }
+                }
+
+                //var tempScore = Convert.ToDouble((source.LongestCommonSubsequence(item.Key).Length) / Convert.ToDouble(Math.Min(source.Length, item.Key.Length)));
+                if (tempScore > 0.80 && tempScore > score)
                 {
                     score = tempScore;
                     resultString = item.Key;
