@@ -185,6 +185,7 @@ namespace TranslationMod
 
         public string randomName()
         {
+            #region randomName implementation
             string str;
             string str1 = "";
             int num = Game1.random.Next(3, 6);
@@ -292,10 +293,12 @@ namespace TranslationMod
                 str1 = (Game1.random.NextDouble() < 0.5 ? DataRandName["badReplace"]["Bobo"].ToString() : DataRandName["badReplace"]["Wumbus"].ToString());
             }
             return str1;
+            #endregion
         }
 
         public List<string> getOtherFarmerNames()
         {
+            #region getOtherFarmerNames implementation
             List<string> strs = new List<string>();
             Random random = new Random((int)Game1.uniqueIDForThisGame);
             Random random1 = new Random((int)((int)Game1.uniqueIDForThisGame + Game1.stats.DaysPlayed));
@@ -362,6 +365,7 @@ namespace TranslationMod
             }
             strs.Add(str);
             return strs;
+            #endregion
         }
 
         [Subscribe]
@@ -402,12 +406,14 @@ namespace TranslationMod
         public void onDrawSpriteText(PreSpriteTextDrawStringEvent @event)
         {
             WriteToScan(@event.Text);
+            
             if (Characters.ContainsKey(@event.Text))
             {
                 //if (@event.Text == "Shane")
-                //    @event.Text = StardewValley.Dialogue.randomName();
+                //    //    @event.Text = StardewValley.Dialogue.randomName();
+                //    @event.Text = StardewValley.Utility.getOtherFarmerNames()[0];
                 //else
-                @event.Text = Characters[@event.Text];
+                    @event.Text = Characters[@event.Text];
             }
             drawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition,
                 @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
@@ -452,9 +458,9 @@ namespace TranslationMod
             {
                 @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
             }
-            //Regex rx = new Regex("^[0-9]+$");
-            if (!string.IsNullOrEmpty(@event.Message) && @event.ReturnValue == null && !new Regex("^[0-9А-Яа-я:]+$").IsMatch(@event.Message))
-               WriteToScan(@event.Message);
+            //Regex rx = new Regex("^[0-9А-Яа-я: -=.]+$");
+            //if (!string.IsNullOrEmpty(@event.Message) && @event.ReturnValue == null && !new Regex("^[0-9А-Яа-я: -=.]+$").IsMatch(@event.Message))
+            //   WriteToScan(@event.Message);
         }
 
         private void LoadConfig(string ContentRoot)
@@ -520,7 +526,7 @@ namespace TranslationMod
 
         void WriteToScan(string line)
         {
-            if (string.IsNullOrEmpty(line))
+            if (string.IsNullOrEmpty(line) || new Regex("^[0-9А-Яа-я: -=.]+$").IsMatch(line))
                 return;
             string scanFile = "upload.json";
             if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, scanFile)))
