@@ -7,16 +7,37 @@ namespace TranslationMod
     public class FuzzyStringDictionary
     {
         private Dictionary<string, string> _dictionary;
+        private List<string> memoryBuffer;
         public FuzzyStringDictionary(Dictionary<string, string> dictioanry)
         {
             _dictionary = dictioanry;
+            memoryBuffer = new List<string>();
+        }
+        public FuzzyStringDictionary()
+        {
+            _dictionary = new Dictionary<string, string>();
+            memoryBuffer = new List<string>();
         }
 
         public string this[string key]
         {
             get
             {
-                return _dictionary[CompareKey(key)];
+                try
+                {
+                    if(!memoryBuffer.Contains(key))
+                        return _dictionary[CompareKey(key)];
+                    return "";
+                }
+                catch
+                {
+                    if(memoryBuffer.Count > 500)
+                    {
+                        memoryBuffer.RemoveAt(0);
+                    }
+                    memoryBuffer.Add(key);
+                    return "";
+                }
             }
             set
             {
@@ -51,6 +72,22 @@ namespace TranslationMod
         public void Add(string key, string value)
         {
             _dictionary.Add(key, value);
+        }
+
+        /// <summary>
+        /// Ignore all duplicate keys
+        /// </summary>
+        /// <param name="pairs"></param>
+        public void AddRange(IEnumerable<KeyValuePair<string,string>> pairs)
+        {
+            foreach (var pair in pairs)
+            {
+                try
+                {
+                    _dictionary.Add(pair.Key, pair.Value);
+                }
+                catch (ArgumentException e) { }
+            }
         }
 
         public void Clear()
