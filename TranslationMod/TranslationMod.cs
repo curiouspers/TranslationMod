@@ -28,6 +28,9 @@ namespace TranslationMod
         public Dictionary<string, string> Characters { get; set; }
         private Dictionary<string,int> _languages;
         private Dictionary<string, string> _languageDescriptions;
+        private FuzzyStringDictionary _fuzzyDictionary;
+        private Dictionary<string, string> _mainDictionary;
+        private Dictionary<string, string> _keyWords;
         private string _currentLanguage;
         private bool _isConfigLoaded = false;
         public List<String> LoadedResources;
@@ -187,8 +190,14 @@ namespace TranslationMod
         [Subscribe]
         public void onDrawSpriteText(PreSpriteTextDrawStringEvent @event)
         {
-            WriteToScan(@event.Text);
-            if (Characters.ContainsKey(@event.Text))
+            //WriteToScan(@event.Text);var tramslateMessage = Translate(@event.Text);
+            var tramslateMessage = Translate(@event.Text);
+            if (!string.IsNullOrEmpty(tramslateMessage))
+            {
+                @event.ReturnValue = tramslateMessage;
+                @event.ReturnEarly = true;
+            }
+            else if (Characters.ContainsKey(@event.Text))
             {
                 @event.Text = Characters[@event.Text];
             }
@@ -201,8 +210,14 @@ namespace TranslationMod
         [Subscribe]
         public void onGetWidthSpriteText(SpriteTextGetWidthOfStringEvent @event)
         {
-            WriteToScan(@event.Text);
-            if (Characters.ContainsKey(@event.Text))
+            //WriteToScan(@event.Text);
+            var tramslateMessage = Translate(@event.Text);
+            if (!string.IsNullOrEmpty(tramslateMessage))
+            {
+                @event.ReturnValue = tramslateMessage;
+                @event.ReturnEarly = true;
+            }
+            else if (Characters.ContainsKey(@event.Text))
             {
                 @event.Text = Characters[@event.Text];
                 @event.ReturnValue = @event.Root.GetWidthOfString(@event.Text);
@@ -213,34 +228,62 @@ namespace TranslationMod
         [Subscribe]
         public void onSpriteBatchDrawString(SpriteBatchDrawStringEvent @event)
         {
-            if (@event.Message == "Map" && ModConfig.LanguageName == "RU")
+            var tramslateMessage = Translate(@event.Message);
+            if (!string.IsNullOrEmpty(tramslateMessage))
             {
-                @event.ReturnValue = "Карта";
+                @event.ReturnValue = tramslateMessage;
             }
-            if (Data.ContainsKey("GrandpaStory") && Data["GrandpaStory"].Dialogues.Where(d => d.Key == @event.Message && !string.IsNullOrEmpty(d.Value)).Count()>0)
-            {
-                @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
-            }
-            WriteToScan(@event.Message);
+            //if (@event.Message == "Map" && ModConfig.LanguageName == "RU")
+            //{
+            //    @event.ReturnValue = "Карта";
+            //}
+            //if (Data.ContainsKey("GrandpaStory") && Data["GrandpaStory"].Dialogues.Where(d => d.Key == @event.Message && !string.IsNullOrEmpty(d.Value)).Count()>0)
+            //{
+            //    @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
+            //}
+            //WriteToScan(@event.Message);
         }
 
         [Subscribe]
         public void onSpriteFontMeasureString(SpriteFontMeasureStringEvent @event)
         {
-            if(@event.Message == "Map" && ModConfig.LanguageName == "RU")
+            var tramslateMessage = Translate(@event.Message);
+            if (!string.IsNullOrEmpty(tramslateMessage))
             {
-                @event.ReturnValue = "Карта";
+                @event.ReturnValue = tramslateMessage;
             }
-            if (Data.ContainsKey("GrandpaStory") && Data["GrandpaStory"].Dialogues.Where(d => d.Key == @event.Message && !string.IsNullOrEmpty(d.Value)).Count() > 0)
+            //if(@event.Message == "Map" && ModConfig.LanguageName == "RU")
+            //{
+            //    @event.ReturnValue = "Карта";
+            //}
+            //if (Data.ContainsKey("GrandpaStory") && Data["GrandpaStory"].Dialogues.Where(d => d.Key == @event.Message && !string.IsNullOrEmpty(d.Value)).Count() > 0)
+            //{
+            //    @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
+            //}
+            //WriteToScan(@event.Message);
+        }
+
+        private string Translate(string message)
+        {
+            if (_mainDictionary.ContainsKey(message))
             {
-                @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
+                return _mainDictionary[message];
             }
-            WriteToScan(@event.Message);
+            else if (_fuzzyDictionary.ContainsKey(message))
+            {
+                return _fuzzyDictionary[message];
+            }
+            else return "";
         }
 
         private void LoadConfig(string ContentRoot)
         {
             _languages = new Dictionary<string,int>();
+            _fuzzyDictionary = new FuzzyStringDictionary();
+            _mainDictionary = new Dictionary<string, string>();
+            _keyWords = new Dictionary<string, string>();
+            Data = new Dictionary<string, Person>();
+            Characters = new Dictionary<string, string>();
             var jobj = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "descriptions.json"))));
             _languageDescriptions = new Dictionary<string, string>();
             foreach (var directory in Directory.GetDirectories(Path.Combine(PathOnDisk, "languages")).Select((o,i)=> new { Value = o, Index = i }))
@@ -262,15 +305,50 @@ namespace TranslationMod
                 ModConfig = JsonConvert.DeserializeObject<Config>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
             }
             _currentLanguage = ModConfig.LanguageName;
-            if (Directory.Exists(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries")) && Directory.GetFiles(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries")).Count() > 0)
+            var dictionariesFolder = Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries");
+            if (Directory.Exists(dictionariesFolder) && Directory.GetFiles(dictionariesFolder).Count() > 0)
             {
-                Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "MainDictionary.json"))));
-                Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", ModConfig.LanguageName, "dictionaries", "Characters.json"))));
-            }
-            else
-            {
-                Data = new Dictionary<string, Person>();
-                Characters = new Dictionary<string, string>();
+                foreach (var dict in Directory.GetFiles(dictionariesFolder))
+                {
+                    var dictName = Path.GetFileName(dict);
+                    if (dictName == "KeyWords.json")
+                    {
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        foreach(var val in jo)
+                        {
+                            if(_keyWords.ContainsKey(val.Key))
+                            {
+                                _keyWords.Add(val.Key, val.Value.ToString());
+                            }
+                        }
+                    }
+                    else if (dictName == "MainDictionary.json")
+                    {
+                        Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                    }
+                    else if (dictName == "Characters.json")
+                    {
+                        Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                    }
+                    else
+                    {
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        foreach(var pair in jo)
+                        {
+                            if(pair.Key.Contains("@"))
+                            {
+                                if (!_fuzzyDictionary.ContainsKey(pair.Key))
+                                    _fuzzyDictionary.Add(pair.Key,pair.Value.ToString());
+                            }
+                            else
+                            {
+                                if(!_mainDictionary.ContainsKey(pair.Key))
+                                    _mainDictionary.Add(pair.Key, pair.Value.ToString());
+                            }
+                        }
+
+                    }
+                }
             }
 
             #region upload content to the game

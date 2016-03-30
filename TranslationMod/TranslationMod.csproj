@@ -16,7 +16,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>C:\Users\vaa\AppData\Roaming\StardewValley\Mods\TranslationMod\</OutputPath>
+    <OutputPath>C:\Users\WarFollowsMe\AppData\Roaming\StardewValley\Mods\TranslationMod\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -318,9 +318,6 @@
     <None Include="languages\RU\dictionaries\Characters.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\Dialogues.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="languages\RU\dictionaries\KeyWords.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -336,6 +333,9 @@
     <None Include="languages\RU\dictionaries\MiniGames.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="languages\RU\dictionaries\NPC.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="languages\RU\dictionaries\Object.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -345,7 +345,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\StormOriginal\Storm\Storm\Storm.csproj">
+    <ProjectReference Include="..\..\Storm\Storm\Storm\Storm.csproj">
       <Project>{3ae6190c-1cc7-4fa4-b859-5eabc8ec0614}</Project>
       <Name>Storm</Name>
     </ProjectReference>
