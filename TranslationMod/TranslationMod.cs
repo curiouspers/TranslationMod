@@ -146,7 +146,6 @@ namespace TranslationMod
         [Subscribe]
         public void onGetRandomName(GetRandomNameEvent @event)
         {
-            //ЗДЕСЬ АЛГОРИТМ ГЕНЕРАЦИИ ИМЕН НА РУССКОМ!
             //Возвращаемый объект - string
             @event.ReturnValue = randomName();
             @event.ReturnEarly = true;
@@ -155,38 +154,11 @@ namespace TranslationMod
         [Subscribe]
         public void onOtherFarmerNames(GetOtherFarmerNamesEvent @event)
         {
-            //ЗДЕСЬ АЛГОРИТМ ГЕНЕРАЦИИ СПИСКА ИМЕН ФЕРМЕРОВ НА РУССКОМ!
             //Возвращаемый объект - List<string>
             @event.ReturnValue = getOtherFarmerNames();
             @event.ReturnEarly = true;
         }
-
-        //private const string Cyrillic = "AaБбВвГг...";
-        //private const string Latin = "A|a|B|b|V|v|G|g|...";
-        private const string Cyrillic = "AaBbVvGgDdEeJjZzIiYyKkLlMmNnOoPpRrSsTtUuFfCcWwHh";
-        private const string Latin = "А|а|Б|б|В|в|Г|г|Д|д|Е|е|Ж|ж|З|з|И|и|И|и|К|к|Л|л|М|м|Н|н|О|о|П|п|Р|р|С|с|Т|т|У|у|Ф|ф|Ч|ч|В|в|Х|";
-        private Dictionary<char, string> mLookup;
-
-        public string Romanize(string russian)
-        {
-            if (mLookup == null)
-            {
-                mLookup = new Dictionary<char, string>();
-                var replace = Latin.Split('|');
-                for (int ix = 0; ix < Cyrillic.Length; ++ix)
-                {
-                    mLookup.Add(Cyrillic[ix], replace[ix]);
-                }
-            }
-            var buf = new StringBuilder(russian.Length);
-            foreach (char ch in russian)
-            {
-                if (mLookup.ContainsKey(ch)) buf.Append(mLookup[ch]);
-                else buf.Append(ch);
-            }
-            return buf.ToString();
-        }
-
+        
         public string randomName()
         {
             #region randomName implementation
@@ -459,7 +431,6 @@ namespace TranslationMod
             if (!string.IsNullOrEmpty(translateMessage))
             {
                 @event.ReturnValue = translateMessage;
-                //HERE MAYBE WE WANT TO @event.returnEarly = true; ??
             }
             //if (@event.Message == "Map" && ModConfig.LanguageName == "RU")
             //{
@@ -470,6 +441,45 @@ namespace TranslationMod
             //    @event.ReturnValue = Data["GrandpaStory"].Dialogues.Find(d => d.Key == @event.Message).Value;
             //}
             //WriteToScan(@event.Message);
+        }
+
+        [Subscribe]
+        public void onParseText(ParseTextEvent @event)
+        {
+            var translateMessage = Translate(@event.Text);
+            if (!string.IsNullOrEmpty(translateMessage))
+            {
+                @event.Text = translateMessage;
+                //@event.ReturnEarly = true;
+            }
+            #region game function parseText
+            var text = @event.Text;
+            var whichFont = @event.WhichFont;
+            var width = @event.Width;
+
+            if (text == null)
+            {
+                @event.ReturnValue = "";
+                return;
+            }
+            string str1 = string.Empty;
+            string str2 = string.Empty;
+            string str3 = text;
+            foreach (string str4 in str3.Split(' '))
+            {
+                if (whichFont.MeasureString(str1 + str4).Length() > width ||
+                    str4.Equals(Environment.NewLine))
+                {
+                    str2 = str2 + str1 + Environment.NewLine;
+                    str1 = string.Empty;
+                }
+                str1 = str1 + str4 + " ";
+            }
+            @event.ReturnValue = str2 + str1;
+
+            //WriteToScan(@event.ReturnValue.ToString());
+            #endregion
+            @event.ReturnEarly = true;
         }
 
         [Subscribe]
@@ -548,19 +558,89 @@ namespace TranslationMod
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
                         foreach (var val in jo)
                         {
-                            //var jo2 = JObject.Parse(val.Value.ToString());
-                            //foreach (var val in jo2)
-                            //{
-                                if (!_keyWords.ContainsKey(val.Key))
-                                {
-                                    _keyWords.Add(val.Key, val.Value.ToString());
-                                }
-                           // }
+                            var pair = JObject.Parse(val.Value.ToString());
+                            foreach (var row in pair)
+                            {
+                                Console.WriteLine(row.Key);
+                                AddPairToDict(row.Key, row.Value.ToString(), _mainDictionary);
+                            }
+                            if (!_keyWords.ContainsKey(val.Key))
+                            {
+                                _keyWords.Add(val.Key, val.Value.ToString());
+                            }
                         }
                     }
                     else if (dictName == "MainDictionary.json")
                     {
                         Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        foreach (var pair in Data)
+                        {
+                            if (pair.Key == "BigCraftablesInformation")
+                            {
+                                foreach (var row in pair.Value.Dialogues)
+                                {
+                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 0); // name
+                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 4); // desc
+                                }
+                            }
+                            if (pair.Key == "Blueprints")
+                            {
+                                foreach (var row in pair.Value.Dialogues)
+                                {
+                                    if (row.Key.Split('/').Length > 9)
+                                    {
+                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 8); // desc
+                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 9); // type
+                                    }
+                                    else
+                                    {
+                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 4); // desc
+                                    }
+                                }
+                            }
+                            if (pair.Key == "Boots" || pair.Key == "CookingChannel" || pair.Key == "Fish" || pair.Key == "weapons")
+                            {
+                                foreach (var row in pair.Value.Dialogues)
+                                {
+                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 0); // name
+                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 1); // desc
+                                }
+                            }
+                            if (pair.Key == "Bundles")
+                            {
+                                foreach (var row in pair.Value.Dialogues)
+                                {
+                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 0); // name
+                                }
+                            }
+                            if (pair.Key == "ObjectInformation")
+                            {
+                                foreach (var row in pair.Value.Dialogues)
+                                {
+                                    if (row.Key.Split('/').Length > 4)
+                                    {
+                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 0); // name
+                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 4); // desc
+                                    }
+                                    else
+                                    {
+                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 0); // name
+                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 1); // desc
+                                    }
+                                }
+                            }
+                            if (pair.Key == "Quests")
+                            {
+                                foreach (var row in pair.Value.Dialogues)
+                                {
+                                    
+                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 1); // name
+                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 2); // desc
+                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 3); // goal
+                                }
+                            }
+                        }
+
                     }
                     else if (dictName == "Characters.json")
                     {
@@ -584,10 +664,7 @@ namespace TranslationMod
                             }
                             else
                             {
-                                if(!_mainDictionary.ContainsKey(pair.Key) )
-                                    _mainDictionary.Add(pair.Key, pair.Value.ToString());
-                                else if (_mainDictionary[pair.Key] == "" && pair.Value.ToString() != "")
-                                    _mainDictionary[pair.Key] = pair.Value.ToString();
+                                AddPairToDict(pair.Key, pair.Value.ToString(), _mainDictionary);
                             }
                         }
 
@@ -618,6 +695,21 @@ namespace TranslationMod
             #endregion
 
             _isConfigLoaded = true;
+        }
+
+
+        private void AddPairToDictFromIndex(string key, string value, Dictionary<string, string> dict, int index)
+        {
+            key = !string.IsNullOrEmpty(key) ? key.Split('/')[index] : "";
+            value = !string.IsNullOrEmpty(value) ? value.Split('/')[index] : "";
+            AddPairToDict(key, value, _mainDictionary);
+        }
+
+        private void AddPairToDict(string key, string value, Dictionary<string, string> dict) {
+            if (!dict.ContainsKey(key))
+                dict.Add(key, value);
+            else if (dict[key] == "" && value != "")
+                dict[key] = value;
         }
 
         void WriteToScan(string line)
