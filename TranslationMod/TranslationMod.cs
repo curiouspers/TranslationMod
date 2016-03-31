@@ -38,6 +38,7 @@ namespace TranslationMod
         private bool _isConfigLoaded = false;
         public List<String> LoadedResources;
         private bool _isMenuDrawing;
+        private Regex reToSkip = new Regex("^[0-9А-Яа-я: -=.g]+$", RegexOptions.Compiled);
 
         [Subscribe]
         public void InitializeCallback(InitializeEvent @event)
@@ -417,13 +418,13 @@ namespace TranslationMod
                 @event.Text = Characters[@event.Text];
             }
             else {
-                //WriteToScan(@event.Text);var tramslateMessage = Translate(@event.Text);
+                //WriteToScan(@event.Text);var translateMessage = Translate(@event.Text);
                 
-                var tramslateMessage = Translate(@event.Text);
-                if (!string.IsNullOrEmpty(tramslateMessage))
+                var translateMessage = Translate(@event.Text);
+                if (!string.IsNullOrEmpty(translateMessage))
                 {
-                    @event.ReturnValue = tramslateMessage;
-                    @event.ReturnEarly = true;
+                    @event.Text = translateMessage;
+                    //@event.ReturnEarly = true;
                 }
             }
             drawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition,
@@ -436,10 +437,11 @@ namespace TranslationMod
         public void onGetWidthSpriteText(SpriteTextGetWidthOfStringEvent @event)
         {
             //WriteToScan(@event.Text);
-            var tramslateMessage = Translate(@event.Text);
-            if (!string.IsNullOrEmpty(tramslateMessage))
+            var translateMessage = Translate(@event.Text);
+            if (!string.IsNullOrEmpty(translateMessage))
             {
-                @event.ReturnValue = tramslateMessage;
+                //@event.ReturnValue = translateMessage;
+                @event.ReturnValue = @event.Root.GetWidthOfString(translateMessage);
                 @event.ReturnEarly = true;
             }
             else if (Characters.ContainsKey(@event.Text))
@@ -453,10 +455,10 @@ namespace TranslationMod
         [Subscribe]
         public void onSpriteBatchDrawString(SpriteBatchDrawStringEvent @event)
         {
-            var tramslateMessage = Translate(@event.Message);
-            if (!string.IsNullOrEmpty(tramslateMessage))
+            var translateMessage = Translate(@event.Message);
+            if (!string.IsNullOrEmpty(translateMessage))
             {
-                @event.ReturnValue = tramslateMessage;
+                @event.ReturnValue = translateMessage;
                 //HERE MAYBE WE WANT TO @event.returnEarly = true; ??
             }
             //if (@event.Message == "Map" && ModConfig.LanguageName == "RU")
@@ -473,10 +475,12 @@ namespace TranslationMod
         [Subscribe]
         public void onSpriteFontMeasureString(SpriteFontMeasureStringEvent @event)
         {
-            var tramslateMessage = Translate(@event.Message);
-            if (!string.IsNullOrEmpty(tramslateMessage))
+            if (reToSkip.IsMatch(@event.Message) || string.IsNullOrEmpty(@event.Message))
+                return;
+            var translateMessage = Translate(@event.Message);
+            if (!string.IsNullOrEmpty(translateMessage))
             {
-                @event.ReturnValue = tramslateMessage;
+                @event.ReturnValue = translateMessage;
             }
             //if(@event.Message == "Map" && ModConfig.LanguageName == "RU")
             //{
@@ -491,7 +495,7 @@ namespace TranslationMod
 
         private string Translate(string message)
         {
-            if (string.IsNullOrEmpty(message) || new Regex("^[0-9А-Яа-я: -=.g]+$").IsMatch(message))
+            if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message))
                 return "";
             if (_mainDictionary.ContainsKey(message))
             {
@@ -542,12 +546,16 @@ namespace TranslationMod
                     if (dictName == "KeyWords.json")
                     {
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
-                        foreach(var val in jo)
+                        foreach (var val in jo)
                         {
-                            if(_keyWords.ContainsKey(val.Key))
-                            {
-                                _keyWords.Add(val.Key, val.Value.ToString());
-                            }
+                            //var jo2 = JObject.Parse(val.Value.ToString());
+                            //foreach (var val in jo2)
+                            //{
+                                if (!_keyWords.ContainsKey(val.Key))
+                                {
+                                    _keyWords.Add(val.Key, val.Value.ToString());
+                                }
+                           // }
                         }
                     }
                     else if (dictName == "MainDictionary.json")
@@ -564,18 +572,22 @@ namespace TranslationMod
                     }
                     else
                     {
-                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)).Replace("@newline", Environment.NewLine));
                         foreach(var pair in jo)
                         {
                             if(pair.Key.Contains("@"))
                             {
                                 if (!_fuzzyDictionary.ContainsKey(pair.Key))
                                     _fuzzyDictionary.Add(pair.Key,pair.Value.ToString());
+                                else if (_fuzzyDictionary[pair.Key] == "" && pair.Value.ToString() != "")
+                                    _fuzzyDictionary[pair.Key] = pair.Value.ToString();
                             }
                             else
                             {
-                                if(!_mainDictionary.ContainsKey(pair.Key))
+                                if(!_mainDictionary.ContainsKey(pair.Key) )
                                     _mainDictionary.Add(pair.Key, pair.Value.ToString());
+                                else if (_mainDictionary[pair.Key] == "" && pair.Value.ToString() != "")
+                                    _mainDictionary[pair.Key] = pair.Value.ToString();
                             }
                         }
 
@@ -610,7 +622,7 @@ namespace TranslationMod
 
         void WriteToScan(string line)
         {
-            if (string.IsNullOrEmpty(line) || new Regex("^[0-9А-Яа-я: -=.]+$").IsMatch(line))
+            if (string.IsNullOrEmpty(line) || reToSkip.IsMatch(line))
                 return;
             string scanFile = "upload.json";
             if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, scanFile)))
