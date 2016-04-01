@@ -24,7 +24,7 @@
         "Upgrades": "Улучшения",
         "Decorations": "Украшения",
         "Demolish": "Снос",
-        "Animals": "Животные",
+        "Animals": "Животные"
     },
     "Blueprints": {
         "Silo": "Силос",
@@ -43,14 +43,12 @@
         "Cow": "Корова"
     },
     "BuffIcon": {
-        "Farming": "Ферм-во",
+        "Farming": "Фермерство",
         "Fishing": "Рыбалка",
-        "Mining": "Добыча",
+        "Mining": "Горное дело",
         "Combat": "Бой",
         "Luck": "Удача",
-        "Foraging": "Собир-во",
-        "Other": "Остальное",
-        "Total": "Всего",
+        "Foraging": "Хранение",
         "Max Energy": "Макс. Энергия",
         "Magnetism": "Очарование",
         "Speed": "Скорость",
@@ -60,7 +58,7 @@
         "Weight": "Вес",
         "Immunity": "Иммунитет",
         "Crit. Power": "Крит. удар",
-        "Crit. Chance": "Крит. шанс",
+        "Crit. Chance": "Крит. шанс"
     },
     "ObjectInformation": {
         "Weeds": "Сорняки",
@@ -86,7 +84,7 @@
         "Earth Crystal": "Земной кристалл",
         "Coconut": "Кокос",
         "Cactus Fruit": "Плод Кактуса",
-        "Sap": "Сок растения",
+        "Sap": "Сок",
         "Torch": "Факел",
         "Spirit Torch": "Призрачный Факел",
         "Dwarf Scroll I": "Гномий Свиток I",
@@ -597,7 +595,7 @@
         "Brute": "",
         "Defender": "",
         "Acrobat": "",
-        "Desperado": "",
+        "Desperado": ""
     },
     "StrengthGamePowers": {
         "Plankton": "",
@@ -640,15 +638,17 @@
         "Bulldozer": "",
         "Gorilla": "",
         "Mammoth": "",
-        "George's Knee": "",
+        "George's Knee": ""
     },
     "Answers": {
         "Yes": "Да",
+        "Okay":"Хорошо",
         "No": "Нет",
         "Cancel": "Отмена",
         "Do nothing": "Ничего не делать",
         "Buy":"Пока",
-        "Leave":"Уйти"
+        "Leave":"Уйти",
+        "Not now":"Не сейчас"
     },
     "HiWords":{
         "Hi":"Привет",
@@ -656,6 +656,11 @@
         "Good morning":"Доброе утро",
         "Good afternoon":"Добрый день",
         "Good evening":"Добрый вечер",
+        "Howdy!":"",
+        "Greetings.":"",
+        "Oh, hi!":"",
+        "Welcome!":"",
+        "Hello there.":""
     },
     "DeliciousAdjective": {
         "yummy": "",
