@@ -146,19 +146,25 @@ namespace TranslationMod
         [Subscribe]
         public void onGetRandomName(GetRandomNameEvent @event)
         {
-            //ЗДЕСЬ АЛГОРИТМ ГЕНЕРАЦИИ ИМЕН НА РУССКОМ!
-            //Возвращаемый объект - string
-            @event.ReturnValue = randomName();
-            @event.ReturnEarly = true;
+            if(ModConfig.LanguageName != "EN")
+            {
+                //ЗДЕСЬ АЛГОРИТМ ГЕНЕРАЦИИ ИМЕН НА РУССКОМ!
+                //Возвращаемый объект - string
+                @event.ReturnValue = randomName();
+                @event.ReturnEarly = true;
+            }
         }
 
         [Subscribe]
         public void onOtherFarmerNames(GetOtherFarmerNamesEvent @event)
         {
-            //ЗДЕСЬ АЛГОРИТМ ГЕНЕРАЦИИ СПИСКА ИМЕН ФЕРМЕРОВ НА РУССКОМ!
-            //Возвращаемый объект - List<string>
-            @event.ReturnValue = getOtherFarmerNames();
-            @event.ReturnEarly = true;
+            if (ModConfig.LanguageName != "EN")
+            {
+                //ЗДЕСЬ АЛГОРИТМ ГЕНЕРАЦИИ СПИСКА ИМЕН ФЕРМЕРОВ НА РУССКОМ!
+                //Возвращаемый объект - List<string>
+                @event.ReturnValue = getOtherFarmerNames();
+                @event.ReturnEarly = true;
+            }
         }
 
         //private const string Cyrillic = "AaБбВвГг...";
@@ -495,17 +501,20 @@ namespace TranslationMod
 
         private string Translate(string message)
         {
-            if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message))
-                return "";
-            if (_mainDictionary.ContainsKey(message))
+            if (ModConfig.LanguageName != "EN")
             {
-                return _mainDictionary[message];
+                if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message))
+                    return "";
+                if (_mainDictionary.ContainsKey(message))
+                {
+                    return _mainDictionary[message];
+                }
+                else if (_fuzzyDictionary.ContainsKey(message))
+                {
+                    return _fuzzyDictionary[message];
+                }
             }
-            else if (_fuzzyDictionary.ContainsKey(message))
-            {
-                return _fuzzyDictionary[message];
-            }
-            else return "";
+            return "";
         }
 
         private void LoadConfig(string ContentRoot)
