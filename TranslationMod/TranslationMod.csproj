@@ -318,7 +318,13 @@
     <None Include="languages\RU\dictionaries\aDateStrings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="languages\RU\dictionaries\AllUniqueItemNames.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="languages\RU\dictionaries\Characters.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="languages\RU\dictionaries\Event.cs.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="languages\RU\dictionaries\KeyWords.json">
@@ -342,7 +348,13 @@
     <None Include="languages\RU\dictionaries\NPC.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="languages\RU\dictionaries\Object.cs.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="languages\RU\dictionaries\Object.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="languages\RU\dictionaries\Utility.cs.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="manifest.json">
@@ -351,7 +363,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Storm\Storm\Storm\Storm.csproj">
+    <ProjectReference Include="..\..\StormOriginal\Storm\Storm\Storm.csproj">
       <Project>{3ae6190c-1cc7-4fa4-b859-5eabc8ec0614}</Project>
       <Name>Storm</Name>
     </ProjectReference>
