@@ -1,4 +1,28 @@
 {
+
+      "You're not good enough friends with @key to enter his bedroom.":"Вы недостаточно хорошие друзья с @keyT чтобы войти в его спальню.",
+      "You're not good enough friends with @key to enter her bedroom.":"Вы недостаточно хорошие друзья с @keyT чтобы войти в её спальню.",
+      "You're not good enough friends with @key or @key to enter their bedroom.":"Вы недостаточно хорошие друзья с @keyT и @keyT чтобы войти в их спальню.",
+      "You've already given @key a gift today.":"Сегодня вы уже дарили @keyD подарок.",
+      "You've already given @key 2 gifts this week! That's enough.":"На этой неделе вы подарили @keyD 2 подарка! Этого достаточно.",
+      "@key x@number":"@key x@number",
+      "@key x @number":"@key x @number",
+
+      "@key@newline@newline@key@newline@newline@key":"@key@newline@newline@key@newline@newline@key",
+      "Gamepad mode activated":"Режим геймпада активирован",
+    "Length:":"Длина:",
+    "@numberin.":"@numberд.",
+    "@number in.":"@number д.",
+    "@key x@number":"@key x@number",
+
+    "Total Found: @number": "Всего найдено: @number",
+    "Times Cooked: @number": "Приготовлено раз: @number",
+    "Number Found: @number": "Кол-во найдено: @number",
+    "Number Shipped: @number": "Кол-во продано: @number",
+    "Number Caught: @number": "Кол-во поймано: @number",
+    "Biggest Catch: @number in.": "Наибольший улов: @number дюйм.",
+    "Year @number":"Год @number",
+
   "__comment":"AnimalHouse.cs",
       "Remove the egg?":"Убрать яйцо?",
       "A new baby chick hatched!":"Вылупился циплёнок!",
@@ -96,7 +120,9 @@
         "Greenhorn":"Новичок",
         "Newcomer":"Приезжий",
 
-      "You received @number @key":"Вы получили @number @key",
+      "You received a @key!":"Вы получили @keyV!",
+      "You received an @key!":"Вы получили @keyV!",
+      "You received @number @key!":"Вы получили @number @keyV!",
       "You received 15 Parsnip Seeds!^^'Here's a little something to get you started.^-Mayor Lewis'":"Вы получили 15 Семян Пастернака!^^Вот тебе кое-что для начала^-Мэр Льюис",
       "Nice try...":"Хорошая попытка...",
 
@@ -197,8 +223,9 @@
       "A male slime has hatched":"Вылупился мальчик слизень",
       "A female slime has hatched":"Вылупилась девочка слизень",
 
-      "A recipe to make @key":"Рецепт изготовления @key",
-      "Blueprints for crafting @key":"Чертеж для крафтка @key",
+      "A recipe to make @key":"Рецепт изготовления @keyR",
+      "@key Recipe":"Рецепт @keyR",
+      "Blueprints for crafting @key":"Чертеж для крафтка @keyR",
       "Gunther can tell you more about this if you donate it to the museum.":"Гюнтер может рассказать больше об этом если вы пожертвуете это музею",
 
       "__comment":"Honey",

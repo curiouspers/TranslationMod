@@ -39,8 +39,6 @@
       "The pages are too faded to read":"",
       "__comment":"num, Utility.getNumberEnding(num) of Utility.getSeasonNameFromNumber(seasonNumber), Year num1:",
 
-      "__comment":"getOtherFarmerNames",
-      "__comment":"getOtherFarmerNames need to bee wrapped and realized on our side",
       
       "Requires construction of a Coop":"",
       "Requires construction of a Barn":"",

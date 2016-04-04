@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Cyriller, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Users\Xen\AppData\Roaming\StardewValley\Mods\TranslationMod\Cyriller.dll</HintPath>
+    </Reference>
     <Reference Include="FuzzyString, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\Storm\Storm\packages\FuzzyString.1.0.0\lib\FuzzyString.dll</HintPath>
       <Private>True</Private>

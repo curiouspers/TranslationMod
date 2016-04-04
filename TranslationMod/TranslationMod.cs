@@ -18,6 +18,8 @@ using System.Text.RegularExpressions;
 using StardewValley.Buildings;
 using Storm.StardewValley.Accessor;
 using StardewValley;
+using Cyriller;
+using Cyriller.Model;
 
 namespace TranslationMod
 {
@@ -31,14 +33,16 @@ namespace TranslationMod
         public Newtonsoft.Json.Linq.JObject DataRandName { get; set; }
         private Dictionary<string,int> _languages;
         private Dictionary<string, string> _languageDescriptions;
-        private FuzzyStringDictionary _fuzzyDictionary;
-        private Dictionary<string, string> _mainDictionary;
+        private static FuzzyStringDictionary _fuzzyDictionary;
+        public static Dictionary<string, string> _mainDictionary;
         private Dictionary<string, string> _keyWords;
         private string _currentLanguage;
         private bool _isConfigLoaded = false;
         public List<String> LoadedResources;
         private bool _isMenuDrawing;
-        private Regex reToSkip = new Regex("^[0-9А-Яа-я: -=.g]+$", RegexOptions.Compiled);
+        private static Regex reToSkip = new Regex("^[0-9А-Яа-я: -=.g]+$", RegexOptions.Compiled);
+        private static CyrPhrase cyrPhrase;
+        private static int IsTranslated;
 
         [Subscribe]
         public void InitializeCallback(InitializeEvent @event)
@@ -159,6 +163,7 @@ namespace TranslationMod
             @event.ReturnEarly = true;
         }
         
+
         public string randomName()
         {
             #region randomName implementation
@@ -378,28 +383,35 @@ namespace TranslationMod
         }
 
         // Draws bold texts
+        private int _characterPosition;
         [Subscribe]
         public void onDrawSpriteText(PreSpriteTextDrawStringEvent @event)
         {
+            var originalText = @event.Text;
+            var translateText = @event.Text;
             if (Characters.ContainsKey(@event.Text))
             {
-                //if (@event.Text == "Shane")
-                //    //    @event.Text = StardewValley.Dialogue.randomName();
-                //    @event.Text = StardewValley.Utility.getOtherFarmerNames()[0];
-                //else
-                @event.Text = Characters[@event.Text];
+                translateText = Characters[@event.Text];
             }
-            else {
+            else
+            {
                 //WriteToScan(@event.Text);var translateMessage = Translate(@event.Text);
-                
+
                 var translateMessage = Translate(@event.Text);
                 if (!string.IsNullOrEmpty(translateMessage))
                 {
-                    @event.Text = translateMessage;
-                    //@event.ReturnEarly = true;
+                    translateText = translateMessage;
                 }
             }
-            drawString(@event.Sprite, @event.Text, @event.X, @event.Y, @event.CharacterPosition,
+            if (originalText.Length > @event.CharacterPosition || @event.CharacterPosition == 999999)
+            {
+                _characterPosition = @event.CharacterPosition;
+            }
+            else if (_characterPosition < translateText.Length)
+            {
+                _characterPosition++;
+            }
+            drawString(@event.Sprite, translateText, @event.X, @event.Y, _characterPosition,
                 @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
                 @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
             @event.ReturnEarly = true;
@@ -408,21 +420,30 @@ namespace TranslationMod
         [Subscribe]
         public void onGetWidthSpriteText(SpriteTextGetWidthOfStringEvent @event)
         {
+            if (IsTranslated > 0)
+            {
+                IsTranslated = 0;
+                return;
+            }
             //WriteToScan(@event.Text);
             var translateMessage = Translate(@event.Text);
-            if (!string.IsNullOrEmpty(translateMessage))
+
+            if (!string.IsNullOrEmpty(translateMessage))// && translateMessage != @event.Text)
             {
-                //@event.ReturnValue = translateMessage;
+                IsTranslated++;
+                @event.Text = translateMessage;
                 @event.ReturnValue = @event.Root.GetWidthOfString(translateMessage);
                 @event.ReturnEarly = true;
             }
             else if (Characters.ContainsKey(@event.Text))
             {
+                IsTranslated++;
                 @event.Text = Characters[@event.Text];
                 @event.ReturnValue = @event.Root.GetWidthOfString(@event.Text);
                 @event.ReturnEarly = true;
             }
         }
+
 
         [Subscribe]
         public void onSpriteBatchDrawString(SpriteBatchDrawStringEvent @event)
@@ -485,8 +506,9 @@ namespace TranslationMod
         [Subscribe]
         public void onSpriteFontMeasureString(SpriteFontMeasureStringEvent @event)
         {
-            if (reToSkip.IsMatch(@event.Message) || string.IsNullOrEmpty(@event.Message))
-                return;
+            //if (reToSkip.IsMatch(@event.Message) || string.IsNullOrEmpty(@event.Message))
+            if (string.IsNullOrEmpty(@event.Message))
+                    return;
             var translateMessage = Translate(@event.Message);
             if (!string.IsNullOrEmpty(translateMessage))
             {
@@ -503,10 +525,12 @@ namespace TranslationMod
             //WriteToScan(@event.Message);
         }
 
-        private string Translate(string message)
+        public static string Translate(string message)
         {
             if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message))
-                return "";
+            {
+                return message;
+            }
             if (_mainDictionary.ContainsKey(message))
             {
                 return _mainDictionary[message];
@@ -515,8 +539,47 @@ namespace TranslationMod
             {
                 return _fuzzyDictionary[message];
             }
-            else return "";
+            else return message;
         }
+
+        public static string Decline(string message, string _case) {
+            try
+            {
+
+                var result = cyrPhrase.Decline(message, GetConditionsEnum.Similar);
+                string res = "";
+                switch (_case)
+                {
+                    case "R":
+                        res = result.Genitive;
+                        break;
+                    case "D":
+                        res = result.Dative;
+                        break;
+                    case "V":
+                        res = result.Accusative;
+                        break;
+                    case "T":
+                        res = result.Instrumental;
+                        break;
+                    case "P":
+                        res = result.Prepositional;
+                        break;
+                    case "N":
+                    default:
+                        res = result.Nominative;
+                        break;
+                }
+                return res;
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Decline Exception, try to add a word " + message);
+                return message;
+                throw;
+            }
+        }
+
 
         private void LoadConfig(string ContentRoot)
         {
@@ -561,7 +624,7 @@ namespace TranslationMod
                             var pair = JObject.Parse(val.Value.ToString());
                             foreach (var row in pair)
                             {
-                                Console.WriteLine(row.Key);
+                                //Console.WriteLine(row.Key);
                                 AddPairToDict(row.Key, row.Value.ToString(), _mainDictionary);
                             }
                             if (!_keyWords.ContainsKey(val.Key))
@@ -645,6 +708,8 @@ namespace TranslationMod
                     else if (dictName == "Characters.json")
                     {
                         Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        foreach(var pair in Characters)
+                            AddPairToDict(pair.Key, pair.Value.ToString(), _mainDictionary);
                     }
                     else if (dictName == "nameGen.json")
                     {
@@ -694,7 +759,11 @@ namespace TranslationMod
             }
             #endregion
 
+            var collection = new CyrNounCollection();
+            var adjectives = new CyrAdjectiveCollection();
+            cyrPhrase = new CyrPhrase(collection, adjectives);
             _isConfigLoaded = true;
+
         }
 
 
