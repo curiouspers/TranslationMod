@@ -354,44 +354,45 @@ namespace TranslationMod
 
         private string Translate(string message)
         {
-            if (ModConfig.LanguageName != "EN")
-            {
+            //if (ModConfig.LanguageName != "EN")
+            //{
                 if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message))
-            {
-                return message;
-            }
-            else if (_memoryBuffer.ContainsKey(message))
-            {
-                return _memoryBuffer[message];
-            }
-            if (_mainDictionary.ContainsKey(message))
-            {
-                return _mainDictionary[message];
-            }
-            else if (_fuzzyDictionary.ContainsKey(message))
-            {
-                var resultTranslate = message;
-                var fval = _fuzzyDictionary.getKeyValue(message);
-
-                if (!string.IsNullOrEmpty(fval.Key) && !string.IsNullOrEmpty(fval.Value))
                 {
-                    var diff = GetKeysValue(fval.Key, message);
-                    resultTranslate = StringFormatWithKeys(fval.Value, diff.Select(d => d.Value).ToList());
+                    return message;
                 }
-
-                if (_memoryBuffer.Count > 500) { _memoryBuffer.Remove(_memoryBuffer.First().Key); }
-                _memoryBuffer.Add(message, resultTranslate);
-
-                return resultTranslate;
-            }
-            else {
-                if (!message.Contains("@") && !_memoryBuffer.ContainsKey(message))
+                else if (_memoryBuffer.ContainsKey(message))
                 {
+                    return _memoryBuffer[message];
+                }
+                if (_mainDictionary.ContainsKey(message))
+                {
+                    return _mainDictionary[message];
+                }
+                else if (_fuzzyDictionary.ContainsKey(message))
+                {
+                    var resultTranslate = message;
+                    var fval = _fuzzyDictionary.getKeyValue(message);
+
+                    if (!string.IsNullOrEmpty(fval.Key) && !string.IsNullOrEmpty(fval.Value))
+                    {
+                        var diff = GetKeysValue(fval.Key, message);
+                        resultTranslate = StringFormatWithKeys(fval.Value, diff.Select(d => d.Value).ToList());
+                    }
+
                     if (_memoryBuffer.Count > 500) { _memoryBuffer.Remove(_memoryBuffer.First().Key); }
-                    _memoryBuffer.Add(message, message);
+                    _memoryBuffer.Add(message, resultTranslate);
+
+                    return resultTranslate;
                 }
-                return message;
-            }
+                else {
+                    if (!message.Contains("@") && !_memoryBuffer.ContainsKey(message))
+                    {
+                        if (_memoryBuffer.Count > 500) { _memoryBuffer.Remove(_memoryBuffer.First().Key); }
+                        _memoryBuffer.Add(message, message);
+                    }
+                    return message;
+                }
+            //}
         }
 
         public static string Decline(string message, string _case) {
@@ -461,7 +462,7 @@ namespace TranslationMod
         }
 
         //добавил склонение в StringFormatWithKey:
-        public static string StringFormatWithKeys(string format, List<string> args)
+        public string StringFormatWithKeys(string format, List<string> args)
         {
             string result = format;
             MatchCollection matches;
@@ -703,7 +704,141 @@ namespace TranslationMod
                 dict[key] = value;
         }
 
-        public string randomName()
+
+        // not using this right now
+        private string replaceKeywordsWithValues(string original, string fuzzyKey, string fuzzyValue)
+        {
+            if (fuzzyValue.Contains("@player"))
+            {
+                fuzzyValue = fuzzyValue.Replace("@player", StardewValley.Game1.player.name);
+            }
+            if (fuzzyValue.Contains("@farm"))
+            {
+                if (fuzzyKey == "@farm Farm")
+                {
+                    // need to be done this way, because when you on load screen there is no farmName yet.
+                    string farmName = original.Substring(0, original.LastIndexOf(' '));
+                    fuzzyValue = fuzzyValue.Replace("@farm", farmName);
+                }
+                else
+                {
+                    fuzzyValue = fuzzyValue.Replace("@farm", StardewValley.Game1.player.farmName);
+                }
+            }
+            if (fuzzyValue.Contains("@playerChild"))
+            {
+                var childName = (StardewValley.Game1.player.getChildren().Count > 0) ? StardewValley.Game1.player.getChildren().Last().name : "";
+                fuzzyValue = fuzzyValue.Replace("@playerChild", childName);
+            }
+            if (!fuzzyValue.Contains("@"))
+                return fuzzyValue;
+            string[] strO = original.Split(' ');
+            string[] strF = fuzzyKey.Split(' ');
+            string key = "";
+            string val = "";
+            bool foundKey = false;
+            for (int i = 0; i < strF.Length; i++)
+            {
+                if (strF[i].Contains("@number"))
+                {
+                    key = strO[i];
+                    Match match = Tools.reNumber.Match(key);
+                    //val = val.Replace("@number", match.ToString());
+                    fuzzyValue = Tools.ReplaceFirst(fuzzyValue, "@number", match.ToString());
+                    foundKey = false;
+                    continue;
+                }
+
+                int charsToSkip = 0;
+                int charsToSkipFromEnd = 0;
+
+                if (strF[i].Contains("@key"))
+                {
+                    foundKey = true;
+                    charsToSkip = strF[i].IndexOf('@');
+                    charsToSkipFromEnd = strF[i].Length - charsToSkip - "@key".Length;
+                    //if (strF[i][0] != '@') {
+                    //    //for (int j = 0; j < strF[i].Length; j++)
+                    //    //{
+                    //    //    charsToSkip++;
+                    //    //    if (strF[i][j] == '@')
+                    //    //        break;
+                    //    //}
+                    //    for (int j = string.Join(" ", strO.SubArray(i, strO.Length - i + 1)).Length; j < original.Length; j++)
+                    //    {
+                    //        key += original[j];
+                    //    }
+                    //}
+                    if (charsToSkipFromEnd > 0)
+                    {
+                        int j = i;
+                        key = strO[j];
+                        while (j + 1 < strO.Length && strO[j][strO[j].Length - charsToSkipFromEnd] != strF[i][strF[i].Length - charsToSkipFromEnd])
+                        {
+                            j++;
+                            key += " " + strO[j];
+                        }
+                        // if (key[key.Length-1] == ' ')
+                        //key = key.Substring(0, key.Length - 1);
+                        //if (strO[i][strO[i].Length - charsToSkipFromEnd] == strF[i][strF[i].Length - charsToSkipFromEnd])
+                        if (key[key.Length - charsToSkipFromEnd] == strF[i][strF[i].Length - charsToSkipFromEnd])
+                        {
+                            key = string.Concat(key.ToArray().SubArray(charsToSkip, key.Length - charsToSkip - charsToSkipFromEnd));
+                            // if there is only one char in substr key (like "(@key)"=>"(F)", then replace @key with this char and go on
+                            if (key.Length == 1)
+                            {
+                                fuzzyValue = fuzzyValue.Replace("@key", key);
+                                continue;
+                            }
+                        }
+                    }
+
+                    // if we have another word after @key, and it equals  to next word in original, then just translate current original word
+                    if (i + 1 < strF.Length)
+                    {
+                        if (strF[i + 1] == strO[i + 1])
+                        {
+                            key = strO[i];
+                            if (strF[i] == "@key" && _mainDictionary.ContainsKey(key))
+                            {
+                                val = _mainDictionary[key];
+                                fuzzyValue = Tools.ReplaceFirst(fuzzyValue, "@key", val);
+                                foundKey = false;
+                                continue;
+                            }
+                        }
+                        else
+                        {
+
+                        }
+                    }
+
+                    if (key != "" && strF[i].Contains("@key") && _mainDictionary.ContainsKey(key))
+                    {
+                        val = _mainDictionary[key];
+                        fuzzyValue = Tools.ReplaceFirst(fuzzyValue, "@key", val);
+                        foundKey = false;
+                        continue;
+                    }
+                }
+                if (foundKey && key != "" && strF[i].Contains("@key") && _mainDictionary.ContainsKey(key))
+                {
+                    val = _mainDictionary[key];
+                    fuzzyValue = Tools.ReplaceFirst(fuzzyValue, "@key", val);
+                    foundKey = false;
+                    continue;
+                }
+                /*if (strF[i] != strO[i] && foundKey)
+                {
+                    key += " " + strO[i];
+                }*/
+            }
+
+            return fuzzyValue;
+        }
+        
+
+    public string randomName()
         {
             string str;
             string str1 = "";
