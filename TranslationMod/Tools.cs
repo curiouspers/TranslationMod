@@ -33,7 +33,7 @@ namespace TranslationMod
                         if (memoryBuffer.Count > 500)
                         {
                             memoryBuffer.Remove(memoryBuffer.First().Key);
-                    }
+                        }
                         if (!key.Contains("@") && !memoryBuffer.ContainsKey(key))
                             memoryBuffer.Add(key, translate);
                         return translate;
@@ -112,7 +112,11 @@ namespace TranslationMod
                 return true;
             var removeItem = CompareKey(key);
             if (string.IsNullOrEmpty(removeItem)) return false;
-            else return true;
+            else {
+                if (!memoryBuffer.ContainsKey(key))
+                    memoryBuffer.Add(key, removeItem);
+                return true;
+            }
         }
 
         public bool Remove(string key)
@@ -160,7 +164,7 @@ namespace TranslationMod
                 if (NEW_APPROACH)
                 {
                     // new approach ?
-                    List<KeyValuePair<string, string>> kvs = GetKeysValue(key, source);
+                    List<KeyValuePair<string, string>> kvs = TranslationMod.GetKeysValue(key, source);
                     string exceptKeysKey = key;
                     string exceptKeysSource = source;
                     if (kvs.Count == 0 || string.IsNullOrEmpty(kvs[0].Value))
@@ -270,7 +274,7 @@ namespace TranslationMod
                     }
                     tempScore /= (source.Length - keyWordsScore);
                 }
-
+                source = source.Replace(" " + Environment.NewLine + " ", Environment.NewLine);
 
                 //var tempScore = Convert.ToDouble((source.LongestCommonSubsequence(item.Key).Length) / Convert.ToDouble(Math.Min(source.Length, item.Key.Length)));
                 if (tempScore >= 0.75 && tempScore > score)
@@ -280,18 +284,16 @@ namespace TranslationMod
                     resultingValue = item.Value;
                 }
             }
-            source = source.Replace(" " + Environment.NewLine + " ", Environment.NewLine);
-            if (!string.IsNullOrEmpty(resultString) && !string.IsNullOrEmpty(resultingValue))
-            {
-                var diff = GetKeysValue(resultString, source);
-                var resultTranslate = StringFormatWithKeys(resultingValue, diff.Select(d => d.Value).ToList());
-                memoryBuffer.Add(source, resultTranslate);
-                //memoryBuffer.Add(source, replaceKeywordsWithValues(source, resultString, resultingValue));
-            }
-            if (!source.Contains("@") && !memoryBuffer.ContainsKey(source))
-                memoryBuffer.Add(source, source);
 
             return resultString;
+        }
+
+        public KeyValuePair<string, string> getKeyValue(string key)
+        {
+            if (memoryBuffer.ContainsKey(key))
+                return new KeyValuePair<string, string>(memoryBuffer[key], _dictionary[memoryBuffer[key]]);
+            else
+                return new KeyValuePair<string, string>(_dictionary[CompareKey(key)], _dictionary[memoryBuffer[key]]);
         }
 
         // not using this right now
@@ -322,7 +324,6 @@ namespace TranslationMod
                 return fuzzyValue;
             string[] strO = original.Split(' ');
             string[] strF = fuzzyKey.Split(' ');
-            string output ="";
             string key ="";
             string val ="";
             bool foundKey = false;
@@ -425,74 +426,6 @@ namespace TranslationMod
             return fuzzyValue;
         }
 
-        //Вот этот достает пары ключ:значение
-        public static List<KeyValuePair<string, string>> GetKeysValue(string template, string str)
-        {
-            List<KeyValuePair<string, string>> result = new List<KeyValuePair<string, string>>();
-            string pattern = Regex.Escape(template);
-            MatchCollection matches;
-            int count = 0;
-            while ((matches = Regex.Matches(pattern, "@key|@number|@farm|@player")).Count != 0)
-            {
-                pattern = pattern.Remove(matches[0].Index, matches[0].Length);
-                pattern = pattern.Insert(matches[0].Index, "(.+?)");
-                result.Add(new KeyValuePair<string, string>(matches[0].Value, ""));
-                count++;
-            }
-
-            pattern += "$";
-            Regex r = new Regex(pattern, RegexOptions.Singleline);
-            Match m = r.Match(str);
-
-            for (int i = 1; i < m.Groups.Count; i++)
-            {
-                var key = result[i - 1].Key;
-                result[i - 1] = new KeyValuePair<string, string>(key, m.Groups[i].Value);
-            }
-            return result;
-        }
-
-        //добавил склонение в StringFormatWithKey:
-        public static string StringFormatWithKeys(string format, List<string> args)
-        {
-            string result = format;
-            MatchCollection matches;
-            int i = 0;
-            while ((matches = Regex.Matches(result, "@key[RDVTP]{0,1}|@number|@farm|@player")).Count != 0)
-            {
-                var value = args[i];
-                if (matches[0].Value.Contains("@key"))
-                {
-                    if (i == 2 &&
-                        format == "@key" + Environment.NewLine + Environment.NewLine + "@key" + Environment.NewLine + Environment.NewLine + "@key"
-                        && value.Contains(Environment.NewLine))
-                    {
-                        //Console.WriteLine("hey");
-                        string newValue = "";
-                        foreach (var item in value.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
-                        {
-                            newValue += TranslationMod.Translate(item) + Environment.NewLine;
-                        }
-                        value = newValue.Substring(0, newValue.Length - Environment.NewLine.Length);
-                    }
-                    else {
-                        //value = TranslationMod.Translate(value); //Тут переводит ключ!!!
-                        var tmp = TranslationMod.Translate(value);
-                        if (!string.IsNullOrEmpty(tmp))
-                            value = tmp;
-                    }
-
-                    if (matches[0].Value.Length == 5)
-                    {
-                        value = TranslationMod.Decline(value, matches[0].Value.Last().ToString());
-                    }
-                }
-                result = result.Remove(matches[0].Index, matches[0].Length);
-                result = result.Insert(matches[0].Index, value);
-                i++;
-            }
-            return result;
-        }
     }
 
     public static class Tools

@@ -43,6 +43,7 @@ namespace TranslationMod
         private static Regex reToSkip = new Regex("^[0-9А-Яа-я: -=.g]+$", RegexOptions.Compiled);
         private static CyrPhrase cyrPhrase;
         private static int IsTranslated;
+        private static Dictionary<string, string> _memoryBuffer;
 
         [Subscribe]
         public void InitializeCallback(InitializeEvent @event)
@@ -531,15 +532,38 @@ namespace TranslationMod
             {
                 return message;
             }
+            else if (_memoryBuffer.ContainsKey(message))
+            {
+                return _memoryBuffer[message];
+            }
             if (_mainDictionary.ContainsKey(message))
             {
                 return _mainDictionary[message];
             }
             else if (_fuzzyDictionary.ContainsKey(message))
             {
-                return _fuzzyDictionary[message];
+                var resultTranslate = message;
+                var fval = _fuzzyDictionary.getKeyValue(message);
+
+                if (!string.IsNullOrEmpty(fval.Key) && !string.IsNullOrEmpty(fval.Value))
+                {
+                    var diff = GetKeysValue(fval.Key, message);
+                    resultTranslate = StringFormatWithKeys(fval.Value, diff.Select(d => d.Value).ToList());
+                }
+
+                if (_memoryBuffer.Count > 500) { _memoryBuffer.Remove(_memoryBuffer.First().Key); }
+                _memoryBuffer.Add(message, resultTranslate);
+
+                return resultTranslate;
             }
-            else return message;
+            else {
+                if (!message.Contains("@") && !_memoryBuffer.ContainsKey(message))
+                {
+                    if (_memoryBuffer.Count > 500) { _memoryBuffer.Remove(_memoryBuffer.First().Key); }
+                    _memoryBuffer.Add(message, message);
+                }
+                return message;
+            }
         }
 
         public static string Decline(string message, string _case) {
@@ -580,9 +604,80 @@ namespace TranslationMod
             }
         }
 
+        
+        //Вот этот достает пары ключ:значение
+        public static List<KeyValuePair<string, string>> GetKeysValue(string template, string str)
+        {
+            List<KeyValuePair<string, string>> result = new List<KeyValuePair<string, string>>();
+            string pattern = Regex.Escape(template);
+            MatchCollection matches;
+            int count = 0;
+            while ((matches = Regex.Matches(pattern, "@key|@number|@farm|@player")).Count != 0)
+            {
+                pattern = pattern.Remove(matches[0].Index, matches[0].Length);
+                pattern = pattern.Insert(matches[0].Index, "(.+?)");
+                result.Add(new KeyValuePair<string, string>(matches[0].Value, ""));
+                count++;
+            }
+
+            pattern += "$";
+            Regex r = new Regex(pattern, RegexOptions.Singleline);
+            Match m = r.Match(str);
+
+            for (int i = 1; i < m.Groups.Count; i++)
+            {
+                var key = result[i - 1].Key;
+                result[i - 1] = new KeyValuePair<string, string>(key, m.Groups[i].Value);
+            }
+            return result;
+        }
+
+        //добавил склонение в StringFormatWithKey:
+        public static string StringFormatWithKeys(string format, List<string> args)
+        {
+            string result = format;
+            MatchCollection matches;
+            int i = 0;
+            while ((matches = Regex.Matches(result, "@key[RDVTP]{0,1}|@number|@farm|@player")).Count != 0)
+            {
+                var value = args[i];
+                if (matches[0].Value.Contains("@key"))
+                {
+                    if (i == 2 &&
+                        format == "@key" + Environment.NewLine + Environment.NewLine + "@key" + Environment.NewLine + Environment.NewLine + "@key"
+                        && value.Contains(Environment.NewLine))
+                    {
+                        //Console.WriteLine("hey");
+                        string newValue = "";
+                        foreach (var item in value.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
+                        {
+                            newValue += Translate(item) + Environment.NewLine;
+                        }
+                        value = newValue.Substring(0, newValue.Length - Environment.NewLine.Length);
+                    }
+                    else {
+                        //value = Translate(value); //Тут переводит ключ!!!
+                        var tmp = Translate(value);
+                        if (!string.IsNullOrEmpty(tmp))
+                            value = tmp;
+                    }
+
+                    if (matches[0].Value.Length == 5)
+                    {
+                        value = Decline(value, matches[0].Value.Last().ToString());
+                    }
+                }
+                result = result.Remove(matches[0].Index, matches[0].Length);
+                result = result.Insert(matches[0].Index, value);
+                i++;
+            }
+            return result;
+        }
+
 
         private void LoadConfig(string ContentRoot)
         {
+            _memoryBuffer = new Dictionary<string, string>();
             _languages = new Dictionary<string,int>();
             _fuzzyDictionary = new FuzzyStringDictionary();
             _mainDictionary = new Dictionary<string, string>();
