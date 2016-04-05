@@ -33,8 +33,8 @@ namespace TranslationMod
         public JObject DataRandName { get; set; }
         private Dictionary<string,int> _languages;
         private Dictionary<string, string> _languageDescriptions;
-        private static FuzzyStringDictionary _fuzzyDictionary;
-        public static Dictionary<string, string> _mainDictionary;
+        private FuzzyStringDictionary _fuzzyDictionary;
+        private Dictionary<string, string> _mainDictionary;
         private Dictionary<string, string> _keyWords;
         private string _currentLanguage;
         private bool _isConfigLoaded = false;
@@ -43,6 +43,7 @@ namespace TranslationMod
         private static Regex reToSkip = new Regex("^[0-9А-Яа-я: -=.g]+$", RegexOptions.Compiled);
         private static CyrPhrase cyrPhrase;
         private static int IsTranslated;
+        private static Dictionary<string, string> _memoryBuffer;
 
         [Subscribe]
         public void InitializeCallback(InitializeEvent @event)
@@ -293,14 +294,15 @@ namespace TranslationMod
         [Subscribe]
         public void onParseText(ParseTextEvent @event)
         {
+
+            #region game function parseText
+            var text = @event.Text;
             var translateMessage = Translate(@event.Text);
             if (!string.IsNullOrEmpty(translateMessage))
             {
-                @event.Text = translateMessage;
+                text = translateMessage;
                 //@event.ReturnEarly = true;
             }
-            #region game function parseText
-            var text = @event.Text;
             var whichFont = @event.WhichFont;
             var width = @event.Width;
 
@@ -332,9 +334,8 @@ namespace TranslationMod
         [Subscribe]
         public void onSpriteFontMeasureString(SpriteFontMeasureStringEvent @event)
         {
-            //if (reToSkip.IsMatch(@event.Message) || string.IsNullOrEmpty(@event.Message))
-            if (string.IsNullOrEmpty(@event.Message))
-                    return;
+            if (reToSkip.IsMatch(@event.Message) || string.IsNullOrEmpty(@event.Message))
+                return;
             var translateMessage = Translate(@event.Message);
             if (!string.IsNullOrEmpty(translateMessage))
             {
@@ -353,20 +354,45 @@ namespace TranslationMod
 
         private string Translate(string message)
         {
-            if (ModConfig.LanguageName != "EN")
-            {
+            //if (ModConfig.LanguageName != "EN")
+            //{
                 if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message))
-                    return "";
+                {
+                    return message;
+                }
+                else if (_memoryBuffer.ContainsKey(message))
+                {
+                    return _memoryBuffer[message];
+                }
                 if (_mainDictionary.ContainsKey(message))
                 {
                     return _mainDictionary[message];
                 }
                 else if (_fuzzyDictionary.ContainsKey(message))
                 {
-                    return _fuzzyDictionary[message];
+                    var resultTranslate = message;
+                    var fval = _fuzzyDictionary.getKeyValue(message);
+
+                    if (!string.IsNullOrEmpty(fval.Key) && !string.IsNullOrEmpty(fval.Value))
+                    {
+                        var diff = GetKeysValue(fval.Key, message);
+                        resultTranslate = StringFormatWithKeys(fval.Value, diff.Select(d => d.Value).ToList());
+                    }
+
+                    if (_memoryBuffer.Count > 500) { _memoryBuffer.Remove(_memoryBuffer.First().Key); }
+                    _memoryBuffer.Add(message, resultTranslate);
+
+                    return resultTranslate;
                 }
-            }
-            return "";
+                else {
+                    if (!message.Contains("@") && !_memoryBuffer.ContainsKey(message))
+                    {
+                        if (_memoryBuffer.Count > 500) { _memoryBuffer.Remove(_memoryBuffer.First().Key); }
+                        _memoryBuffer.Add(message, message);
+                    }
+                    return message;
+                }
+            //}
         }
 
         public static string Decline(string message, string _case) {
@@ -407,9 +433,80 @@ namespace TranslationMod
             }
         }
 
+        
+        //Вот этот достает пары ключ:значение
+        public static List<KeyValuePair<string, string>> GetKeysValue(string template, string str)
+        {
+            List<KeyValuePair<string, string>> result = new List<KeyValuePair<string, string>>();
+            string pattern = Regex.Escape(template);
+            MatchCollection matches;
+            int count = 0;
+            while ((matches = Regex.Matches(pattern, "@key|@number|@farm|@player")).Count != 0)
+            {
+                pattern = pattern.Remove(matches[0].Index, matches[0].Length);
+                pattern = pattern.Insert(matches[0].Index, "(.+?)");
+                result.Add(new KeyValuePair<string, string>(matches[0].Value, ""));
+                count++;
+            }
+
+            pattern += "$";
+            Regex r = new Regex(pattern, RegexOptions.Singleline);
+            Match m = r.Match(str);
+
+            for (int i = 1; i < m.Groups.Count; i++)
+            {
+                var key = result[i - 1].Key;
+                result[i - 1] = new KeyValuePair<string, string>(key, m.Groups[i].Value);
+            }
+            return result;
+        }
+
+        //добавил склонение в StringFormatWithKey:
+        public string StringFormatWithKeys(string format, List<string> args)
+        {
+            string result = format;
+            MatchCollection matches;
+            int i = 0;
+            while ((matches = Regex.Matches(result, "@key[RDVTP]{0,1}|@number|@farm|@player")).Count != 0)
+            {
+                var value = args[i];
+                if (matches[0].Value.Contains("@key"))
+                {
+                    if (i == 2 &&
+                        format == "@key" + Environment.NewLine + Environment.NewLine + "@key" + Environment.NewLine + Environment.NewLine + "@key"
+                        && value.Contains(Environment.NewLine))
+                    {
+                        //Console.WriteLine("hey");
+                        string newValue = "";
+                        foreach (var item in value.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
+                        {
+                            newValue += Translate(item) + Environment.NewLine;
+                        }
+                        value = newValue.Substring(0, newValue.Length - Environment.NewLine.Length);
+                    }
+                    else {
+                        //value = Translate(value); //Тут переводит ключ!!!
+                        var tmp = Translate(value);
+                        if (!string.IsNullOrEmpty(tmp))
+                            value = tmp;
+                    }
+
+                    if (matches[0].Value.Length == 5)
+                    {
+                        value = Decline(value, matches[0].Value.Last().ToString());
+                    }
+                }
+                result = result.Remove(matches[0].Index, matches[0].Length);
+                result = result.Insert(matches[0].Index, value);
+                i++;
+            }
+            return result;
+        }
+
 
         private void LoadConfig(string ContentRoot)
         {
+            _memoryBuffer = new Dictionary<string, string>();
             _languages = new Dictionary<string,int>();
             _fuzzyDictionary = new FuzzyStringDictionary();
             _mainDictionary = new Dictionary<string, string>();
@@ -605,6 +702,415 @@ namespace TranslationMod
                 dict.Add(key, value);
             else if (dict[key] == "" && value != "")
                 dict[key] = value;
+        }
+
+
+        // not using this right now
+        private string replaceKeywordsWithValues(string original, string fuzzyKey, string fuzzyValue)
+        {
+            if (fuzzyValue.Contains("@player"))
+            {
+                fuzzyValue = fuzzyValue.Replace("@player", StardewValley.Game1.player.name);
+            }
+            if (fuzzyValue.Contains("@farm"))
+            {
+                if (fuzzyKey == "@farm Farm")
+                {
+                    // need to be done this way, because when you on load screen there is no farmName yet.
+                    string farmName = original.Substring(0, original.LastIndexOf(' '));
+                    fuzzyValue = fuzzyValue.Replace("@farm", farmName);
+                }
+                else
+                {
+                    fuzzyValue = fuzzyValue.Replace("@farm", StardewValley.Game1.player.farmName);
+                }
+            }
+            if (fuzzyValue.Contains("@playerChild"))
+            {
+                var childName = (StardewValley.Game1.player.getChildren().Count > 0) ? StardewValley.Game1.player.getChildren().Last().name : "";
+                fuzzyValue = fuzzyValue.Replace("@playerChild", childName);
+            }
+            if (!fuzzyValue.Contains("@"))
+                return fuzzyValue;
+            string[] strO = original.Split(' ');
+            string[] strF = fuzzyKey.Split(' ');
+            string key = "";
+            string val = "";
+            bool foundKey = false;
+            for (int i = 0; i < strF.Length; i++)
+            {
+                if (strF[i].Contains("@number"))
+                {
+                    key = strO[i];
+                    Match match = Tools.reNumber.Match(key);
+                    //val = val.Replace("@number", match.ToString());
+                    fuzzyValue = Tools.ReplaceFirst(fuzzyValue, "@number", match.ToString());
+                    foundKey = false;
+                    continue;
+                }
+
+                int charsToSkip = 0;
+                int charsToSkipFromEnd = 0;
+
+                if (strF[i].Contains("@key"))
+                {
+                    foundKey = true;
+                    charsToSkip = strF[i].IndexOf('@');
+                    charsToSkipFromEnd = strF[i].Length - charsToSkip - "@key".Length;
+                    //if (strF[i][0] != '@') {
+                    //    //for (int j = 0; j < strF[i].Length; j++)
+                    //    //{
+                    //    //    charsToSkip++;
+                    //    //    if (strF[i][j] == '@')
+                    //    //        break;
+                    //    //}
+                    //    for (int j = string.Join(" ", strO.SubArray(i, strO.Length - i + 1)).Length; j < original.Length; j++)
+                    //    {
+                    //        key += original[j];
+                    //    }
+                    //}
+                    if (charsToSkipFromEnd > 0)
+                    {
+                        int j = i;
+                        key = strO[j];
+                        while (j + 1 < strO.Length && strO[j][strO[j].Length - charsToSkipFromEnd] != strF[i][strF[i].Length - charsToSkipFromEnd])
+                        {
+                            j++;
+                            key += " " + strO[j];
+                        }
+                        // if (key[key.Length-1] == ' ')
+                        //key = key.Substring(0, key.Length - 1);
+                        //if (strO[i][strO[i].Length - charsToSkipFromEnd] == strF[i][strF[i].Length - charsToSkipFromEnd])
+                        if (key[key.Length - charsToSkipFromEnd] == strF[i][strF[i].Length - charsToSkipFromEnd])
+                        {
+                            key = string.Concat(key.ToArray().SubArray(charsToSkip, key.Length - charsToSkip - charsToSkipFromEnd));
+                            // if there is only one char in substr key (like "(@key)"=>"(F)", then replace @key with this char and go on
+                            if (key.Length == 1)
+                            {
+                                fuzzyValue = fuzzyValue.Replace("@key", key);
+                                continue;
+                            }
+                        }
+                    }
+
+                    // if we have another word after @key, and it equals  to next word in original, then just translate current original word
+                    if (i + 1 < strF.Length)
+                    {
+                        if (strF[i + 1] == strO[i + 1])
+                        {
+                            key = strO[i];
+                            if (strF[i] == "@key" && _mainDictionary.ContainsKey(key))
+                            {
+                                val = _mainDictionary[key];
+                                fuzzyValue = Tools.ReplaceFirst(fuzzyValue, "@key", val);
+                                foundKey = false;
+                                continue;
+                            }
+                        }
+                        else
+                        {
+
+                        }
+                    }
+
+                    if (key != "" && strF[i].Contains("@key") && _mainDictionary.ContainsKey(key))
+                    {
+                        val = _mainDictionary[key];
+                        fuzzyValue = Tools.ReplaceFirst(fuzzyValue, "@key", val);
+                        foundKey = false;
+                        continue;
+                    }
+                }
+                if (foundKey && key != "" && strF[i].Contains("@key") && _mainDictionary.ContainsKey(key))
+                {
+                    val = _mainDictionary[key];
+                    fuzzyValue = Tools.ReplaceFirst(fuzzyValue, "@key", val);
+                    foundKey = false;
+                    continue;
+                }
+                /*if (strF[i] != strO[i] && foundKey)
+                {
+                    key += " " + strO[i];
+                }*/
+            }
+
+            return fuzzyValue;
+        }
+        
+
+    public string randomName()
+        {
+            string str;
+            string str1 = "";
+            int num = Game1.random.Next(3, 6);
+            string[] strArrays = new string[] { DataRandName["0"]["B"].ToString(),DataRandName["0"]["Br"].ToString(), DataRandName["0"]["J"].ToString(),
+                DataRandName["0"]["F"].ToString(), DataRandName["0"]["S"].ToString(), DataRandName["0"]["M"].ToString(), DataRandName["0"]["C"].ToString(),
+                DataRandName["0"]["Ch"].ToString(), DataRandName["0"]["L"].ToString(), DataRandName["0"]["P"].ToString(), DataRandName["0"]["K"].ToString(),
+                DataRandName["0"]["W"].ToString(), DataRandName["0"]["G"].ToString(), DataRandName["0"]["Z"].ToString(), DataRandName["0"]["Tr"].ToString(),
+                DataRandName["0"]["T"].ToString(), DataRandName["0"]["Gr"].ToString(), DataRandName["0"]["Fr"].ToString(), DataRandName["0"]["Pr"].ToString(),
+                DataRandName["0"]["N"].ToString(), DataRandName["0"]["Sn"].ToString(), DataRandName["0"]["R"].ToString(), DataRandName["0"]["Sh"].ToString(),
+                DataRandName["0"]["St"].ToString() };
+            string[] strArrays1 = strArrays;
+            string[] strArrays2 = new string[] { DataRandName["1"]["ll"].ToString(), DataRandName["1"]["tch"].ToString(), DataRandName["1"]["l"].ToString(),
+                DataRandName["1"]["m"].ToString(), DataRandName["1"]["n"].ToString(), DataRandName["1"]["p"].ToString(), DataRandName["1"]["r"].ToString(),
+                DataRandName["1"]["s"].ToString(), DataRandName["1"]["t"].ToString(), DataRandName["1"]["c"].ToString(), DataRandName["1"]["rt"].ToString(),
+                DataRandName["1"]["ts"].ToString() };
+            string[] strArrays3 = strArrays2;
+            string[] strArrays4 = new string[] { DataRandName["2"]["a"].ToString(), DataRandName["2"]["e"].ToString(), DataRandName["2"]["i"].ToString(),
+                DataRandName["2"]["o"].ToString(), DataRandName["2"]["u"].ToString() };
+            string[] strArrays5 = strArrays4;
+            string[] strArrays6 = new string[] { DataRandName["3"]["ie"].ToString(), DataRandName["3"]["o"].ToString(), DataRandName["3"]["a"].ToString(),
+                DataRandName["3"]["ers"].ToString(), DataRandName["3"]["ley"].ToString() };
+            string[] strArrays7 = strArrays6;
+            Dictionary<string, string[]> strs = new Dictionary<string, string[]>();
+            Dictionary<string, string[]> strs1 = new Dictionary<string, string[]>();
+            string[] strArrays8 = new string[] { DataRandName["4"]["nie"].ToString(), DataRandName["4"]["bell"].ToString(), DataRandName["4"]["bo"].ToString(),
+                DataRandName["4"]["boo"].ToString(), DataRandName["4"]["bella"].ToString(), DataRandName["4"]["s"].ToString() };
+            strs.Add(DataRandName["2"]["a"].ToString(), strArrays8);
+            string[] strArrays9 = new string[] { DataRandName["5"]["ll"].ToString(), DataRandName["5"]["llo"].ToString(), DataRandName["5"][""].ToString(),
+                DataRandName["5"]["o"].ToString() };
+            strs.Add(DataRandName["2"]["e"].ToString(), strArrays9);
+            string[] strArrays10 = new string[] { DataRandName["6"]["ck"].ToString(), DataRandName["6"]["e"].ToString(), DataRandName["6"]["bo"].ToString(),
+                DataRandName["6"]["ba"].ToString(), DataRandName["6"]["lo"].ToString(), DataRandName["6"]["la"].ToString(), DataRandName["6"]["to"].ToString(),
+                DataRandName["6"]["ta"].ToString(), DataRandName["6"]["no"].ToString(), DataRandName["6"]["na"].ToString(), DataRandName["6"]["ni"].ToString(),
+                DataRandName["6"]["a"].ToString(), DataRandName["6"]["o"].ToString(), DataRandName["6"]["zor"].ToString(), DataRandName["6"]["que"].ToString(),
+                DataRandName["6"]["ca"].ToString(), DataRandName["6"]["co"].ToString(), DataRandName["6"]["mi"].ToString() };
+            strs.Add(DataRandName["2"]["i"].ToString(), strArrays10);
+            string[] strArrays11 = new string[] { DataRandName["7"]["nie"].ToString(), DataRandName["7"]["ze"].ToString(), DataRandName["7"]["dy"].ToString(),
+                DataRandName["7"]["da"].ToString(), DataRandName["7"]["o"].ToString(), DataRandName["7"]["ver"].ToString(), DataRandName["7"]["la"].ToString(),
+                DataRandName["7"]["lo"].ToString(), DataRandName["7"]["s"].ToString(), DataRandName["7"]["ny"].ToString(), DataRandName["7"]["mo"].ToString(),
+                DataRandName["7"]["ra"].ToString() };
+            strs.Add(DataRandName["2"]["o"].ToString(), strArrays11);
+            string[] strArrays12 = new string[] { DataRandName["8"]["rt"].ToString(), DataRandName["8"]["mo"].ToString(), DataRandName["8"][""].ToString(),
+                DataRandName["8"]["s"].ToString() };
+            strs.Add(DataRandName["2"]["u"].ToString(), strArrays12);
+            string[] strArrays13 = new string[] { DataRandName["9"]["nny"].ToString(), DataRandName["9"]["sper"].ToString(), DataRandName["9"]["trina"].ToString(),
+                DataRandName["9"]["bo"].ToString(), DataRandName["9"]["-bell"].ToString(), DataRandName["9"]["boo"].ToString(), DataRandName["9"]["lbert"].ToString(),
+                DataRandName["9"]["sko"].ToString(), DataRandName["9"]["sh"].ToString(), DataRandName["9"]["ck"].ToString(), DataRandName["9"]["ishe"].ToString(),
+                DataRandName["9"]["rk"].ToString() };
+            strs1.Add(DataRandName["2"]["a"].ToString(), strArrays13);
+            string[] strArrays14 = new string[] { DataRandName["10"]["lla"].ToString(), DataRandName["10"]["llo"].ToString(), DataRandName["10"]["rnard"].ToString(),
+                DataRandName["10"]["cardo"].ToString(), DataRandName["10"]["ffe"].ToString(), DataRandName["10"]["ppo"].ToString(), DataRandName["10"]["ppa"].ToString(),
+                DataRandName["10"]["tch"].ToString(), DataRandName["10"]["x"].ToString() };
+            strs1.Add(DataRandName["2"]["e"].ToString(), strArrays14);
+            string[] strArrays15 = new string[] { DataRandName["11"]["llard"].ToString(), DataRandName["11"]["lly"].ToString(), DataRandName["11"]["lbo"].ToString(),
+                DataRandName["11"]["cky"].ToString(), DataRandName["11"]["card"].ToString(), DataRandName["11"]["ne"].ToString(), DataRandName["11"]["nnie"].ToString(),
+                DataRandName["11"]["lbert"].ToString(), DataRandName["11"]["nono"].ToString(), DataRandName["11"]["nano"].ToString(), DataRandName["11"]["nana"].ToString(),
+                DataRandName["11"]["ana"].ToString(), DataRandName["11"]["nsy"].ToString(), DataRandName["11"]["msy"].ToString(), DataRandName["11"]["skers"].ToString(),
+                DataRandName["11"]["rdo"].ToString(), DataRandName["11"]["rda"].ToString(), DataRandName["11"]["sh"].ToString() };
+            strs1.Add(DataRandName["2"]["i"].ToString(), strArrays15);
+            string[] strArrays16 = new string[] { DataRandName["12"]["nie"].ToString(), DataRandName["12"]["zzy"].ToString(), DataRandName["12"]["do"].ToString(),
+                DataRandName["12"]["na"].ToString(), DataRandName["12"]["la"].ToString(), DataRandName["12"]["la"].ToString(), DataRandName["12"]["ver"].ToString(),
+                DataRandName["12"]["ng"].ToString(), DataRandName["12"]["ngus"].ToString(), DataRandName["12"]["ny"].ToString(), DataRandName["12"]["-mo"].ToString(),
+                DataRandName["12"]["llo"].ToString(), DataRandName["12"]["ze"].ToString(), DataRandName["12"]["ra"].ToString(), DataRandName["12"]["ma"].ToString(),
+                DataRandName["12"]["cco"].ToString(), DataRandName["12"]["z"].ToString() };
+            strs1.Add(DataRandName["2"]["o"].ToString(), strArrays16);
+            string[] strArrays17 = new string[] { DataRandName["13"]["ssie"].ToString(), DataRandName["13"]["bbie"].ToString(), DataRandName["13"]["ffy"].ToString(),
+                DataRandName["13"]["bba"].ToString(), DataRandName["13"]["rt"].ToString(), DataRandName["13"]["s"].ToString(), DataRandName["13"]["mby"].ToString(),
+                DataRandName["13"]["mbo"].ToString(), DataRandName["13"]["mbus"].ToString(), DataRandName["13"]["ngus"].ToString(), DataRandName["13"]["cky"].ToString() };
+            strs1.Add(DataRandName["2"]["u"].ToString(), strArrays17);
+            str1 = string.Concat(str1, strArrays1[Game1.random.Next(strArrays1.Count<string>() - 1)]);
+            for (int i = 1; i < num - 1; i++)
+            {
+                str1 = (i % 2 != 0 ? string.Concat(str1, strArrays5[Game1.random.Next(strArrays5.Length)]) : string.Concat(str1, strArrays3[Game1.random.Next(strArrays3.Length)]));
+                if (str1.Count<char>() >= num)
+                {
+                    break;
+                }
+            }
+            if (Game1.random.NextDouble() < 0.5 && !strArrays5.Contains<string>(string.Concat(str1.ElementAt<char>(str1.Length - 1))))
+            {
+                str1 = string.Concat(str1, strArrays7[Game1.random.Next((int)strArrays7.Length)]);
+            }
+            else if (!strArrays5.Contains<string>(string.Concat(str1.ElementAt<char>(str1.Length - 1))))
+            {
+                str1 = string.Concat(str1, strArrays5[Game1.random.Next((int)strArrays5.Length)]);
+            }
+            else if (Game1.random.NextDouble() < 0.8)
+            {
+                str1 = (str1.Count() > 3 ?
+                    string.Concat(str1, strs[string.Concat(str1.ElementAt(str1.Length - 1))].ElementAt(Game1.random.Next(strs[string.Concat(str1.ElementAt(str1.Length - 1))].Count() - 1))) :
+                    string.Concat(str1, strs1[string.Concat(str1.ElementAt(str1.Length - 1))].ElementAt(Game1.random.Next(strs1[string.Concat(str1.ElementAt(str1.Length - 1))].Count() - 1))));
+            }
+            for (int j = str1.Count<char>() - 1; j > 2; j--)
+            {
+                if (strArrays5.Contains<string>(str1[j].ToString()) && strArrays5.Contains<string>(str1[j - 2].ToString()))
+                {
+                    char chr = str1[j - 1];
+                    if (chr == DataRandName["14"]["c"].ToString()[0])
+                    {
+                        str1 = string.Concat(str1.Substring(0, j), DataRandName["14"]["k"].ToString(), str1.Substring(j));
+                        j--;
+                    }
+                    else if (chr == DataRandName["14"]["l"].ToString()[0])
+                    {
+                        str1 = string.Concat(str1.Substring(0, j - 1), DataRandName["14"]["n"].ToString(), str1.Substring(j));
+                        j--;
+                    }
+                    else if (chr == DataRandName["14"]["r"].ToString()[0])
+                    {
+                        str1 = string.Concat(str1.Substring(0, j - 1), DataRandName["14"]["k"].ToString(), str1.Substring(j));
+                        j--;
+                    }
+                }
+            }
+            if (str1.Count<char>() <= 3 && Game1.random.NextDouble() < 0.1)
+            {
+                str1 = (Game1.random.NextDouble() < 0.5 ? string.Concat(str1, str1) : string.Concat(str1, "-", str1));
+            }
+            if (str1.Count<char>() <= 2 && str1.Last<char>() == DataRandName["15"]["e"].ToString()[0])
+            {
+                string str2 = str1;
+                if (Game1.random.NextDouble() < 0.3)
+                {
+                    str = DataRandName["15"]["m"].ToString();
+                }
+                else
+                {
+                    str = (Game1.random.NextDouble() < 0.5 ? DataRandName["15"]["p"].ToString() : DataRandName["15"]["b"].ToString());
+                }
+                str1 = string.Concat(str2, str);
+            }
+            bool isBad = false;
+            for (int i = 0; i < DataRandName["bad"].Count(); i++)
+            {
+                if (str1.ToLower().Contains(DataRandName["bad"]["" + i].ToString()))
+                {
+                    isBad = true;
+                    break;
+                }
+            }
+            if (isBad)
+            {
+                str1 = (Game1.random.NextDouble() < 0.5 ? DataRandName["badReplace"]["Bobo"].ToString() : DataRandName["badReplace"]["Wumbus"].ToString());
+            }
+            return str1;
+        }
+
+        public List<string> getOtherFarmerNames()
+        {
+            #region getOtherFarmerNames implementation
+            List<string> strs = new List<string>();
+            Random random = new Random((int)Game1.uniqueIDForThisGame);
+            Random random1 = new Random((int)((int)Game1.uniqueIDForThisGame + Game1.stats.DaysPlayed));
+            string[] strArrays = new string[] { DataRandName["n1"]["Ron"].ToString(), DataRandName["n1"]["Desmond"].ToString(),
+                DataRandName["n1"]["Gary"].ToString(), DataRandName["n1"]["Bart"].ToString(), DataRandName["n1"]["Willy"].ToString(),
+                DataRandName["n1"]["Tex"].ToString(), DataRandName["n1"]["Chris"].ToString(), DataRandName["n1"]["Lenny"].ToString(),
+                DataRandName["n1"]["Patrick"].ToString(), DataRandName["n1"]["Marty"].ToString(), DataRandName["n1"]["Jared"].ToString(),
+                DataRandName["n1"]["Kyle"].ToString(), DataRandName["n1"]["Mitch"].ToString(), DataRandName["n1"]["Dale"].ToString(),
+                DataRandName["n1"]["Leland"].ToString(), DataRandName["n1"]["Hunt"].ToString(), DataRandName["n1"]["Curtis"].ToString(),
+                DataRandName["n1"]["Leone"].ToString(), DataRandName["n1"]["Andy"].ToString(), DataRandName["n1"]["Steve"].ToString(),
+                DataRandName["n1"]["Frank"].ToString(), DataRandName["n1"]["Zach"].ToString(), DataRandName["n1"]["Bert"].ToString(),
+                DataRandName["n1"]["Lucas"].ToString(), DataRandName["n1"]["Logan"].ToString(), DataRandName["n1"]["Stu"].ToString(),
+                DataRandName["n1"]["Mike"].ToString(), DataRandName["n1"]["Jake"].ToString(), DataRandName["n1"]["Nick"].ToString(),
+                DataRandName["n1"]["Ben"].ToString(), DataRandName["n1"]["Daniel"].ToString(), DataRandName["n1"]["Bubs"].ToString(),
+                DataRandName["n1"]["Jack"].ToString() };
+            string[] strArrays1 = strArrays;
+            string[] strArrays2 = new string[] { DataRandName["n2"]["Susan"].ToString(), DataRandName["n2"]["Danielle"].ToString(),
+                DataRandName["n2"]["Rosie"].ToString(), DataRandName["n2"]["Joanie"].ToString(), DataRandName["n2"]["Emma"].ToString(),
+                DataRandName["n2"]["Kate"].ToString(), DataRandName["n2"]["Pauline"].ToString(), DataRandName["n2"]["Bev"].ToString(),
+                DataRandName["n2"]["Melissa"].ToString(), DataRandName["n2"]["Penny"].ToString(), DataRandName["n2"]["Nancy"].ToString(),
+                DataRandName["n2"]["Betty"].ToString(), DataRandName["n2"]["Minnie"].ToString(), DataRandName["n2"]["Rebecca"].ToString(),
+                DataRandName["n2"]["Holly"].ToString(), DataRandName["n2"]["Ashley"].ToString(), DataRandName["n2"]["Jasmine"].ToString(),
+                DataRandName["n2"]["Nina"].ToString(), DataRandName["n2"]["Carly"].ToString(), DataRandName["n2"]["Jessica"].ToString(),
+                DataRandName["n2"]["Samantha"].ToString(), DataRandName["n2"]["Amanda"].ToString(), DataRandName["n2"]["Brittany"].ToString(),
+                DataRandName["n2"]["Liz"].ToString(), DataRandName["n2"]["Taylor"].ToString(), DataRandName["n2"]["Megan"].ToString(),
+                DataRandName["n2"]["Hannah"].ToString(), DataRandName["n2"]["Lauren"].ToString(), DataRandName["n2"]["Stephanie"].ToString() };
+            string[] strArrays3 = strArrays2;
+            string[] strArrays4 = new string[] { DataRandName["n3"]["Farmer"].ToString(), DataRandName["n3"]["Prospector"].ToString(),
+                DataRandName["n3"]["Fisherman"].ToString(), DataRandName["n3"]["Woodsman"].ToString(), DataRandName["n3"]["Lumberjack"].ToString(),
+                DataRandName["n3"]["Explorer"].ToString(), DataRandName["n3"]["Swordsman"].ToString(), DataRandName["n3"]["Rancher"].ToString(),
+                DataRandName["n3"]["Cowboy"].ToString(), DataRandName["n3"]["Slick"].ToString(), DataRandName["n3"]["'King'"].ToString(),
+                DataRandName["n3"]["Professor"].ToString(), DataRandName["n3"]["Seafarer"].ToString(), DataRandName["n3"]["Sailor"].ToString(),
+                DataRandName["n3"]["Hotshot"].ToString(), DataRandName["n3"]["Hunter"].ToString(), DataRandName["n3"]["Warlock"].ToString() };
+            string[] strArrays5 = strArrays4;
+            string[] strArrays6 = new string[] { DataRandName["n4"]["Farmer"].ToString(), DataRandName["n4"]["Prospector"].ToString(),
+                DataRandName["n4"]["Seafarer"].ToString(), DataRandName["n4"]["Herbalist"].ToString(), DataRandName["n4"]["Explorer"].ToString(),
+                DataRandName["n4"]["Swordmaiden"].ToString(), DataRandName["n4"]["Rancher"].ToString(), DataRandName["n4"]["Cowgirl"].ToString(),
+                DataRandName["n4"]["Sweet"].ToString(), DataRandName["n4"]["Cheerleader"].ToString(), DataRandName["n4"]["Sorceress"].ToString(),
+                DataRandName["n4"]["Floralist"].ToString() };
+            string[] strArrays7 = strArrays6;
+            string[] strArrays8 = new string[] { DataRandName["n5"]["Geezer"].ToString(), DataRandName["n5"]["'Daddy'"].ToString(),
+                DataRandName["n5"]["Big"].ToString(), DataRandName["n5"]["Lil'"].ToString(), DataRandName["n5"]["Plumber"].ToString(),
+                DataRandName["n5"]["Great-Grandpa"].ToString(), DataRandName["n5"]["Bubba"].ToString(), DataRandName["n5"]["Doughboy"].ToString(),
+                DataRandName["n5"]["Bag Boy"].ToString(), DataRandName["n5"]["Courtesy Clerk"].ToString(), DataRandName["n5"]["Banker"].ToString(),
+                DataRandName["n5"]["Grocer"].ToString(), DataRandName["n5"]["Golf Pro"].ToString(), DataRandName["n5"]["Pirate"].ToString(),
+                DataRandName["n5"]["Burglar"].ToString(), DataRandName["n5"]["Hamburger"].ToString(), DataRandName["n5"]["Cool Guy"].ToString(),
+                DataRandName["n5"]["Simple"].ToString(), DataRandName["n5"]["Good Guy"].ToString(), DataRandName["n5"]["'Garbage'"].ToString(),
+                DataRandName["n5"]["Math Whiz"].ToString(), DataRandName["n5"]["'Lucky'"].ToString(), DataRandName["n5"]["Middle Aged"].ToString(),
+                DataRandName["n5"]["Software Developer"].ToString(), DataRandName["n5"]["Baker"].ToString(), DataRandName["n5"]["Business Major"].ToString(),
+                DataRandName["n5"]["Pony Master"].ToString(), DataRandName["n5"]["Ol'"].ToString() };
+            string[] strArrays9 = strArrays8;
+            string[] strArrays10 = new string[] { DataRandName["n6"]["Granny"].ToString(), DataRandName["n6"]["Old Mother"].ToString(),
+                DataRandName["n6"]["Tiny"].ToString(), DataRandName["n6"]["Simple"].ToString(), DataRandName["n6"]["Scrapbook"].ToString(),
+                DataRandName["n6"]["Log Lady"].ToString(), DataRandName["n6"]["Miss"].ToString(), DataRandName["n6"]["Clever"].ToString(),
+                DataRandName["n6"]["Gossiping"].ToString(), DataRandName["n6"]["Prom Queen"].ToString(), DataRandName["n6"]["Diva"].ToString(),
+                DataRandName["n6"]["Sweet Lil'"].ToString(), DataRandName["n6"]["Blushing"].ToString(), DataRandName["n6"]["Bashful"].ToString(),
+                DataRandName["n6"]["Cat Lady"].ToString(), DataRandName["n6"]["Astronomer"].ToString(), DataRandName["n6"]["Housewife"].ToString(),
+                DataRandName["n6"]["Gardener"].ToString(), DataRandName["n6"]["Computer Whiz"].ToString(), DataRandName["n6"]["Lunch Lady"].ToString(),
+                DataRandName["n6"]["Bumpkin"].ToString() };
+            string[] strArrays11 = strArrays10;
+            string[] strArrays12 = new string[] { DataRandName["n7"]["'The Meatloaf'"].ToString(), DataRandName["n7"]["'The Boy Wonder'"].ToString(),
+                DataRandName["n7"]["'The Wiz'"].ToString(), DataRandName["n7"]["'Super Legs'"].ToString(), DataRandName["n7"]["'The Nose'"].ToString(),
+                DataRandName["n7"]["'The Duck'"].ToString(), DataRandName["n7"]["'Spoonface'"].ToString(), DataRandName["n7"]["'The Brain'"].ToString(),
+                DataRandName["n7"]["'The Shark'"].ToString() };
+            string[] strArrays13 = strArrays12;
+            string[] strArrays14 = new string[] { DataRandName["n8"]["Farmer"].ToString(), DataRandName["n8"]["Rancher"].ToString(),
+                DataRandName["n8"]["Cowboy"].ToString(), DataRandName["n8"]["Farmboy"].ToString() };
+            string[] strArrays15 = new string[] { DataRandName["n9"]["Farmer"].ToString(), DataRandName["n9"]["Rancher"].ToString(),
+                DataRandName["n9"]["Cowgirl"].ToString(), DataRandName["n9"]["Farmgirl"].ToString() };
+            string str = "";
+            if (!Game1.player.isMale)
+            {
+                str = strArrays3[random.Next(strArrays3.Count<string>())];
+                for (int i = 0; i < 2; i++)
+                {
+                    while (strs.Contains(str) || Game1.player.name.Equals(str))
+                    {
+                        str = (i != 0 ? strArrays3[random1.Next(strArrays3.Count<string>())] : 
+                            strArrays3[random.Next(strArrays3.Count<string>())]);
+                    }
+                    str = (i != 0 ? string.Concat(strArrays7[random1.Next(strArrays7.Count<string>())], " ", str) : 
+                        string.Concat(strArrays15[random.Next(strArrays15.Count<string>())], " ", str));
+                    strs.Add(str);
+                }
+            }
+            else
+            {
+                str = strArrays1[random.Next(strArrays1.Count<string>())];
+                for (int j = 0; j < 2; j++)
+                {
+                    while (strs.Contains(str) || Game1.player.name.Equals(str))
+                    {
+                        str = (j != 0 ? strArrays1[random1.Next(strArrays1.Count<string>())] : strArrays1[random.Next(strArrays1.Count<string>())]);
+                    }
+                    str = (j != 0 ? string.Concat(strArrays5[random1.Next(strArrays5.Count<string>())], " ", str) : 
+                        string.Concat(strArrays14[random.Next(strArrays14.Count<string>())], " ", str));
+                    strs.Add(str);
+                }
+            }
+            if (random1.NextDouble() >= 0.5)
+            {
+                str = strArrays3[random1.Next(strArrays3.Count<string>())];
+                while (Game1.player.name.Equals(str))
+                {
+                    str = strArrays3[random1.Next(strArrays3.Count<string>())];
+                }
+                str = string.Concat(strArrays11[random1.Next(strArrays11.Count<string>())], " ", str);
+            }
+            else
+            {
+                str = strArrays1[random1.Next(strArrays1.Count<string>())];
+                while (Game1.player.name.Equals(str))
+                {
+                    str = strArrays1[random1.Next(strArrays1.Count<string>())];
+                }
+                str = (random1.NextDouble() >= 0.5 ? string.Concat(str, " ", strArrays13[random1.Next(strArrays13.Count<string>())]) : 
+                    string.Concat(strArrays9[random1.Next(strArrays9.Count<string>())], " ", str));
+            }
+            strs.Add(str);
+            return strs;
+            #endregion
         }
 
         void WriteToScan(string line)

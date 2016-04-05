@@ -20,7 +20,7 @@
     "Number Found: @number": "Кол-во найдено: @number",
     "Number Shipped: @number": "Кол-во продано: @number",
     "Number Caught: @number": "Кол-во поймано: @number",
-    "Biggest Catch: @number in.": "Наибольший улов: @number дюйм.",
+    "Biggest Catch: @number in.": "Наибольший улов: @number д.",
     "Year @number":"Год @number",
 
   "__comment":"AnimalHouse.cs",
