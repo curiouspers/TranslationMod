@@ -30,9 +30,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Cyriller, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Users\Xen\AppData\Roaming\StardewValley\Mods\TranslationMod\Cyriller.dll</HintPath>
+    <Reference Include="Cyriller">
+      <HintPath>..\packages\Cyriller\Cyriller.dll</HintPath>
     </Reference>
     <Reference Include="FuzzyString, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\Storm\Storm\packages\FuzzyString.1.0.0\lib\FuzzyString.dll</HintPath>
@@ -53,7 +52,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Storm-Hooked-Game">
-      <HintPath>..\..\StormOriginal\Storm\Storm\bin\Debug\Storm-Hooked-Game.exe</HintPath>
+      <HintPath>..\..\Storm\Storm\Storm\bin\Debug\Storm-Hooked-Game.exe</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -362,6 +361,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="languages\RU\dictionaries\Object.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="languages\RU\dictionaries\Quests.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="languages\RU\dictionaries\QuestsOther.json">
