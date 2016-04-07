@@ -140,6 +140,7 @@ namespace TranslationMod
                     }
                 }
             }
+            
         }
 
         [Subscribe]
@@ -354,8 +355,8 @@ namespace TranslationMod
 
         private string Translate(string message)
         {
-            //if (ModConfig.LanguageName != "EN")
-            //{
+            if (ModConfig.LanguageName != "EN")
+            {
                 if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message))
                 {
                     return message;
@@ -371,7 +372,7 @@ namespace TranslationMod
                 else if (_fuzzyDictionary.ContainsKey(message))
                 {
                     var resultTranslate = message;
-                    var fval = _fuzzyDictionary.getKeyValue(message);
+                    var fval = _fuzzyDictionary.GetKeyValue(message);
 
                     if (!string.IsNullOrEmpty(fval.Key) && !string.IsNullOrEmpty(fval.Value))
                     {
@@ -392,7 +393,8 @@ namespace TranslationMod
                     }
                     return message;
                 }
-            //}
+            }
+            return "";
         }
 
         public static string Decline(string message, string _case) {
@@ -641,8 +643,8 @@ namespace TranslationMod
                     }
                     else
                     {
-                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)).Replace("@newline", Environment.NewLine));
-                        foreach(var pair in jo)
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)).Replace(" @newline ", Environment.NewLine).Replace("@newline", Environment.NewLine));
+                        foreach (var pair in jo)
                         {
                             if(pair.Key.Contains("@"))
                             {
@@ -686,7 +688,10 @@ namespace TranslationMod
             var collection = new CyrNounCollection();
             var adjectives = new CyrAdjectiveCollection();
             cyrPhrase = new CyrPhrase(collection, adjectives);
+            string str = "You're not good enough friends with Pierre or Caroline to enter their bedroom.";
+            str = Translate(str);
             _isConfigLoaded = true;
+
 
         }
 
