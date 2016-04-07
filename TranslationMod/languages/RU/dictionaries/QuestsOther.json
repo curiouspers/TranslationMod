@@ -1,4 +1,5 @@
 {
+    "@number Day":"@number День",
 "__comment": "LostItemQuest.cs",
     "You found the @key. Better return it to @key.":"",
     "Return to @key.":"",
