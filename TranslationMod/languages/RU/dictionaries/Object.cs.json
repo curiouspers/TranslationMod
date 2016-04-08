@@ -5,22 +5,19 @@
       "You're not good enough friends with @key or @key to enter their bedroom.":"Вы недостаточно хорошие друзья с @keyT и @keyT чтобы войти в их спальню.",
       "You've already given @key a gift today.":"Сегодня вы уже дарили @keyD подарок.",
       "You've already given @key 2 gifts this week! That's enough.":"На этой неделе вы подарили @keyD 2 подарка! Этого достаточно.",
-      "@key x@number":"@key x@number",
+      
       "@key x @number":"@key x @number",
+      "Eat this @key?":"Съесть @keyR?",
 
       "@key@newline@newline@key@newline@newline@key":"@key@newline@newline@key@newline@newline@key",
+
       "Gamepad mode activated":"Режим геймпада активирован",
+      "Use in the water to catch fish.":"Используйте на водоёмах, чтобы ловить рыбу.",
+      
     "Length:":"Длина:",
     "@numberin.":"@numberд.",
     "@number in.":"@number д.",
-    "@key x@number":"@key x@number",
-
-    "Total Found: @number": "Всего найдено: @number",
-    "Times Cooked: @number": "Приготовлено раз: @number",
-    "Number Found: @number": "Кол-во найдено: @number",
-    "Number Shipped: @number": "Кол-во продано: @number",
-    "Number Caught: @number": "Кол-во поймано: @number",
-    "Biggest Catch: @number in.": "Наибольший улов: @number д.",
+    
     "Year @number":"Год @number",
 
   "__comment":"AnimalHouse.cs",
@@ -55,7 +52,7 @@
       "+@number @key":"+@number @key",
       "Magnetic Radius":"Магнитный Радиус",
       "Source: @key":"Источник: @key",
-      "Duration: @number:@number @number @number":"Длительность: @number:@number @number @number",
+      "Duration: @number:@number":"Длительность: @number:@number",
 
   "__comment":"CoopDweller.cs",
       "@key is sleeping.":"@key спит.",
@@ -400,4 +397,21 @@
       "A beautiful old wand.":"Красивая старая палочка",
       "Watering Can":"Лейка",
       "Used to water crops. It can be refilled at any water source.":"Используйте для поливки растений. Может быть наполнена в любом источнике воды.",
+
+
+  "__comment":"Buildings/ , Characters/ ",
+      "Dismount before entering":"Снимите перед входом",
+      "Pieces of Hay: @number/@number":"Кусков сена: @number/@number",
+      "Under construction.":"Идет постройка.",
+      "Name Your Horse":"Назовите свою лошадь",
+      "Grover":"Гровер",
+      "Thank you!":"Спасибо!",
+      "A gift!":"Подарок!",
+  "__comment":"This line, you're male:",
+      "I think I'll write in my journal tonight...@newline@newline-@key @number-@newlineI've been spending a lot of time with @key lately...":"Гровер",
+  "__comment":"This line, you're female:",
+      "I think I'll write in my diary tonight...@newline@newline-@key @number-@newlineI've been spending a lot of time with @key lately...":"Гровер",
+      "...We're becoming good friends. I hope things stay that way.":"", 
+      "...I like him more than just a friend.":"", 
+      "...I like her more than just a friend.":""
 }

@@ -131,17 +131,21 @@ namespace TranslationMod
             if (memoryBuffer.ContainsKey(source))
                 return memoryBuffer[source];
 
-            bool NEW_APPROACH = true;
+            bool NEW_APPROACH = false;
             double score = 0;
             string resultString = "";
             string resultingValue = "";
             string key = "";
             string[] strS;
             string[] strI;
-            if (!NEW_APPROACH && source.Contains(Environment.NewLine))
-            {
-                source = source.Replace(Environment.NewLine, " " + Environment.NewLine + " ");
-            }
+
+            string nl = Environment.NewLine;
+            string nlnl = nl + nl;
+
+            //if (!NEW_APPROACH && source.Contains(nl))
+            //{
+            //    source = source.Replace(nl, " " + nl + " ");
+            //}
             foreach (var item in _dictionary)
             {
                 bool noMatch = false;
@@ -153,8 +157,12 @@ namespace TranslationMod
                     else
                         return item.Key;
                 }
-                if (source.Contains(Environment.NewLine) && (!item.Key.Contains("@newline") && !item.Key.Contains(Environment.NewLine)) ||
-                    Regex.Matches(source, Environment.NewLine).Count < Regex.Matches(item.Key, Environment.NewLine).Count)
+
+                if (item.Key.IndexOf("@") > 0 && item.Key[0] != source[0])
+                    continue;
+
+                if (source.Contains(nl) && (!item.Key.Contains("@newline") && !item.Key.Contains(nl)))
+                    //|| Regex.Matches(source, nl).Count < Regex.Matches(item.Key, nl).Count)
                 {
                     continue;
                 }
@@ -189,9 +197,14 @@ namespace TranslationMod
                 }
                 else {
 
-                    strS = source.Split(' ');
-                    if (source.Contains(Environment.NewLine))
-                        strI = key.Replace(Environment.NewLine, " " + Environment.NewLine + " ").Split(' ');
+                    if (source.IndexOf(nlnl) != source.LastIndexOf(nlnl) && source.Split(new string[] { nlnl }, StringSplitOptions.None).Length - 1 == 2 )
+                    {
+                        return "@key"+nlnl+"@key"+nlnl+"@key";
+                    }
+
+                    strS = source.Replace(nl, " " + nl + " ").Split(' ');
+                    if (source.Contains(nl))
+                        strI = key.Replace(nl, " " + nl + " ").Split(' ');
                     else
                         strI = key.Split(' ');
 
@@ -202,17 +215,53 @@ namespace TranslationMod
                     int prevKeyWordIndex = -1;
                     int j = 0;
                     double exceptKeyWordsScore = 0;
+                    int curKeyIndex = 0;
+                    int curSourceIndex = 0;
                     for (int i = 0; i < strS.Length; i++)
                     {
+                        if (i != 0)
+                        {
+                            curKeyIndex++;
+                            curSourceIndex++;
+                        }
 
-                        if (i < strI.Length && !string.IsNullOrEmpty(strI[i]) && strI[i].Contains('@'))
+                        if (strI[j] == strS[i])
+                        {
+                            tempScore += strI[j].Length;
+                            if (i > 0)
+                            {
+                                tempScore++;
+                            }
+                            //exceptKeyWordsScore += strS[i].Length;
+                            prevKeyWordIndex = -1;
+
+                            curKeyIndex += strI[j].Length;
+                            curSourceIndex += strS[i].Length;
+                            j++;
+                            if (j >= strI.Length) j = strI.Length - 1;
+                            continue;
+                        } else
+                        {
+                            if (//j < strI.Length && strI[j].Contains("@") && j + 1 < strI.Length && i + 1 < strS.Length && strI[j + 1].IndexOf("@") == -1 && source.Substring(curSourceIndex).IndexOf(strI[j + 1]) == -1 ||
+                                //j < strI.Length && prevKeyWordIndex > -1 && j < strI.Length && i < strS.Length && strI[j].IndexOf("@") == -1 && source.Substring(curSourceIndex).IndexOf(strI[j]) == -1 ||
+                                strS[i].Length>0 && j < strI.Length && strI[j].IndexOf("@number") > -1 && !Tools.numberArr.Contains(strS[i][0]))
+                            {
+                                prevKeyWordIndex = -1;
+                                break;
+                            }
+                        }
+
+                        if (j < strI.Length && !string.IsNullOrEmpty(strI[j]) && strI[j].Contains('@'))
                         {
 
-                            keyWordKey = strI[i];
-                            keyWord = strS[j];
+                            keyWordKey = strI[j];
+                            keyWord = strS[i];
 
                             if (string.IsNullOrEmpty(keyWord) || keyWordKey[0] != '@' && keyWordKey[0] != keyWord[0])
+                            {
+                                prevKeyWordIndex = -1;
                                 break;
+                            }
 
                             var tmp = new string[0];
                             if (keyWordKey.Contains("@key") && keyWordKey != "@key")
@@ -221,7 +270,7 @@ namespace TranslationMod
                             if (tmp.Length == 0 && keyWordKey.Contains("@number") && keyWordKey != "@number")
                                 tmp = keyWordKey.Split(new string[] { "@number" }, StringSplitOptions.None);
 
-                            if (tmp.Length > 1 && i + 1 < strI.Length && strI[i + 1] == strS[j + 1])
+                            if (tmp.Length > 1 && j + 1 < strI.Length && i + 1 < strS.Length && strI[j + 1] == strS[i + 1])
                             {
                                 if (string.IsNullOrEmpty(tmp[0]) && !string.IsNullOrEmpty(tmp[1]))
                                 {
@@ -247,36 +296,61 @@ namespace TranslationMod
                             }
 
                             keyWordsScore += keyWord.Length;
-                            j++;
-                            prevKeyWordIndex = i;
+                            curKeyIndex += strI[j].Length;
+                            curSourceIndex += strS[i].Length;
+
+                            prevKeyWordIndex = j;
+                            if (i+1 < strI.Length && strI[j+1] == strS[i+1])
+                                j++;
+                            if (j >= strI.Length) j = strI.Length-1;
                             continue;
                         }
-                        else if (i < strI.Length && strI[i] == strS[j])
+                        else if (j < strI.Length && strI[j] == strS[i])
                         {
-                            tempScore += strI[i].Length;
+                            tempScore += strI[j].Length;
                             if (i > 0)
                             {
                                 tempScore++;
                             }
                             //exceptKeyWordsScore += strS[i].Length;
                             prevKeyWordIndex = -1;
+
+                            curKeyIndex += strI[j].Length;
+                            curSourceIndex += strS[i].Length;
                             j++;
+                            if (j >= strI.Length) j = strI.Length-1;
                         }
-                        else if (prevKeyWordIndex > 0)
+                        else if (prevKeyWordIndex > -1)
                         {
-                            exceptKeyWordsScore += strS[j].Length;
-                            keyWordsScore += strS[j].Length + 1;
-                            keyWord += " " + strS[j];
+                            exceptKeyWordsScore += strS[i].Length;
+                            keyWordsScore += strS[i].Length + 1;
+                            keyWord += " " + strS[i];
+
+
+                            // If word after key do not match AND this was a last @key,
+                            // we take last part of item.Key and if it is not substing of source, then 
+                            // this is not the droids we are looking for
+                            if (//i+1 < strI.Length && j+1 < strS.Length && strI[j+1].IndexOf("@") == -1 && source.IndexOf(strI[j+1]) == -1 ||
+                                curKeyIndex < item.Key.Length && item.Key.LastIndexOf("@") < curKeyIndex && source.IndexOf(item.Key.Substring(curKeyIndex)) == -1)
+                            {
+                                prevKeyWordIndex = -1;
+                                break;
+                            }
+                            
+                            curKeyIndex += strI[j].Length;
+                            curSourceIndex += strS[i].Length;
                             j++;
+                            if (j >= strI.Length) j = strI.Length-1;
                         }
                         else
                         {
+                            prevKeyWordIndex = -1;
                             break;
                         }
                     }
                     tempScore /= (source.Length - keyWordsScore);
                 }
-                source = source.Replace(" " + Environment.NewLine + " ", Environment.NewLine);
+                //source = source.Replace(" " + nl + " ", nl);
 
                 //var tempScore = Convert.ToDouble((source.LongestCommonSubsequence(item.Key).Length) / Convert.ToDouble(Math.Min(source.Length, item.Key.Length)));
                 if (tempScore >= 0.75 && tempScore > score)
@@ -290,18 +364,20 @@ namespace TranslationMod
             return resultString;
         }
 
-        public KeyValuePair<string, string> getKeyValue(string key)
+        public KeyValuePair<string, string> GetKeyValue(string key)
         {
-            if (memoryBuffer.ContainsKey(key))
-                return new KeyValuePair<string, string>(memoryBuffer[key], _dictionary[memoryBuffer[key]]);
-            else
-                return new KeyValuePair<string, string>(_dictionary[CompareKey(key)], _dictionary[memoryBuffer[key]]);
+            if (!memoryBuffer.ContainsKey(key))
+            {
+                memoryBuffer.Add(key, CompareKey(key));
+            }
+            return new KeyValuePair<string, string>(memoryBuffer[key], _dictionary[memoryBuffer[key]]);
         }
     }
 
     public static class Tools
     {
         public static Regex reNumber = new Regex("[\\d +-.,]+", RegexOptions.Compiled);
+        public static char[] numberArr = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '+', '-', '.', ',' };
         public static string ReplaceFirst(this string text, string search, string replace)
         {
             int pos = text.IndexOf(search);

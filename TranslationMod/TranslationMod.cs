@@ -140,6 +140,7 @@ namespace TranslationMod
                     }
                 }
             }
+            
         }
 
         [Subscribe]
@@ -296,6 +297,8 @@ namespace TranslationMod
         {
 
             #region game function parseText
+            if (Environment.NewLine != "\n" && @event.Text.Contains("\n") && !@event.Text.Contains(Environment.NewLine))
+                @event.Text = @event.Text.Replace("\n", Environment.NewLine);
             var text = @event.Text;
             var translateMessage = Translate(@event.Text);
             if (!string.IsNullOrEmpty(translateMessage))
@@ -354,8 +357,8 @@ namespace TranslationMod
 
         private string Translate(string message)
         {
-            //if (ModConfig.LanguageName != "EN")
-            //{
+            if (ModConfig.LanguageName != "EN")
+            {
                 if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message))
                 {
                     return message;
@@ -371,7 +374,7 @@ namespace TranslationMod
                 else if (_fuzzyDictionary.ContainsKey(message))
                 {
                     var resultTranslate = message;
-                    var fval = _fuzzyDictionary.getKeyValue(message);
+                    var fval = _fuzzyDictionary.GetKeyValue(message);
 
                     if (!string.IsNullOrEmpty(fval.Key) && !string.IsNullOrEmpty(fval.Value))
                     {
@@ -392,7 +395,8 @@ namespace TranslationMod
                     }
                     return message;
                 }
-            //}
+            }
+            return "";
         }
 
         public static string Decline(string message, string _case) {
@@ -641,8 +645,8 @@ namespace TranslationMod
                     }
                     else
                     {
-                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)).Replace("@newline", Environment.NewLine));
-                        foreach(var pair in jo)
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)).Replace("@newline", Environment.NewLine)); //.Replace(" @newline ", Environment.NewLine)
+                        foreach (var pair in jo)
                         {
                             if(pair.Key.Contains("@"))
                             {
@@ -683,11 +687,15 @@ namespace TranslationMod
             }
             #endregion
 
-            var collection = new CyrNounCollection();
-            var adjectives = new CyrAdjectiveCollection();
-            cyrPhrase = new CyrPhrase(collection, adjectives);
-            _isConfigLoaded = true;
+            //var collection = new CyrNounCollection();
+            //var adjectives = new CyrAdjectiveCollection();
+            //cyrPhrase = new CyrPhrase(collection, adjectives);
+            //string str = "You're not good enough friends with Pierre or Caroline to enter their bedroom.";
+            //str = ".Could someone bring me a Cave Carrot? \r\n - Alex\r\n\r\n - 75g on delivery\r\n - Makes Alex happy";
+            //    //". Could someone bring me a @key? @newline          -@key@newline@newline- @numberg on delivery@newline- @key":"",  
+            //str = Translate(str);
 
+            _isConfigLoaded = true;
         }
 
         private void AddPairToDictFromIndex(string key, string value, Dictionary<string, string> dict, int index)

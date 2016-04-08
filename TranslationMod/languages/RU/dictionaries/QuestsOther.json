@@ -1,0 +1,96 @@
+{
+    "@number Day":"@number День",
+"__comment": "LostItemQuest.cs",
+    "You found the @key. Better return it to @key.":"",
+    "Return to @key.":"",
+    "You found it! Thank you.":"",
+"__comment": "Quest.cs",
+    "Journal Updated":"",
+"__comment": "ResourceCollectionQuest.cs",
+    "Gathering":"",
+    "Hello! It's Robin. Could someone bring me @number pieces of @key? They need to be fresh... that means gathered today. Thanks!":"",
+    "Hey, looks like you got the lumber I asked for.@key$h":"",
+    "Hey, looks like you got the stone I asked for.@key$h":"",
+    "Wonderful!":"",
+    "Thank you!":"",
+    "That's a big help... thanks!":"",
+
+    "I am looking for someone to bring me @number @keys, @key    -Clint":"",
+    "to aid in the understanding of local minerals.":"",
+    "for inspection.":"",
+    "as part of a local geological survey.":"",
+    "to see if any rare gems are hidden inside.":"",
+	
+	"- @numberg on delivery.":"",
+	"- You can keep the ores after Clint inspects them.":"",
+    
+    "__comment":"Example: 0/35 Stone collected",
+    "@number/@number @key collected":"",
+    
+    "You brought the ores I requested! @key":"",
+    "I like to inspect local ores from time to time, to keep track of quality and abundance.#$b#Let me just take a look at these... Hmm... I see.#$b#Thank you. You can keep these ores. They're of @key quality.":"",
+    "You brought the ores I requested! @key#$b#I like to inspect local ores from time to time, to keep track of quality and abundance.#$b#Let me just take a look at these... Hmm... I see.#$b#Thank you. You can keep these ores. They're of @key quality.#$b#...And here's your payment, as promised.":"",
+    "You brought the ores I requested. @key#$b#Hmm... It seems these ores don't have any rare gems hidden inside. That's okay.#$b#Here's your ores back, and your payment... as promised.":"",
+    "Excellent.":"",
+    "Thank you.":"",
+    "Great.":"",
+    "excellent":"",
+    "decent":"",
+    "good":"",
+
+
+"__comment":"SlayMonsterQuest.cs",
+    "Slay Monsters":"",
+    "The monsters known as 'Duggies' are making a mess of the local mine! The holes they create could weaken the structural integrity of the mines. Could someone defeat @number of these creatures?":"",
+    
+    "__comment":"key variations below",
+    "Wanted: Slime hunter to slay @number @key":"",
+    "Frost Jellies in the frozen depths of the mine.":"",
+    "Red Slimes in the deep lava caverns of the local mine.":"",
+    " Green Slimes in the local mine.":"",
+
+  "__comment":"Example:Ah, @! So you helped us with our slime problem? Thank you!$h#$b#I hope you didn't go through too much trouble... I know it can be really hard to get that sticky slime out your clothes.#$b# I've definitely ruined a few good pairs of pants trying to catch those little squirmers. I can remember Mama throwing a fit after I got green slime all over my brand new twill pants... $h#$b# Well, anyways... enjoy your reward.",
+    "Ah, @! So you helped us with our slime problem? Thank you!$h#$b#I hope you didn't go through too much trouble...@key":"",
+  "__comment":"key variations below",
+    "Those slimes can be pretty dangerous in groups.#$b#It should be a little easier to go spelunking now, thanks to your efforts. Enjoy your reward!":"",
+    " I know it can be really hard to get that sticky slime out your clothes.#$b# I've definitely ruined a few good pairs of pants trying to catch those little @key. I can remember @key after I got @key slime all over my brand new @key pants... $h#$b# Well, anyways... enjoy your reward.":"",
+    "squirmers":"",
+    "wigglers":"",
+    "Mama throwing a fit":"",
+    "Papa going into a rage":"",
+    "dress":"",
+    "silk":"",
+    "twill":"",
+    
+    "An invasive crab species is living in the local mine, threating the native wildlife! These creatures are known for disguising themselves as stones. I'll pay someone to slay @number of them.  -Demetrius":"",
+    "Hey, I see you culled the @key population a bit. They've been multiplying quicker than normal due to human activity in the caves, so I'm hoping our efforts prevent them from threatening any other species.#$b#The local wildlife thanks you for what you did today, @. Enjoy your reward.$h":"",
+    
+    "The monsters known as @key are throwing the elemental balance into disarray. I would like an adventurer to enter the mines and slay @number of these @key.  -M. Rasmodius, Wizard":"",
+    "beasts":"",
+    "fiends":"",
+    "creatures":"",
+    "The elementals are pleased with the job you did. Here's your payment, as promised.":"",
+
+    "Wanted: Monster hunter to slay @number @keys in the local mines.":"",
+    "Ah, @! So you helped us with our monster problem? Thank you!$h#$b#I hope you didn't go through too much trouble...":"",
+    
+    "@number/@number @keys defeated":"",
+    "Frost Jellie":"Морозный слизень",
+    "Talk to @key":"",
+
+
+"__comment":"SocializeQuest.cs",
+    "Saying 'Hello'":"",
+    "Hey! Will someone say 'Hi' to everyone in town for me? I want to spread a message of @key today!   -Emily@newline@newline- Everyone will like you a little more":"",
+    "pure joy":"",
+    "peace & goodwill":"",
+    "community spirit":"",
+    "@number/@number people greeted":"@number/@number людей поприветствовано",
+
+
+"__comment":"WeedingQuest.cs",
+    "Hiring someone to weed the entire town. Once all the weeds are gone, report to the Mayor for payment. Thanks!@newline@newline- 300g reward@newline- Everyone will like you a little more":"",
+    "You did a great job, @! Thank you so much.$h#$b#I think everyone will be happy once they see how great the town looks!#$b#Here's your payment.":"",
+    "@number/@number town weeds removed":"",
+    "Talk to Mr. Lewis":"",
+}
