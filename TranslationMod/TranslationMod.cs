@@ -122,24 +122,23 @@ namespace TranslationMod
         [Subscribe]
         public void PastGameLoadedCallback(PostGameLoadedEvent @event)
         {
-            var characters = @event.Root.AllCharacters;
-            foreach (var npc in characters)
-            {
-                if (npc.Dialogue != null)
-                {
-                    var dialogues = npc.Dialogue.AsEnumerable().ToArray();
-                    foreach (var dialog in dialogues)
-                    {
-                        if(Data.ContainsKey(npc.Name))
-                        {
-                            var newValue = Data[npc.Name].Dialogues.Where(d => d.Key == dialog.Value).Select(d => d.Value).FirstOrDefault();
-                            if (!string.IsNullOrEmpty(newValue))
-                                npc.Dialogue[dialog.Key] = newValue;
-                        }
-                    }
-                }
-            }
-            
+            //var characters = @event.Root.AllCharacters;
+            //foreach (var npc in characters)
+            //{
+            //    if (npc.Dialogue != null)
+            //    {
+            //        var dialogues = npc.Dialogue.AsEnumerable().ToArray();
+            //        foreach (var dialog in dialogues)
+            //        {
+            //            if(Data.ContainsKey(npc.Name))
+            //            {
+            //                var newValue = Data[npc.Name].Dialogues.Where(d => d.Key == dialog.Value).Select(d => d.Value).FirstOrDefault();
+            //                if (!string.IsNullOrEmpty(newValue))
+            //                    npc.Dialogue[dialog.Key] = newValue;
+            //            }
+            //        }
+            //    }
+            //}            
         }
 
         [Subscribe]
@@ -176,152 +175,210 @@ namespace TranslationMod
         [Subscribe]
         public void OnSetNewDialgue(SetNewDialogueEvent @event)
         {
-            var npc = @event.NPC;
-            var dialogue = "";
-            var original = "";
-            if (string.IsNullOrEmpty(@event.Dialogue))
+            if (ModConfig.LanguageName != "EN")
             {
-                if (!@event.Add) @event.NPC.CurrentDialogue.Clear();
-                var content = StormContentManager.Load<Dictionary<string, string>>(@event.Root.Content,
-                    "Characters\\Dialogue\\" + @event.DialogueSheetName);
-                string str = @event.NumberToAppend == -1 ? npc.Name : "";
-                string key = @event.DialogueSheetKey + (@event.NumberToAppend != -1 ?
-                    string.Concat(@event.NumberToAppend) :
-                    "") + str;
-                if (!content.ContainsKey(key)) return;
-                else
+                var npc = @event.NPC;
+                var dialogue = "";
+                var original = "";
+                if (string.IsNullOrEmpty(@event.Dialogue))
                 {
-                    original = content[key];
+                    if (!@event.Add) @event.NPC.CurrentDialogue.Clear();
+                    var content = StormContentManager.Load<Dictionary<string, string>>(@event.Root.Content,
+                        "Characters\\Dialogue\\" + @event.DialogueSheetName);
+                    string str = @event.NumberToAppend == -1 ? npc.Name : "";
+                    string key = @event.DialogueSheetKey + (@event.NumberToAppend != -1 ?
+                        string.Concat(@event.NumberToAppend) :
+                        "") + str;
+                    if (!content.ContainsKey(key)) return;
+                    else
+                    {
+                        original = content[key];
+                    }
                 }
+                else original = @event.Dialogue;
+                if (Data.ContainsKey(npc.Name))
+                {
+                    var newValue = Data[npc.Name].Dialogues.Where(d => d.Key == original).Select(d => d.Value).FirstOrDefault();
+                    if (!string.IsNullOrEmpty(newValue))
+                        dialogue = newValue;
+                }
+                else if ((dialogue = Translate(@event.Dialogue)) != "") { }
+                else dialogue = original;
+                ((StardewValley.NPC)@event.NPC.Underlying).CurrentDialogue.Push(new Dialogue(dialogue, (StardewValley.NPC)@event.NPC.Underlying)
+                {
+                    removeOnNextMove = @event.ClearOnMovement
+                });
+                @event.ReturnEarly = true;
             }
-            else original = @event.Dialogue;
-            if (Data.ContainsKey(npc.Name))
-            {
-                var newValue = Data[npc.Name].Dialogues.Where(d => d.Key == original).Select(d => d.Value).FirstOrDefault();
-                if (!string.IsNullOrEmpty(newValue))
-                    dialogue = newValue;
-            }
-            else if ((dialogue = Translate(@event.Dialogue)) != "") { }
-            else dialogue = original;
-            ((StardewValley.NPC)@event.NPC.Underlying).CurrentDialogue.Push(new Dialogue(dialogue, (StardewValley.NPC)@event.NPC.Underlying)
-            {
-                removeOnNextMove = @event.ClearOnMovement
-            });
-            @event.ReturnEarly = true;
         }
 
         [Subscribe]
         public void OnDrawSpriteText(PreSpriteTextDrawStringEvent @event)
         {
-            var originalText = @event.Text;
-            var translateText = @event.Text;
-            if (Characters.ContainsKey(@event.Text))
+            if (ModConfig.LanguageName != "EN")
             {
-                translateText = Characters[@event.Text];
-            }
-            else
-            {
-                var translateMessage = Translate(@event.Text);
-                if (!string.IsNullOrEmpty(translateMessage))
+                var originalText = @event.Text;
+                var translateText = @event.Text;
+                if (Characters.ContainsKey(@event.Text))
                 {
-                    translateText = translateMessage;
+                    translateText = Characters[@event.Text];
                 }
+                else
+                {
+                    var translateMessage = Translate(@event.Text);
+                    if (!string.IsNullOrEmpty(translateMessage))
+                    {
+                        if (translateMessage.Contains("^"))
+                        {
+                            if (@event.Root.Player.IsMale)
+                            {
+                                translateMessage = translateMessage.Split('^')[0];
+                            }
+                            else translateMessage = translateMessage.Split('^')[1];
+                        }
+                        translateText = translateMessage;
+                    }
+                }
+                if (originalText.Length > @event.CharacterPosition || @event.CharacterPosition == 999999)
+                {
+                    _characterPosition = @event.CharacterPosition;
+                }
+                else if (_characterPosition < translateText.Length)
+                {
+                    _characterPosition++;
+                }
+                drawString(@event.Sprite, translateText, @event.X, @event.Y, _characterPosition,
+                    @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
+                    @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
+                @event.ReturnEarly = true;
             }
-            if (originalText.Length > @event.CharacterPosition || @event.CharacterPosition == 999999)
-            {
-                _characterPosition = @event.CharacterPosition;
-            }
-            else if (_characterPosition < translateText.Length)
-            {
-                _characterPosition++;
-            }
-            drawString(@event.Sprite, translateText, @event.X, @event.Y, _characterPosition,
-                @event.Width, @event.Height, @event.Alpha, @event.LayerDepth, @event.JunimoText,
-                @event.DrawBGScroll, @event.PlaceHolderScrollWidthText, @event.Color);
-            @event.ReturnEarly = true;
         }
 
         [Subscribe]
         public void OnGetWidthSpriteText(SpriteTextGetWidthOfStringEvent @event)
         {
-            if (IsTranslated > 0)
+            if (ModConfig.LanguageName != "EN")
             {
-                IsTranslated = 0;
-                return;
-            }
-            var translateMessage = Translate(@event.Text);
+                if (IsTranslated > 0)
+                {
+                    IsTranslated = 0;
+                    return;
+                }
+                var translateMessage = Translate(@event.Text);
 
-            if (!string.IsNullOrEmpty(translateMessage))
-            {
-                IsTranslated++;
-                @event.Text = translateMessage;
-                @event.ReturnValue = @event.Root.GetWidthOfString(translateMessage);
-                @event.ReturnEarly = true;
-            }
-            else if (Characters.ContainsKey(@event.Text))
-            {
-                IsTranslated++;
-                @event.Text = Characters[@event.Text];
-                @event.ReturnValue = @event.Root.GetWidthOfString(@event.Text);
-                @event.ReturnEarly = true;
+                if (!string.IsNullOrEmpty(translateMessage))
+                {
+                    IsTranslated++;
+                    if (translateMessage.Contains("^"))
+                    {
+                        if (@event.Root.Player.IsMale)
+                        {
+                            translateMessage = translateMessage.Split('^')[0];
+                        }
+                        else translateMessage = translateMessage.Split('^')[1];
+                    }
+                    @event.Text = translateMessage;
+                    @event.ReturnValue = @event.Root.GetWidthOfString(translateMessage);
+                    @event.ReturnEarly = true;
+                }
+                else if (Characters.ContainsKey(@event.Text))
+                {
+                    IsTranslated++;
+                    @event.Text = Characters[@event.Text];
+                    @event.ReturnValue = @event.Root.GetWidthOfString(@event.Text);
+                    @event.ReturnEarly = true;
+                }
             }
         }
 
         [Subscribe]
         public void OnSpriteBatchDrawString(SpriteBatchDrawStringEvent @event)
         {
-            var translateMessage = Translate(@event.Message);
-            if (!string.IsNullOrEmpty(translateMessage))
+            if (ModConfig.LanguageName != "EN")
             {
-                @event.ReturnValue = translateMessage;
+                var translateMessage = Translate(@event.Message);
+                if (!string.IsNullOrEmpty(translateMessage))
+                {
+                    if (translateMessage.Contains("^"))
+                    {
+                        if (@event.Root.Player.IsMale)
+                        {
+                            translateMessage = translateMessage.Split('^')[0];
+                        }
+                        else translateMessage = translateMessage.Split('^')[1];
+                    }
+                    @event.ReturnValue = translateMessage;
+                }
             }
         }
 
         [Subscribe]
         public void OnParseText(ParseTextEvent @event)
         {
-            var text = @event.Text;
-            if (Environment.NewLine != "\n" && @event.Text.Contains("\n") && !@event.Text.Contains(Environment.NewLine))
-                text = @event.Text.Replace("\n", Environment.NewLine);
-            var translateMessage = Translate(@event.Text);
-            if (!string.IsNullOrEmpty(translateMessage))
+            if(ModConfig.LanguageName != "EN")
             {
-                text = translateMessage;
-            }
-            var whichFont = @event.WhichFont;
-            var width = @event.Width;
-
-            if (text == null)
-            {
-                @event.ReturnValue = "";
-                return;
-            }
-            string str1 = string.Empty;
-            string str2 = string.Empty;
-            string str3 = text;
-            foreach (string str4 in str3.Split(' '))
-            {
-                if (whichFont.MeasureString(str1 + str4).Length() > width ||
-                    str4.Equals(Environment.NewLine))
+                var text = @event.Text;
+                if (Environment.NewLine != "\n" && @event.Text.Contains("\n") && !@event.Text.Contains(Environment.NewLine))
+                    text = @event.Text.Replace("\n", Environment.NewLine);
+                var translateMessage = Translate(@event.Text);
+                if (!string.IsNullOrEmpty(translateMessage))
                 {
-                    str2 = str2 + str1 + Environment.NewLine;
-                    str1 = string.Empty;
+                    if (translateMessage.Contains("^"))
+                    {
+                        if (@event.Root.Player.IsMale)
+                        {
+                            translateMessage = translateMessage.Split('^')[0];
+                        }
+                        else translateMessage = translateMessage.Split('^')[1];
+                    }
+                    text = translateMessage;
                 }
-                str1 = str1 + str4 + " ";
+                var whichFont = @event.WhichFont;
+                var width = @event.Width;
+
+                if (text == null)
+                {
+                    @event.ReturnValue = "";
+                    return;
+                }
+                string str1 = string.Empty;
+                string str2 = string.Empty;
+                string str3 = text;
+                foreach (string str4 in str3.Split(' '))
+                {
+                    if (whichFont.MeasureString(str1 + str4).Length() > width ||
+                        str4.Equals(Environment.NewLine))
+                    {
+                        str2 = str2 + str1 + Environment.NewLine;
+                        str1 = string.Empty;
+                    }
+                    str1 = str1 + str4 + " ";
+                }
+                @event.ReturnValue = str2 + str1;
+                @event.ReturnEarly = true;
             }
-            @event.ReturnValue = str2 + str1;
-            @event.ReturnEarly = true;
         }
 
         [Subscribe]
         public void OnSpriteFontMeasureString(SpriteFontMeasureStringEvent @event)
         {
-            if (reToSkip.IsMatch(@event.Message) || string.IsNullOrEmpty(@event.Message))
-                return;
-            var translateMessage = Translate(@event.Message);
-            if (!string.IsNullOrEmpty(translateMessage))
+            if (ModConfig.LanguageName != "EN")
             {
-                @event.ReturnValue = translateMessage;
+                if (reToSkip.IsMatch(@event.Message) || string.IsNullOrEmpty(@event.Message))
+                    return;
+                var translateMessage = Translate(@event.Message);
+                if (!string.IsNullOrEmpty(translateMessage))
+                {
+                    if (translateMessage.Contains("^"))
+                    {
+                        if (@event.Root.Player.IsMale)
+                        {
+                            translateMessage = translateMessage.Split('^')[0];
+                        }
+                        else translateMessage = translateMessage.Split('^')[1];
+                    }
+                    @event.ReturnValue = translateMessage;
+                }
             }
         }
 
@@ -438,7 +495,7 @@ namespace TranslationMod
             string result = format;
             MatchCollection matches;
             int i = 0;
-            while ((matches = Regex.Matches(result, "@key[RDVTP]{0,1}|@number|@farm|@player")).Count != 0)
+            while ((matches = Regex.Matches(result, "@key[RDVTP]{0,1}|@number|@farm|@player|@playerChild")).Count != 0)
             {
                 var value = args[i];
                 if (matches[0].Value.Contains("@key"))
