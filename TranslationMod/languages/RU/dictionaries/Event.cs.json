@@ -39,7 +39,7 @@
       "You want to be my partner for the flower dance?#$b#Okay! I'd love to.$h":"",
       "I'm sorry... I already have a partner.":"",
 
-      "Someone else is using that right now.":"",
+      "Someone else is using that right now.": "Кто-то еще использует это в данный момент.",
       "Play the slingshot game and win star tokens!":"",
       "Play (50g)":"",
       "Try your hand at some fishing? You could win big.":"",
@@ -53,9 +53,9 @@
       "Step right up! Pick a color and place your bet for a chance to double your wager!":"",
       "Orange":"",
       "Green":"",
-      "I don't want to play":"",
+      "I don't want to play": "Я не хочу играть",
 
-      "Out of Stock.":"",
+      "Out of Stock.": "Нет в наличии.",
 
       "Congratulations! You won 1st place with a rating of @number!#$b#Your prize is 1000 star tokens! Spend them wisely.$h#$b#Oh, and don't forget to clean out your grange display box.":"",
       "Hey, not bad! You won 2nd place with a rating of @number.#$b#Your prize is 500 star tokens! Spend them wisely.$h#$b#Oh, and don't forget to clean out your grange display box.":"",
@@ -69,8 +69,9 @@
       "(Ask @key to be your dance partner)":"",
       "Nevermind...":"",
 
-      "Give @key his secret gift?":"",
-      "Give @key her secret gift?":"",
+      "Give @key his secret gift?": "Подарить @keyR тайный подарок?",
+      "Give @key her secret gift?": "Подарить @keyR тайный подарок?",
+      "Select a gift for @key.":"Выбрать подарок для @keyR",
 
       "Enjoying the festival, dear?":"",
       "I hope you're enjoying yourself... you need a break from all that work.":"",
@@ -95,19 +96,19 @@
       "I have no money, but Harvey was obligated to save my life free of charge. It also appears that I've lost an item from my backpack.":"",
       "I have no money, but Harvey was obligated to save my life free of charge. It also appears that I've lost @number items from my backpack.":"",
 
-      "Received 1000g ":"",
-      "Received 2000g ":"",
-      "Ice Festival":"",
+      "Received 1000g ": "Получено 1000g ",
+      "Received 2000g ": "Получено 2000g ",
+      "Ice Festival": "Фестиваль льда",
 
-      "Battered Sword":"",
-      "A rusty old sword.":"",
+      "Battered Sword": "Разрушенный меч",
+      "A rusty old sword.": "Ржавый и старый меч.",
       "You got the Battered Sword! It was sent home to your toolbox.":"",
       "You got the 'Wand'! It seems like it could be a powerful item, but it's missing something... some kind of energy. It was sent home to your toolbox.":"",
       "Listen to Mr. Lewis's tutorial? ":"",
 
       "Which one would you prefer? ":"",
-      "Mushrooms":"",
-      "Bats":"",
+      "Mushrooms": "Грибы",
+      "Bats": "Летучие мыши",
 
       "Will you adopt this cat?":"",
       "Will you adopt this dog?":"",
@@ -146,8 +147,8 @@
       "It's a tie between @key, @key, @key, @key and @key":"",
       "It's a tie between @key, @key, @key, @key, @key and @key":"",
 
-      "Maybe I was being a little presumptuous earlier... sorry.$5":"",
-      "Thanks for helping out in the lab.$h":"",
+      "Maybe I was being a little presumptuous earlier... sorry.$5": "Возможно раньше я был слишком самонадеянным... прости.$5",
+      "Thanks for helping out in the lab.$h": "Спасибо за помощь в лаборатории.$h",
       "That was a beautiful ceremony. Congratulations!$h":"",
 
       "Willy, with 5 big, fresh fish!":"",
@@ -156,10 +157,15 @@
       "Well, here goes nothing...":"",
       "Hey, good luck.":"",
       "I don't have high hopes of winning... the fish look nice but they don't exactly smell great...$s":"",
-      "I can't believe I lost...$s":"",
+      "I can't believe I lost...$s": "",
       "It feels great to be on top! Hah!$h#$e#Nice effort, though.":"",
       "Well, I didn't win... but it was still satisfying to share all my hard work!":"",
       "Wow, I got a low score. I guess Mayor Lewis isn't much of a fish man. Oh well...$s":"",
+
+      "You added a @key to the soup.":"Вы добавили @keyV в суп.",
+      "You added an @key to the soup.":"Вы добавили @keyV в суп.",
+      "@key added a @key to the soup.":"@key добавил @keyV в суп.",
+      "@key added an @key to the soup.":"@key добавил @keyV в суп.",
 
       "Your grange display has been judged. Return to Mayor Lewis for the result!":"",
 
@@ -210,5 +216,32 @@
       "You don't like it, huh? Bah! Kids these days... no appreciation for anything. That was expensive, and I'm not made of money, you know!" :"",
       "It's nothing fancy, but It's the best I could afford.":"",
       "Um, excuse me.#$b#I have a gift for you. I found it last summer when I was playing at the beach. I hope you like it.$h":"",
-      "I'm glad you moved here, farmer @player!$h":""
+      "I'm glad you moved here, farmer @player!$h":"",
+
+    "__comment": "Evets/*.cs",
+    "__comment": "SoundInTheNightEvent.cs",
+      "A strange sound was heard in the night...": "Странный звук был слышен в ночи...",
+      "An explosion was heard in the night...": "Взрыв был слышен в ночи...",
+      "There was an earthquake during the night.": "Ночью произошло землетрясение.",
+    "__comment": "QuestionEvent.cs",
+      "Should we have a baby, @player?": "@player, может нам стоит завести ребенка?",
+      "Yes": "Да",
+      "Not now...": "Не сейчас...",
+      "Should we adopt a baby, @player?": "@player, может нам стоит приютить ребенка?",
+      "During the night, @key  gave birth to a @key.": "Ночью @key родила @keyV",
+      "Name your new @key": "Назовите своего @keyV",
+    "__comment": "BirthingEvent.cs",
+      "Choose a name:": "Выберите имя:",
+      "What should we name him?": "Как мы назовем его?",
+      "What should we name her?": "Как мы назовем её?",
+      "During the night, the adoption agency dropped off your new boy.": "Ночью агентство по усыновлению доставило мальчика.",
+      "During the night, the adoption agency dropped off your new girl.": "Ночью агентство по усыновлению доставило девочку.",
+      "During the night, @key gave birth to a baby boy.": "Ночью @key родила мальчика",
+      "During the night, @key gave birth to a baby girl.": "Ночью @key родила девочку",
+      "During the night, you gave birth to a baby boy.": "Ночью вы родили мальчика.",
+      "During the night, you gave birth to a baby girl.": "Ночью вы родили девочку.",
+      "Just look at our little family... We've come a long way, haven't we?": "Только посмотри на нашу небольшую семью... Мы проделали долгий путь, не так ли?",
+      "Two beautiful children... We've come a long away, haven't we?": "Два прекрасных ребенка... Мы проделали долгий путь, не так ли?",
+      "Everything went well, and now little @playerChild is part of the family. We're very fortunate.": "Все прошло гладко, и теперь @playerChild часть нашей семьи. Нам очень повезло",
+      "It's so wonderful to welcome little @playerChild into our life.": "Это замечательно - приветствовать кроху по имени @playerChild в нашей жизни."
 }
