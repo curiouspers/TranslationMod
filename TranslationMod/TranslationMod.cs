@@ -35,11 +35,10 @@ namespace TranslationMod
         private Dictionary<string, string> _languageDescriptions;
         private FuzzyStringDictionary _fuzzyDictionary;
         private Dictionary<string, string> _mainDictionary;
-        private Dictionary<string, string> _keyWords;
         private string _currentLanguage;
         private bool _isConfigLoaded = false;
         private bool _isMenuDrawing;
-        private static Regex reToSkip = new Regex("^[0-9А-Яа-я: -=.g]+$", RegexOptions.Compiled);
+        private static Regex reToSkip = new Regex("^[0-9: -=.g]+$", RegexOptions.Compiled);
         private static CyrPhrase cyrPhrase;
         private static int IsTranslated;
         private static Dictionary<string, string> _memoryBuffer;
@@ -481,7 +480,6 @@ namespace TranslationMod
             _languages = new Dictionary<string,int>();
             _fuzzyDictionary = new FuzzyStringDictionary();
             _mainDictionary = new Dictionary<string, string>();
-            _keyWords = new Dictionary<string, string>();
             Data = new Dictionary<string, Person>();
             Characters = new Dictionary<string, string>();
             var jobj = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "descriptions.json"))));
@@ -510,7 +508,7 @@ namespace TranslationMod
                 foreach (var dict in Directory.GetFiles(dictionariesFolder))
                 {
                     var dictName = Path.GetFileName(dict);
-                    if (dictName == "KeyWords.json")
+                    if(dictName == "Dialogues.json")
                     {
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
                         foreach (var val in jo)
@@ -518,91 +516,50 @@ namespace TranslationMod
                             var pair = JObject.Parse(val.Value.ToString());
                             foreach (var row in pair)
                             {
-                                AddPairToDict(row.Key, row.Value.ToString(), _mainDictionary);
-                            }
-                            if (!_keyWords.ContainsKey(val.Key))
-                            {
-                                _keyWords.Add(val.Key, val.Value.ToString());
+                                if (row.Key.Contains("@"))
+                                {
+                                    if (!_fuzzyDictionary.ContainsKey(row.Key))
+                                        _fuzzyDictionary.Add(row.Key, row.Value.ToString());
+                                    else if (_fuzzyDictionary[row.Key] == "" && row.Value.ToString() != "")
+                                        _fuzzyDictionary[row.Key] = row.Value.ToString();
+                                }
+                                else
+                                {
+                                    AddToMainDictionary(row.Key, row.Value.ToString());
+                                }
                             }
                         }
                     }
-                    else if (dictName == "MainDictionary.json")
+                    if (dictName == "KeyWords.json" || dictName == "Items.json" || dictName == "Achievements.json")
                     {
-                        Data = JsonConvert.DeserializeObject<Dictionary<string, Person>>(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
-                        foreach (var pair in Data)
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        foreach (var val in jo)
                         {
-                            if (pair.Key == "BigCraftablesInformation")
+                            var pair = JObject.Parse(val.Value.ToString());
+                            foreach (var row in pair)
                             {
-                                foreach (var row in pair.Value.Dialogues)
-                                {
-                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 0); // name
-                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 4); // desc
-                                }
-                            }
-                            if (pair.Key == "Blueprints")
-                            {
-                                foreach (var row in pair.Value.Dialogues)
-                                {
-                                    if (row.Key.Split('/').Length > 9)
-                                    {
-                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 8); // desc
-                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 9); // type
-                                    }
-                                    else
-                                    {
-                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 4); // desc
-                                    }
-                                }
-                            }
-                            if (pair.Key == "Boots" || pair.Key == "CookingChannel" || pair.Key == "Fish" || pair.Key == "weapons")
-                            {
-                                foreach (var row in pair.Value.Dialogues)
-                                {
-                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 0); // name
-                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 1); // desc
-                                }
-                            }
-                            if (pair.Key == "Bundles")
-                            {
-                                foreach (var row in pair.Value.Dialogues)
-                                {
-                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 0); // name
-                                }
-                            }
-                            if (pair.Key == "ObjectInformation")
-                            {
-                                foreach (var row in pair.Value.Dialogues)
-                                {
-                                    if (row.Key.Split('/').Length > 4)
-                                    {
-                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 0); // name
-                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 4); // desc
-                                    }
-                                    else
-                                    {
-                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 0); // name
-                                        AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 1); // desc
-                                    }
-                                }
-                            }
-                            if (pair.Key == "Quests")
-                            {
-                                foreach (var row in pair.Value.Dialogues)
-                                {
-                                    
-                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 1); // name
-                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 2); // desc
-                                    AddPairToDictFromIndex(row.Key, row.Value, _mainDictionary, 3); // goal
-                                }
+                                AddToMainDictionary(row.Key, row.Value.ToString());
                             }
                         }
-
                     }
                     else if (dictName == "Characters.json")
                     {
                         Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
-                        foreach(var pair in Characters)
-                            AddPairToDict(pair.Key, pair.Value.ToString(), _mainDictionary);
+                        foreach (var pair in Characters)
+                        {
+                            AddToMainDictionary(pair.Key, pair.Value);
+                        }
+                    }
+                    else if (dictName == "animationDescription.json" || dictName == "EngagementDialogue.json" ||
+                        dictName == "Events.json" || dictName == "Festivals.json" || dictName == "Mails.json" ||
+                        dictName == "NPCGiftTastes.json" || dictName == "Quests.json" || dictName == "schedules.json" ||
+                        dictName == "TV.json")
+                    {
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        foreach (var val in jo)
+                        {
+                            AddToMainDictionary(val.Key, val.Value.ToString());
+                        }
                     }
                     else if (dictName == "nameGen.json")
                     {
@@ -610,22 +567,21 @@ namespace TranslationMod
                     }
                     else
                     {
-                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)).Replace("@newline", Environment.NewLine)); //.Replace(" @newline ", Environment.NewLine)
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)).Replace("@newline", Environment.NewLine));
                         foreach (var pair in jo)
                         {
-                            if(pair.Key.Contains("@"))
+                            if (pair.Key.Contains("@"))
                             {
                                 if (!_fuzzyDictionary.ContainsKey(pair.Key))
-                                    _fuzzyDictionary.Add(pair.Key,pair.Value.ToString());
+                                    _fuzzyDictionary.Add(pair.Key, pair.Value.ToString());
                                 else if (_fuzzyDictionary[pair.Key] == "" && pair.Value.ToString() != "")
                                     _fuzzyDictionary[pair.Key] = pair.Value.ToString();
                             }
                             else
                             {
-                                AddPairToDict(pair.Key, pair.Value.ToString(), _mainDictionary);
+                                AddToMainDictionary(pair.Key, pair.Value.ToString());
                             }
                         }
-
                     }
                 }
             }
@@ -659,19 +615,20 @@ namespace TranslationMod
             _isConfigLoaded = true;
         }
 
-        private void AddPairToDictFromIndex(string key, string value, Dictionary<string, string> dict, int index)
+        private void AddToMainDictionary(string key, string value)
         {
-            key = !string.IsNullOrEmpty(key) ? key.Split('/')[index] : "";
-            value = !string.IsNullOrEmpty(value) ? value.Split('/')[index] : "";
-            AddPairToDict(key, value, _mainDictionary);
+            if (key != "__comment")
+            {
+                if (!_mainDictionary.ContainsKey(key))
+                {
+                    _mainDictionary.Add(key, value);
+                }
+                else if (string.IsNullOrEmpty(_mainDictionary[key]) && string.IsNullOrEmpty(value))
+                {
+                    _mainDictionary[key] = value;
+                }
+            }
         }
-
-        private void AddPairToDict(string key, string value, Dictionary<string, string> dict) {
-            if (!dict.ContainsKey(key))
-                dict.Add(key, value);
-            else if (dict[key] == "" && value != "")
-                dict[key] = value;
-        }      
 
         private string randomName()
         {
