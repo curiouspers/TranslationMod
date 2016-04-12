@@ -270,7 +270,8 @@ namespace TranslationMod
                             if (tmp.Length == 0 && keyWordKey.Contains("@number") && keyWordKey != "@number")
                                 tmp = keyWordKey.Split(new string[] { "@number" }, StringSplitOptions.None);
 
-                            if (tmp.Length > 1 && j + 1 < strI.Length && i + 1 < strS.Length && strI[j + 1] == strS[i + 1])
+                            //if (tmp.Length > 1 && j + 1 < strI.Length && i + 1 < strS.Length && strI[j + 1] == strS[i + 1])
+                            if (tmp.Length == 2 && !string.IsNullOrEmpty(tmp[1]) && string.IsNullOrEmpty(tmp[0]))
                             {
                                 if (string.IsNullOrEmpty(tmp[0]) && !string.IsNullOrEmpty(tmp[1]))
                                 {

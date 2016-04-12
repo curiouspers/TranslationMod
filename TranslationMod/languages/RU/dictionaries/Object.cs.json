@@ -1,5 +1,9 @@
 {
 
+
+"It's locked... (Open @numberam - @numberpm)": "Закрыто... (Открыто с @numberam до @numberpm)",
+"It's locked... (Open @numberpm - @numberam)": "Закрыто... (Открыто с @numberpm до @numberam)",
+
       "You're not good enough friends with @key to enter his bedroom.":"Вы недостаточно хорошие друзья с @keyT чтобы войти в его спальню.",
       "You're not good enough friends with @key to enter her bedroom.":"Вы недостаточно хорошие друзья с @keyT чтобы войти в её спальню.",
       "You're not good enough friends with @key or @key to enter their bedroom.":"Вы недостаточно хорошие друзья с @keyT и @keyT чтобы войти в их спальню.",

@@ -22,7 +22,8 @@
     "Talk to @key": "",
     "@number/@number @key caught": "",
     
-    "__comment": "ItemDeliveryQuest.cs",    
+    "__comment": "ItemDeliveryQuest.cs", 
+    "Delivery":"Доставка",
     "__comment":"Looking for a delicious @key. I'll pay you when you bring it.@newline        -@key",
     "@key a @key @key. @key@newline        -@key@newline@newline- @numberg on delivery@newline- @key":"",
     "Looking for":"",
