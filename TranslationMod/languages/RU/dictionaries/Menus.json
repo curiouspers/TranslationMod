@@ -213,6 +213,8 @@
     "Show Portraits": "Показывать портреты",
     "Show Merchant Portraits": "Показывать портреты торговцев",
     "Always Show Tool Hit Location": "Показывать область взаимодействия",
+    "Gamepad Placement Tile Indicator":"Область взаимодествия геймпадом",
+    "Use Hardware Cursor":"Использовать обычный курсор",
                                      
     "Hide Tool Hit Location When Moving": "Скрыть обл. взаим-ия при движении",
     "Pause When Game Window Is Inactive": "Пауза когда окно игры не активно",
@@ -353,5 +355,7 @@
     "Loading": "Загрузка",
     "Winner!": "Победитель",
     "You Lose": "Вы проиграли",
+    "(boyfriend)":"(парень)",
+    "(girlfriend)":"(девушка)",
     "This change will not take effect until you restart the game": "Это изменеие вступит в силу только после перезагрузки игры"
 }

@@ -192,6 +192,7 @@
 
 
   "__comment":"Object.cs",
+      "Can't be planted here.":"Не может быть посажено здесь",
       "Progress Mode":"Режим прохождения",
       "Endless Mode":"Бесконечный режим",
       "Exit":"Выход",
@@ -306,7 +307,7 @@
 
       "Requires 1 Coal":"Требуется 1 Уголь",
       "Requires 5 ores.":"Требуется 5 руды.",
-      "Requires 20 Wood":"Требуется 20 Древесины",
+      "Requires 10 Wood":"Требуется 10 Древесины",
       "Requires 100 Slime":"Требуется 100 Слизней",
       "Speed Bobber":"Скоростной поплавок",
       "No Trash Bobber":"Поплавок 'Нет мусору'",
@@ -324,6 +325,7 @@
       "Must be added before planting":"Нужно дообавлять перед посадкой",
       "Must be planted on farm.":"Нужно сажать на ферме",
       "Out of season.":"Вне сезона.",
+      "Can't plant here.":"Здесь нельзя сажать",
   "__comment":"TerrainFeatures/ResourceClump.cs",
       "Your axe isn't strong enough to break this stump.":"Ваш топор не достаточно хорош, чтобы разрубить этот пень.",
       "Your axe isn't strong enough to break this log.":"Ваш топор не достаточно хорош, чтобы разрубить это бревно.",
