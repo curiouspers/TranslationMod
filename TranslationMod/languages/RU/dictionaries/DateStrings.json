@@ -54,5 +54,7 @@
   "Thu. @number": "Чт. @number",
   "Fri. @number": "Пт. @number",
   "Sat. @number": "Сб. @number",
-  "Sun. @number": "Вс. @number"
+  "Sun. @number": "Вс. @number",
+  
+  "Year @number": "Год @number"
 }

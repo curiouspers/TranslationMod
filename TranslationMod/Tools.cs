@@ -262,7 +262,7 @@ namespace TranslationMod
                         curSourceIndex += strS[i].Length;
 
                         prevKeyWordIndex = j;
-                        if (i+1 < strI.Length && strI[j+1] == strS[i+1])
+                        if (j + 1 < strI.Length && i + 1 < strS.Length && strI[j+1] == strS[i+1])
                             j++;
                         if (j >= strI.Length) j = strI.Length-1;
                         continue;
@@ -308,7 +308,7 @@ namespace TranslationMod
                     }
                 }
                 tempScore /= (source.Length - keyWordsScore);
-                if (tempScore >= 0.75 && tempScore > score)
+                if (tempScore >= 0.70 && tempScore > score)
                 {
                     score = tempScore;
                     resultString = item.Key;
@@ -339,5 +339,19 @@ namespace TranslationMod
             Array.Copy(data, index, result, 0, length);
             return result;
         }
+        public static void UpdateKey<TKey, TValue>(this IDictionary<TKey, TValue> dic,
+                                      TKey fromKey, TKey toKey)
+        {
+            TValue value = dic[fromKey];
+            dic.Remove(fromKey);
+            dic[toKey] = value;
+        }
+        public static void UpdateKeyValue<TKey, TValue>(this IDictionary<TKey, TValue> dic,
+                                      TKey fromKey, TKey toKey, TValue value)
+        {
+            dic.Remove(fromKey);
+            dic[toKey] = value;
+        }
+
     }
 }
