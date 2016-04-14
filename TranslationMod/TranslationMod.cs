@@ -494,7 +494,7 @@ namespace TranslationMod
             string pattern = Regex.Escape(template);
             MatchCollection matches;
             int count = 0;
-            while ((matches = Regex.Matches(pattern, "@key|@number|@farm|@player")).Count != 0)
+            while ((matches = Regex.Matches(pattern, "@key|@number|@farm|@player|@playerChild")).Count != 0)
             {
                 pattern = pattern.Remove(matches[0].Index, matches[0].Length);
                 pattern = pattern.Insert(matches[0].Index, "(.+?)");
@@ -599,7 +599,7 @@ namespace TranslationMod
                             {
                                 if (row.Key.Contains("@"))
                                 {
-                                    if ((row.Key.Contains("@player") || row.Key.Contains("@farm")) && !row.Key.Contains("@key") && !row.Key.Contains("@number") && !row.Key.Contains("@playerChild"))
+                                    if ((row.Key.Contains("@player") || row.Key.Contains("@farm")) && !row.Key.Contains("@key") && !row.Key.Contains("@number") && !row.Key.Contains("@playerChild") && row.Key != "@farm Farm")
                                     {
                                         AddToMainDictionary(row.Key, row.Value.ToString());
                                     }
@@ -656,7 +656,7 @@ namespace TranslationMod
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)).Replace("@newline", Environment.NewLine));
                         foreach (var pair in jo)
                         {
-                            if ((pair.Key.Contains("@player") || pair.Key.Contains("@farm")) && !pair.Key.Contains("@key") && !pair.Key.Contains("@number") && !pair.Key.Contains("@playerChild"))
+                            if ((pair.Key.Contains("@player") || pair.Key.Contains("@farm")) && !pair.Key.Contains("@key") && !pair.Key.Contains("@number") && !pair.Key.Contains("@playerChild") && pair.Key != "@farm Farm")
                             {
                                 AddToMainDictionary(pair.Key, pair.Value.ToString());
                             }

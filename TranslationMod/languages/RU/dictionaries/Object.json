@@ -52,6 +52,8 @@
 	"The spirits are very displeased today. They will do their best to make your life difficult.":"",
 	"The spirits are furious. Apparently someone tried to give them a worthless offering... Hmm. It's unwise to play jokes on the spirits!":"",
 	"This is rare. The spirits feel absolutely neutral today.":"",
-	"Decorates the walls of one room":"",
-	"Decorates the floor of one room.":""
+	"Wallpaper":"Обои",
+	"Decorates the walls of one room":"Декорирует стены одной комнаты",
+	"Flooring":"Напольное покрытие",
+	"Decorates the floor of one room.":"Декорирует полы одной комнаты"
 }

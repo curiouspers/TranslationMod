@@ -215,7 +215,8 @@
 
       "A recipe to make @key":"Рецепт изготовления @keyR",
       "@key Recipe":"Рецепт @keyR",
-      "Blueprints for crafting @key":"Чертеж для крафтка @keyR",
+      "Blueprints for crafting a @key":"Чертеж для крафта @keyR",
+      "Blueprints for crafting an @key":"Чертеж для крафта @keyR",
       "Gunther can tell you more about this if you donate it to the museum.":"Гюнтер может рассказать больше об этом если вы пожертвуете это музею",
 
       "__comment":"Honey",
