@@ -124,7 +124,14 @@ namespace TranslationMod
         {
             // we need to cache the keys to update since we can't
             // modify the collection during enumeration
-            var keysToUpdate = new List<string>();        
+            var keysToUpdate = new List<string>();
+            foreach (var row in _mainDictionary)
+            {
+                if (row.Key.Contains("@player") || row.Key.Contains("@farm"))
+                {
+                    keysToUpdate.Add(row.Key);
+                }
+            }
             foreach (var keyToUpdate in keysToUpdate)
             {
                 var value = _mainDictionary[keyToUpdate];
