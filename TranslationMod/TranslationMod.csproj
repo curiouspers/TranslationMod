@@ -323,7 +323,7 @@
     <None Include="languages\RU\dictionaries\ContentQuests.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\DateStrings.json">
+    <None Include="languages\RU\dictionaries\_DateStrings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="languages\RU\dictionaries\Characters.json">
@@ -332,7 +332,7 @@
     <None Include="languages\RU\dictionaries\EngagementDialogue.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\Event.cs.json">
+    <None Include="languages\RU\dictionaries\_Events.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="languages\RU\dictionaries\Events.json">
@@ -341,46 +341,43 @@
     <None Include="languages\RU\dictionaries\Festivals.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\Game1.json">
+    <None Include="languages\RU\dictionaries\_Game1.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\GameLocation.json">
+    <None Include="languages\RU\dictionaries\_GameLocation.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="languages\RU\dictionaries\Items.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\KeyWords.json">
+    <None Include="languages\RU\dictionaries\_KeyWords.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\Locations.json">
+    <None Include="languages\RU\dictionaries\_Locations.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="languages\RU\dictionaries\Mails.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\Menus.json">
+    <None Include="languages\RU\dictionaries\_Menus.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\MiniGames.json">
+    <None Include="languages\RU\dictionaries\_MiniGames.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\nameGen.json">
+    <None Include="languages\RU\dictionaries\_NameGen.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\NPC.json">
+    <None Include="languages\RU\dictionaries\_NPC.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="languages\RU\dictionaries\NPCGiftTastes.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\Object.cs.json">
+    <None Include="languages\RU\dictionaries\_Object.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\Object.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="languages\RU\dictionaries\GameQuests.json">
+    <None Include="languages\RU\dictionaries\_GameQuests.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="languages\RU\dictionaries\schedules.json">
@@ -389,13 +386,13 @@
     <None Include="languages\RU\dictionaries\Dialogues.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\tbin_strings.json">
+    <None Include="languages\RU\dictionaries\_TBinStrings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="languages\RU\dictionaries\TV.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\RU\dictionaries\Utility.cs.json">
+    <None Include="languages\RU\dictionaries\_Utility.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="manifest.json">

@@ -137,7 +137,6 @@ namespace TranslationMod
             {
 
                 var value = _mainDictionary[keyToUpdate];
-
                 var newKey = keyToUpdate.Replace("@player", @event.Root.Player.Name).Replace("@farm", @event.Root.Player.FarmName);
                 var newValue = value.Replace("@player", @event.Root.Player.Name).Replace("@farm", @event.Root.Player.FarmName);
                 
@@ -410,6 +409,7 @@ namespace TranslationMod
         {
             if (ModConfig.LanguageName != "EN")
             {
+                //var something = _mainDictionary.Where(d => d.Key.Contains("@player")).ToDictionary(x => x.Key, x => x.Value);
                 if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message))
                 {
                     return message;
@@ -616,7 +616,7 @@ namespace TranslationMod
                             }
                         }
                     }
-                    if (dictName == "KeyWords.json" || dictName == "Items.json" || dictName == "Achievements.json")
+                    if (dictName == "_KeyWords.json" || dictName == "Items.json" || dictName == "Achievements.json")
                     {
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
                         foreach (var val in jo)
@@ -638,7 +638,7 @@ namespace TranslationMod
                     }
                     else if (dictName == "animationDescription.json" || dictName == "EngagementDialogue.json" ||
                         dictName == "Events.json" || dictName == "Festivals.json" || dictName == "Mails.json" ||
-                        dictName == "NPCGiftTastes.json" || dictName == "Quests.json" || dictName == "schedules.json" ||
+                        dictName == "NPCGiftTastes.json" || dictName == "ContentQuests.json" || dictName == "schedules.json" ||
                         dictName == "TV.json")
                     {
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
@@ -647,7 +647,7 @@ namespace TranslationMod
                             AddToMainDictionary(val.Key, val.Value.ToString());
                         }
                     }
-                    else if (dictName == "nameGen.json")
+                    else if (dictName == "_NameGen.json")
                     {
                         _dataRandName = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
                     }
