@@ -124,45 +124,17 @@ namespace TranslationMod
         {
             // we need to cache the keys to update since we can't
             // modify the collection during enumeration
-            var keysToUpdate = new List<string>();
-
-            foreach (var row in _mainDictionary)
-            {
-                if (row.Key.Contains("@player") || row.Key.Contains("@farm"))
-                {
-                    keysToUpdate.Add(row.Key);
-                }
-            }
+            var keysToUpdate = new List<string>();        
             foreach (var keyToUpdate in keysToUpdate)
             {
-
                 var value = _mainDictionary[keyToUpdate];
 
                 var newKey = keyToUpdate.Replace("@player", @event.Root.Player.Name).Replace("@farm", @event.Root.Player.FarmName);
                 var newValue = value.Replace("@player", @event.Root.Player.Name).Replace("@farm", @event.Root.Player.FarmName);
-                
-                //Tools.UpdateKeyValue(_mainDictionary, row.Key, newKey, newValue);
 
                 _mainDictionary.Remove(keyToUpdate);
                 _mainDictionary.Add(newKey, newValue);
-            }
-            //var characters = @event.Root.AllCharacters;
-            //foreach (var npc in characters)
-            //{
-            //    if (npc.Dialogue != null)
-            //    {
-            //        var dialogues = npc.Dialogue.AsEnumerable().ToArray();
-            //        foreach (var dialog in dialogues)
-            //        {
-            //            if(Data.ContainsKey(npc.Name))
-            //            {
-            //                var newValue = Data[npc.Name].Dialogues.Where(d => d.Key == dialog.Value).Select(d => d.Value).FirstOrDefault();
-            //                if (!string.IsNullOrEmpty(newValue))
-            //                    npc.Dialogue[dialog.Key] = newValue;
-            //            }
-            //        }
-            //    }
-            //}            
+            }           
         }
 
         [Subscribe]
@@ -604,10 +576,12 @@ namespace TranslationMod
                                         AddToMainDictionary(row.Key, row.Value.ToString());
                                     }
                                     else
-                                    if (!_fuzzyDictionary.ContainsKey(row.Key))
-                                        _fuzzyDictionary.Add(row.Key, row.Value.ToString());
-                                    else if (_fuzzyDictionary[row.Key] == "" && row.Value.ToString() != "")
-                                        _fuzzyDictionary[row.Key] = row.Value.ToString();
+                                    {
+                                        if (!_fuzzyDictionary.ContainsKey(row.Key))
+                                            _fuzzyDictionary.Add(row.Key, row.Value.ToString());
+                                        else if (_fuzzyDictionary[row.Key] == "" && row.Value.ToString() != "")
+                                            _fuzzyDictionary[row.Key] = row.Value.ToString();
+                                    }
                                 }
                                 else
                                 {
