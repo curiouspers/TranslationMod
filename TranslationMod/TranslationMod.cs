@@ -628,7 +628,7 @@ namespace TranslationMod
                             AddToMainDictionary(val.Key, val.Value.ToString());
                         }
                     }
-                    else if (dictName == "nameGen.json")
+                    else if (dictName == "_NameGen.json")
                     {
                         _dataRandName = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
                     }
