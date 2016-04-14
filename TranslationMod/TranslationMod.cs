@@ -597,7 +597,7 @@ namespace TranslationMod
                             }
                         }
                     }
-                    if (dictName == "KeyWords.json" || dictName == "Items.json" || dictName == "Achievements.json")
+                    if (dictName == "_KeyWords.json" || dictName == "Items.json" || dictName == "Achievements.json")
                     {
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
                         foreach (var val in jo)
