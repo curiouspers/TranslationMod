@@ -35,6 +35,7 @@ namespace TranslationMod
         private Dictionary<string, string> _languageDescriptions;
         private FuzzyStringDictionary _fuzzyDictionary;
         private Dictionary<string, string> _mainDictionary;
+        private Dictionary<string, string> _mails;
         private string _currentLanguage;
         private bool _isConfigLoaded = false;
         private bool _isMenuDrawing;
@@ -43,6 +44,9 @@ namespace TranslationMod
         private static int IsTranslated;
         private static Dictionary<string, string> _memoryBuffer;
         private int _characterPosition;
+        private bool _isGameLoaded = false;
+        private bool _isKeyReplaced = false;
+        private string currentName;
 
         [Subscribe]
         public void InitializeCallback(InitializeEvent @event)
@@ -60,6 +64,15 @@ namespace TranslationMod
         [Subscribe]
         public void OnUpdate(PostUpdateEvent @event)
         {
+            if(!string.IsNullOrEmpty(@event.LocalPlayer.Name) && currentName != @event.LocalPlayer.Name)
+            {
+                currentName = @event.LocalPlayer.Name;
+                Console.WriteLine(@event.LocalPlayer.Name);
+                if(_isGameLoaded && !_isKeyReplaced)
+                {
+                    KeyReplace(@event.LocalPlayer.Name, @event.LocalPlayer.FarmName);
+                }
+            }
             if (@event.Root.ActiveClickableMenu != null && @event.Root.ActiveClickableMenu is GameMenu)
             {
                 var menu = @event.Root.ActiveClickableMenu as GameMenu;
@@ -122,26 +135,7 @@ namespace TranslationMod
         [Subscribe]
         public void PastGameLoadedCallback(PostGameLoadedEvent @event)
         {
-            // we need to cache the keys to update since we can't
-            // modify the collection during enumeration
-            var keysToUpdate = new List<string>();
-            foreach (var row in _mainDictionary)
-            {
-                if (row.Key.Contains("@player") || row.Key.Contains("@farm"))
-                {
-                    keysToUpdate.Add(row.Key);
-                }
-            }
-            foreach (var keyToUpdate in keysToUpdate)
-            {
-                var value = _mainDictionary[keyToUpdate];
-
-                var newKey = keyToUpdate.Replace("@player", @event.Root.Player.Name).Replace("@farm", @event.Root.Player.FarmName);
-                var newValue = value.Replace("@player", @event.Root.Player.Name).Replace("@farm", @event.Root.Player.FarmName);
-
-                _mainDictionary.Remove(keyToUpdate);
-                _mainDictionary.Add(newKey, newValue);
-            }           
+            _isGameLoaded = true;
         }
 
         [Subscribe]
@@ -155,8 +149,6 @@ namespace TranslationMod
         {
             if(ModConfig.LanguageName != "EN")
             {
-                //ЗДЕСЬ АЛГОРИТМ ГЕНЕРАЦИИ ИМЕН НА РУССКОМ!
-                //Возвращаемый объект - string
                 @event.ReturnValue = randomName();
                 @event.ReturnEarly = true;
             }
@@ -167,12 +159,57 @@ namespace TranslationMod
         {
             if (ModConfig.LanguageName != "EN")
             {
-                //ЗДЕСЬ АЛГОРИТМ ГЕНЕРАЦИИ СПИСКА ИМЕН ФЕРМЕРОВ НА РУССКОМ!
-                //Возвращаемый объект - List<string>
                 @event.ReturnValue = getOtherFarmerNames();
                 @event.ReturnEarly = true;
             }
 
+        }
+
+        [Subscribe]
+        public void OnParseText(ParseTextEvent @event)
+        {
+            if (ModConfig.LanguageName != "EN")
+            {
+                var text = @event.Text;
+                if (Environment.NewLine != "\n" && @event.Text.Contains("\n") && !@event.Text.Contains(Environment.NewLine))
+                    text = @event.Text.Replace("\n", Environment.NewLine);
+                var translateMessage = Translate(text);
+                if (!string.IsNullOrEmpty(translateMessage))
+                {
+                    if (translateMessage.Contains("^"))
+                    {
+                        if (@event.Root.Player.IsMale)
+                        {
+                            translateMessage = translateMessage.Split('^')[0];
+                        }
+                        else translateMessage = translateMessage.Split('^')[1];
+                    }
+                    text = translateMessage;
+                }
+                var whichFont = @event.WhichFont;
+                var width = @event.Width;
+
+                if (text == null)
+                {
+                    @event.ReturnValue = "";
+                    return;
+                }
+                string str1 = string.Empty;
+                string str2 = string.Empty;
+                string str3 = text;
+                foreach (string str4 in str3.Split(' '))
+                {
+                    if (whichFont.MeasureString(str1 + str4).Length() > width ||
+                        str4.Equals(Environment.NewLine))
+                    {
+                        str2 = str2 + str1 + Environment.NewLine;
+                        str1 = string.Empty;
+                    }
+                    str1 = str1 + str4 + " ";
+                }
+                @event.ReturnValue = str2 + str1;
+                @event.ReturnEarly = true;
+            }
         }
 
         [Subscribe]
@@ -316,53 +353,6 @@ namespace TranslationMod
         }
 
         [Subscribe]
-        public void OnParseText(ParseTextEvent @event)
-        {
-            if(ModConfig.LanguageName != "EN")
-            {
-                var text = @event.Text;
-                if (Environment.NewLine != "\n" && @event.Text.Contains("\n") && !@event.Text.Contains(Environment.NewLine))
-                    text = @event.Text.Replace("\n", Environment.NewLine);
-                var translateMessage = Translate(text);
-                if (!string.IsNullOrEmpty(translateMessage))
-                {
-                    if (translateMessage.Contains("^"))
-                    {
-                        if (@event.Root.Player.IsMale)
-                        {
-                            translateMessage = translateMessage.Split('^')[0];
-                        }
-                        else translateMessage = translateMessage.Split('^')[1];
-                    }
-                    text = translateMessage;
-                }
-                var whichFont = @event.WhichFont;
-                var width = @event.Width;
-
-                if (text == null)
-                {
-                    @event.ReturnValue = "";
-                    return;
-                }
-                string str1 = string.Empty;
-                string str2 = string.Empty;
-                string str3 = text;
-                foreach (string str4 in str3.Split(' '))
-                {
-                    if (whichFont.MeasureString(str1 + str4).Length() > width ||
-                        str4.Equals(Environment.NewLine))
-                    {
-                        str2 = str2 + str1 + Environment.NewLine;
-                        str1 = string.Empty;
-                    }
-                    str1 = str1 + str4 + " ";
-                }
-                @event.ReturnValue = str2 + str1;
-                @event.ReturnEarly = true;
-            }
-        }
-
-        [Subscribe]
         public void OnSpriteFontMeasureString(SpriteFontMeasureStringEvent @event)
         {
             if (ModConfig.LanguageName != "EN")
@@ -381,6 +371,34 @@ namespace TranslationMod
                         else translateMessage = translateMessage.Split('^')[1];
                     }
                     @event.ReturnValue = translateMessage;
+                }
+            }
+        }
+
+        [Subscribe]
+        public void OnStringBrokeIntoSections(StringBrokeIntoSectionsEvent @event)
+        {
+            if (ModConfig.LanguageName != "EN")
+            {
+                if(!_isKeyReplaced)
+                {
+                    KeyReplace(@event.LocalPlayer.Name, @event.LocalPlayer.FarmName);
+                }
+                var translateMessage = Translate(@event.Letter);
+                if (!string.IsNullOrEmpty(translateMessage))
+                {
+                    List<string> list = new List<string>();
+                    var s = translateMessage;
+                    for (; s.Length > 0; s = s.Substring(list.Last().Length))
+                    {
+                        string thisHeightCutoff = SpriteText.getStringPreviousToThisHeightCutoff(s, @event.Width, @event.Height);
+                        if (thisHeightCutoff.Length > 0)
+                            list.Add(thisHeightCutoff);
+                        else
+                            break;
+                    }
+                    @event.ReturnValue = list;
+                    @event.ReturnEarly = true;
                 }
             }
         }
@@ -540,6 +558,7 @@ namespace TranslationMod
             _languages = new Dictionary<string,int>();
             _fuzzyDictionary = new FuzzyStringDictionary();
             _mainDictionary = new Dictionary<string, string>();
+            _mails = new Dictionary<string, string>();
             Data = new Dictionary<string, Person>();
             Characters = new Dictionary<string, string>();
             var jobj = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "descriptions.json"))));
@@ -617,8 +636,26 @@ namespace TranslationMod
                             AddToMainDictionary(pair.Key, pair.Value);
                         }
                     }
+                    else if(dictName == "Mails.json")
+                    {
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        foreach (var val in jo)
+                        {
+                            if (val.Key != "__comment")
+                            {
+                                if (!_mails.ContainsKey(val.Key))
+                                {
+                                    _mails.Add(val.Key, val.Value.ToString());
+                                }
+                                else if (string.IsNullOrEmpty(_mails[val.Key]) && string.IsNullOrEmpty(val.Value.ToString()))
+                                {
+                                    _mails[val.Key] = val.Value.ToString();
+                                }
+                            }
+                        }
+                    }
                     else if (dictName == "animationDescription.json" || dictName == "EngagementDialogue.json" ||
-                        dictName == "Events.json" || dictName == "Festivals.json" || dictName == "Mails.json" ||
+                        dictName == "Events.json" || dictName == "Festivals.json" ||
                         dictName == "NPCGiftTastes.json" || dictName == "Quests.json" || dictName == "schedules.json" ||
                         dictName == "TV.json")
                     {
@@ -628,7 +665,7 @@ namespace TranslationMod
                             AddToMainDictionary(val.Key, val.Value.ToString());
                         }
                     }
-                    else if (dictName == "nameGen.json")
+                    else if (dictName == "_NameGen.json")
                     {
                         _dataRandName = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
                     }
@@ -973,6 +1010,38 @@ namespace TranslationMod
             }
             strs.Add(str);
             return strs;
+        }
+
+        private void KeyReplace(string playerName, string farm)
+        {
+            // we need to cache the keys to update since we can't
+            // modify the collection during enumeration
+            var keysToUpdate = new List<string>();
+            foreach (var row in _mainDictionary)
+            {
+                if (row.Key.Contains("@player") || row.Key.Contains("@farm"))
+                {
+                    keysToUpdate.Add(row.Key);
+                }
+            }
+            foreach (var keyToUpdate in keysToUpdate)
+            {
+                var value = _mainDictionary[keyToUpdate];
+
+                var newKey = keyToUpdate.Replace("@player", playerName).Replace("@farm", farm);
+                var newValue = value.Replace("@player", playerName).Replace("@farm", farm);
+
+                _mainDictionary.Remove(keyToUpdate);
+                _mainDictionary.Add(newKey, newValue);
+            }
+
+            foreach (var mail in _mails)
+            {
+                var key = mail.Key.Replace("@", playerName);
+                var value = mail.Value.Replace("@", playerName);
+                AddToMainDictionary(key, value);
+            }
+            _isKeyReplaced = true;
         }
 
         private void WriteToScan(string line)
