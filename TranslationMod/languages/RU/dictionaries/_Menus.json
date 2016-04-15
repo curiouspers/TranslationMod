@@ -75,9 +75,11 @@
     "You don't have enough room in your inventory.": "Нет места в инвентаре",
     "The price is 25g per geode...@newline@newlineIt looks you can't afford it right now.": "Цена: 25g за геод...@newline@newlineПохоже сейчас ты не можешь себе это позволить.",
     "Just place your geodes on my anvil and I'll give them a whack. @newline @newlineThe price is 25g per geode.": "",
+
     "@number-@number Damage": "",
     "+ @number @key": "",
     "@number @key": "",
+    
     "Requires @key@newline @key": "Требуется @key@newline @key",
     "@farm Farm": "@farm Ферма",
     "Current Funds: @numberg": "Текущие средства: @numberg",
