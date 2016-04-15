@@ -37,9 +37,7 @@
       "Credits:@newline @newline@newline@newlineProgramming,@newlineArt, Music,@newlineSound Effects, Writing:@newline@newline-Eric Barone@newline@newline@newline@newlineSpecial Thanks:@newline@newline-Amber Hageman@newline-Shane Waletzko@newline-Fiddy, Nuns, Kappy &@newlineeveryone from HarvestCraft@newline-Trader Joe's Organic Hummus@newline@newline@newline@newlineThanks for playing! :)":"",
       "First Night":"",
       "The pages are too faded to read":"",
-      "__comment":"num, Utility.getNumberEnding(num) of Utility.getSeasonNameFromNumber(seasonNumber), Year num1:",
-
-      
+           
       "Requires construction of a Coop":"",
       "Requires construction of a Barn":"",
       "Requires construction of a Big Barn":"",
@@ -194,6 +192,6 @@
       "__comment":"rival says",
           "This is the stupidest town I've ever set my foot in!$s":"",
       "__comment":"message",
-          "Cowboy Willy was never heard from again...":"",
+          "@key was never heard from again...":"",
 
 }
