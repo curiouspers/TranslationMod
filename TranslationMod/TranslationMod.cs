@@ -407,6 +407,7 @@ namespace TranslationMod
         {
             if (ModConfig.LanguageName != "EN")
             {
+                //var something = _mainDictionary.Where(d => d.Key.Contains("@player")).ToDictionary(x => x.Key, x => x.Value);
                 if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message))
                 {
                     return message;
@@ -656,7 +657,7 @@ namespace TranslationMod
                     }
                     else if (dictName == "animationDescription.json" || dictName == "EngagementDialogue.json" ||
                         dictName == "Events.json" || dictName == "Festivals.json" ||
-                        dictName == "NPCGiftTastes.json" || dictName == "Quests.json" || dictName == "schedules.json" ||
+                        dictName == "NPCGiftTastes.json" || dictName == "ContentQuests.json" || dictName == "schedules.json" ||
                         dictName == "TV.json")
                     {
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
