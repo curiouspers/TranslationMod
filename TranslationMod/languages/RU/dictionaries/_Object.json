@@ -1,6 +1,8 @@
 {
   "__comment":"in shop items hover",
     "@key x @number":"@key x @number",
+  "__comment":"in money made screen after day end, eg:Stone x2",
+    "@key x@number":"@key x@number",
   "__comment":"Achievements, like Gofer\r\n\r\nDescription",
     "@key@newline@newline@key":"@key@newline@newline@key",
   "__comment":"Collections page (fishing, shipped, etc. item hover description)",
