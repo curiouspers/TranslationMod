@@ -3,13 +3,6 @@
   "__comment":"Utility.cs",
       "Flooring applied":"",
       "Wallpaper applied":"",
-      " he's worked hard on his farm, ":"",
-      " made significant contributions to the field of archaeology, ":"",
-      "has been a big help around town, ":"",
-      "has come to be loved by many residents, ":"",
-      "has become a local fishing legend, ":"",
-      "has explored the shadowy depths of the local mine, ":"",
-      " and has earned over @numberg in revenue.":"",
 
       "__comment":"Game1.player.songsHeard.Add",
         "Bouncy":"",
@@ -156,12 +149,31 @@
 
 
 
-      "__comment":"getSongTitleFromCueName",
+      "__comment":"getStardewHeroCelebrationEventString",
       "__comment":"Lewis says",
-          "Welcome, everyone, to the 16th Centennial Stardew Hero Celebration!$h#$b#We've been a long time without a Stardew Hero, and I think we can all agree it's time to bestow this prestigious award on someone new!":"",
+          "Welcome, everyone, to the 16th Centennial Stardew Hero Celebration!":"",
+          "We've been a long time without a Stardew Hero, and I think we can all agree it's time to bestow this prestigious award on someone new!":"",
+          
           "...The title of Stardew Hero is awarded only to those who've displayed extraordinary commitment to this valley and the people who live here.":"",
-          "There are many here who've done a lot for this community, but unfortunately there can only be one Stardew Hero.#$b#...And standing before you today are the two top contenders. @player and @key.":"",
-          "@player moved here 2 years ago, and in that time  he's worked hard on his farm,  and has earned over @numberg in revenue.#$b#...Those kinds of accomplishments could breathe life into any community!":"",
+          "There are many here who've done a lot for this community, but unfortunately there can only be one Stardew Hero.":"",
+          "...And standing before you today are the two top contenders. @player and @key.":"",
+
+          "@player moved here 2 years ago, and in that time  he's worked hard on his farm,  and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  she's worked hard on her farm,  and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  he's worked hard on his farm, @key and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  she's worked hard on her farm, @key and has earned over @numberg in revenue.":"",
+
+
+      "__comment":"The key here maybe one of the below lines",
+          " made significant contributions to the field of archaeology, ":"",
+          "has been a big help around town, ":"",
+          "has come to be loved by many residents, ":"",
+          "has become a local fishing legend, ":"",
+          "has explored the shadowy depths of the local mine, ":"",
+          " and has earned over @numberg in revenue.":"",
+
+          "...Those kinds of accomplishments could breathe life into any community!":"",
+
           "@key also moved here 2 years ago. In that time he's created one of the most productive farms I've ever seen!$h#$b#...And funneled a large sum into my personal bank acc... er, I mean campaign fund!":"",
       "__comment":"rival says",
           "Thank you, Mayor, sir!$h":"",

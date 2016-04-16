@@ -598,7 +598,8 @@ namespace TranslationMod
                             {
                                 if (row.Key.Contains("@"))
                                 {
-                                    if ((row.Key.Contains("@player") || row.Key.Contains("@farm")) && !row.Key.Contains("@key") && !row.Key.Contains("@number") && !row.Key.Contains("@playerChild") && row.Key != "@farm Farm")
+                                    if ((row.Key.Contains("@player") || row.Key.Contains("@farm")) && !row.Key.Contains("@key") && !row.Key.Contains("@number") && !row.Key.Contains("@playerChild") && row.Key != "@farm Farm" ||
+                                        (!row.Key.Contains("@player") && !row.Key.Contains("@farm") && !row.Key.Contains("@key") && !row.Key.Contains("@number") && !row.Key.Contains("@playerChild") && row.Key != "@farm Farm"))
                                     {
                                         AddToMainDictionary(row.Key, row.Value.ToString());
                                     }
@@ -733,7 +734,7 @@ namespace TranslationMod
                 {
                     _mainDictionary.Add(key, value);
                 }
-                else if (string.IsNullOrEmpty(_mainDictionary[key]) && string.IsNullOrEmpty(value))
+                else if (string.IsNullOrEmpty(_mainDictionary[key]) && !string.IsNullOrEmpty(value))
                 {
                     _mainDictionary[key] = value;
                 }
@@ -1020,7 +1021,7 @@ namespace TranslationMod
             var keysToUpdate = new List<string>();
             foreach (var row in _mainDictionary)
             {
-                if (row.Key.Contains("@player") || row.Key.Contains("@farm"))
+                if (row.Key.Contains("@player") || row.Key.Contains("@farm") || row.Key.Contains("%farm") || row.Key.Contains("@"))
                 {
                     keysToUpdate.Add(row.Key);
                 }
@@ -1029,11 +1030,12 @@ namespace TranslationMod
             {
                 var value = _mainDictionary[keyToUpdate];
 
-                var newKey = keyToUpdate.Replace("@player", playerName).Replace("@farm", farm);
-                var newValue = value.Replace("@player", playerName).Replace("@farm", farm);
+                var newKey = keyToUpdate.Replace("@player", playerName).Replace("@farm", farm).Replace("%farm", farm).Replace("@", playerName);
+                var newValue = value.Replace("@player", playerName).Replace("@farm", farm).Replace("%farm", farm).Replace("@", playerName);
 
                 _mainDictionary.Remove(keyToUpdate);
-                _mainDictionary.Add(newKey, newValue);
+                if (!_mainDictionary.ContainsKey(newKey))
+                    _mainDictionary.Add(newKey, newValue);
             }
 
             foreach (var mail in _mails)
