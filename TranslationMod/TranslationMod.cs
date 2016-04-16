@@ -723,6 +723,10 @@ namespace TranslationMod
             var adjectives = new CyrAdjectiveCollection();
             cyrPhrase = new CyrPhrase(collection, adjectives);
 
+
+            var message = "I'd like to put an Amethyst above the mantle. Please deliver it some time today.\r\n        -Alex\r\n\r\n- 300g on delivery\r\n- Alex will be thankful";
+            message = Translate(message);
+
             _isConfigLoaded = true;
         }
 
