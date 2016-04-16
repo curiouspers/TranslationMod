@@ -158,19 +158,26 @@
           "There are many here who've done a lot for this community, but unfortunately there can only be one Stardew Hero.":"",
           "...And standing before you today are the two top contenders. @player and @key.":"",
 
-          "@player moved here 2 years ago, and in that time  he's worked hard on his farm,  and has earned over @numberg in revenue.":"",
-          "@player moved here 2 years ago, and in that time  she's worked hard on her farm,  and has earned over @numberg in revenue.":"",
-          "@player moved here 2 years ago, and in that time  he's worked hard on his farm, @key and has earned over @numberg in revenue.":"",
-          "@player moved here 2 years ago, and in that time  she's worked hard on her farm, @key and has earned over @numberg in revenue.":"",
-
-
       "__comment":"The key here maybe one of the below lines",
-          " made significant contributions to the field of archaeology, ":"",
-          "has been a big help around town, ":"",
-          "has come to be loved by many residents, ":"",
-          "has become a local fishing legend, ":"",
-          "has explored the shadowy depths of the local mine, ":"",
-          " and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  he's worked hard on his farm,  and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  he's worked hard on his farm, @key and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  he's worked hard on his farm, @key, @key and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  he's worked hard on his farm, @key, @key, @key and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  he's worked hard on his farm, @key, @key, @key, @key and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  he's worked hard on his farm, @key, @key, @key, @key, @key and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  she's worked hard on her farm,  and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  she's worked hard on her farm, @key and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  she's worked hard on her farm, @key, @key and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  she's worked hard on her farm, @key, @key, @key and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  she's worked hard on her farm, @key, @key, @key, @key and has earned over @numberg in revenue.":"",
+          "@player moved here 2 years ago, and in that time  she's worked hard on her farm, @key, @key, @key, @key, @key and has earned over @numberg in revenue.":"",
+
+      "__comment":"One or any or all of the below lines",
+          " made significant contributions to the field of archaeology":"",
+          "has been a big help around town":"",
+          "has come to be loved by many residents":"",
+          "has become a local fishing legend":"",
+          "has explored the shadowy depths of the local mine":"",
 
           "...Those kinds of accomplishments could breathe life into any community!":"",
 

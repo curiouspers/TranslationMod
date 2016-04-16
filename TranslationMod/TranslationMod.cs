@@ -34,7 +34,7 @@ namespace TranslationMod
         private Dictionary<string,int> _languages;
         private Dictionary<string, string> _languageDescriptions;
         private FuzzyStringDictionary _fuzzyDictionary;
-        private Dictionary<string, string> _mainDictionary;
+        public static Dictionary<string, string> _mainDictionary;
         private Dictionary<string, string> _mails;
         private string _currentLanguage;
         private bool _isConfigLoaded = false;
