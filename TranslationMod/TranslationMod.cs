@@ -6,17 +6,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley.BellsAndWhistles;
 using Storm.StardewValley;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using StardewValley.Buildings;
-using Storm.StardewValley.Accessor;
 using StardewValley;
 using Cyriller;
 using Cyriller.Model;
@@ -27,21 +23,19 @@ namespace TranslationMod
     public class TranslationMod : DiskResource
     {
         public Config ModConfig { get; private set; }
-        public Dictionary<string, Person> Data { get; set; }
         public Dictionary<string, string> Characters { get; set; }
 
         private JObject _dataRandName { get; set; }
         private Dictionary<string,int> _languages;
         private Dictionary<string, string> _languageDescriptions;
         private FuzzyStringDictionary _fuzzyDictionary;
-        public static Dictionary<string, string> _mainDictionary;
         private Dictionary<string, string> _mails;
         private string _currentLanguage;
         private bool _isConfigLoaded = false;
         private bool _isMenuDrawing;
-        private static Regex reToSkip = new Regex("^[0-9: -=.g]+$", RegexOptions.Compiled);
-        private static CyrPhrase cyrPhrase;
-        private static int IsTranslated;
+        private Regex reToSkip = new Regex("^[0-9: -=.g]+$", RegexOptions.Compiled);
+        private CyrPhrase cyrPhrase;
+        private int IsTranslated;
         private static Dictionary<string, string> _memoryBuffer;
         private int _characterPosition;
         private bool _isGameLoaded = false;
@@ -211,47 +205,7 @@ namespace TranslationMod
                 @event.ReturnEarly = true;
             }
         }
-
-        [Subscribe]
-        public void OnSetNewDialgue(SetNewDialogueEvent @event)
-        {
-            if (ModConfig.LanguageName != "EN")
-            {
-                var npc = @event.NPC;
-                var dialogue = "";
-                var original = "";
-                if (string.IsNullOrEmpty(@event.Dialogue))
-                {
-                    if (!@event.Add) @event.NPC.CurrentDialogue.Clear();
-                    var content = StormContentManager.Load<Dictionary<string, string>>(@event.Root.Content,
-                        "Characters\\Dialogue\\" + @event.DialogueSheetName);
-                    string str = @event.NumberToAppend == -1 ? npc.Name : "";
-                    string key = @event.DialogueSheetKey + (@event.NumberToAppend != -1 ?
-                        string.Concat(@event.NumberToAppend) :
-                        "") + str;
-                    if (!content.ContainsKey(key)) return;
-                    else
-                    {
-                        original = content[key];
-                    }
-                }
-                else original = @event.Dialogue;
-                if (Data.ContainsKey(npc.Name))
-                {
-                    var newValue = Data[npc.Name].Dialogues.Where(d => d.Key == original).Select(d => d.Value).FirstOrDefault();
-                    if (!string.IsNullOrEmpty(newValue))
-                        dialogue = newValue;
-                }
-                else if ((dialogue = Translate(@event.Dialogue)) != "") { }
-                else dialogue = original;
-                ((StardewValley.NPC)@event.NPC.Underlying).CurrentDialogue.Push(new Dialogue(dialogue, (StardewValley.NPC)@event.NPC.Underlying)
-                {
-                    removeOnNextMove = @event.ClearOnMovement
-                });
-                @event.ReturnEarly = true;
-            }
-        }
-
+        
         [Subscribe]
         public void OnDrawSpriteText(PreSpriteTextDrawStringEvent @event)
         {
@@ -407,48 +361,49 @@ namespace TranslationMod
         {
             if (ModConfig.LanguageName != "EN")
             {
-                //var something = _mainDictionary.Where(d => d.Key.Contains("@player")).ToDictionary(x => x.Key, x => x.Value);
                 if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message))
                 {
                     return message;
                 }
-                else if (_memoryBuffer.ContainsKey(message))
+                if (_memoryBuffer.ContainsKey(message))
                 {
                     return _memoryBuffer[message];
                 }
-                if (_mainDictionary.ContainsKey(message))
-                {
-                    return _mainDictionary[message];
-                }
-                else if (_fuzzyDictionary.ContainsKey(message))
+                if (_fuzzyDictionary.ContainsKey(message))
                 {
                     var resultTranslate = message;
-                    var fval = _fuzzyDictionary.GetKeyValue(message);
+                    var fval = _fuzzyDictionary.GetFuzzyKeyValue(message);
 
                     if (!string.IsNullOrEmpty(fval.Key) && !string.IsNullOrEmpty(fval.Value))
                     {
-                        var diff = GetKeysValue(fval.Key, message);
-                        resultTranslate = StringFormatWithKeys(fval.Value, diff.Select(d => d.Value).ToList());
+                        if(fval.Key.Contains("@"))
+                        {
+                            var diff = GetKeysValue(fval.Key, message);
+                            resultTranslate = StringFormatWithKeys(fval.Value, diff.Select(d => d.Value).ToList());
+                        }
+                        else
+                        {
+                            resultTranslate = fval.Value;
+                        }
                     }
 
-                    if (_memoryBuffer.Count > 500) { _memoryBuffer.Remove(_memoryBuffer.First().Key); }
+                    if (_memoryBuffer.Count > 500)
+                    {
+                        _memoryBuffer.Remove(_memoryBuffer.First().Key);
+                    }
                     _memoryBuffer.Add(message, resultTranslate);
 
                     return resultTranslate;
                 }
-                else {
-                    if (!message.Contains("@") && !_memoryBuffer.ContainsKey(message))
-                    {
-                        if (_memoryBuffer.Count > 500) { _memoryBuffer.Remove(_memoryBuffer.First().Key); }
-                        _memoryBuffer.Add(message, message);
-                    }
+                else
+                {
                     return message;
                 }
             }
             return "";
         }
 
-        private static string Decline(string message, string _case) {
+        private string Decline(string message, string _case) {
             try
             {
 
@@ -526,7 +481,6 @@ namespace TranslationMod
                         format == "@key" + Environment.NewLine + Environment.NewLine + "@key" + Environment.NewLine + Environment.NewLine + "@key"
                         && value.Contains(Environment.NewLine))
                     {
-                        //Console.WriteLine("hey");
                         string newValue = "";
                         foreach (var item in value.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
                         {
@@ -535,13 +489,12 @@ namespace TranslationMod
                         value = newValue.Substring(0, newValue.Length - Environment.NewLine.Length);
                     }
                     else {
-                        //value = Translate(value); //Тут переводит ключ!!!
                         var tmp = Translate(value);
                         if (!string.IsNullOrEmpty(tmp))
                             value = tmp;
                     }
 
-                    if (matches[0].Value.Length == 5)
+                    if (matches[0].Value.Length == 5 && ModConfig.LanguageName == "RU")
                     {
                         value = Decline(value, matches[0].Value.Last().ToString());
                     }
@@ -558,9 +511,7 @@ namespace TranslationMod
             _memoryBuffer = new Dictionary<string, string>();
             _languages = new Dictionary<string,int>();
             _fuzzyDictionary = new FuzzyStringDictionary();
-            _mainDictionary = new Dictionary<string, string>();
             _mails = new Dictionary<string, string>();
-            Data = new Dictionary<string, Person>();
             Characters = new Dictionary<string, string>();
             var jobj = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "descriptions.json"))));
             _languageDescriptions = new Dictionary<string, string>();
@@ -596,29 +547,11 @@ namespace TranslationMod
                             var pair = JObject.Parse(val.Value.ToString());
                             foreach (var row in pair)
                             {
-                                if (row.Key.Contains("@"))
-                                {
-                                    if ((row.Key.Contains("@player") || row.Key.Contains("@farm")) && !row.Key.Contains("@key") && !row.Key.Contains("@number") && !row.Key.Contains("@playerChild") && row.Key != "@farm Farm" ||
-                                        (!row.Key.Contains("@player") && !row.Key.Contains("@farm") && !row.Key.Contains("@key") && !row.Key.Contains("@number") && !row.Key.Contains("@playerChild") && row.Key != "@farm Farm"))
-                                    {
-                                        AddToMainDictionary(row.Key, row.Value.ToString());
-                                    }
-                                    else
-                                    {
-                                        if (!_fuzzyDictionary.ContainsKey(row.Key))
-                                            _fuzzyDictionary.Add(row.Key, row.Value.ToString());
-                                        else if (_fuzzyDictionary[row.Key] == "" && row.Value.ToString() != "")
-                                            _fuzzyDictionary[row.Key] = row.Value.ToString();
-                                    }
-                                }
-                                else
-                                {
-                                    AddToMainDictionary(row.Key, row.Value.ToString());
-                                }
+                                AddToDictionary(row.Key, row.Value.ToString());
                             }
                         }
                     }
-                    if (dictName == "_KeyWords.json" || dictName == "Items.json" || dictName == "Achievements.json")
+                    if (dictName == "Items.json" || dictName == "Achievements.json")
                     {
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
                         foreach (var val in jo)
@@ -626,7 +559,7 @@ namespace TranslationMod
                             var pair = JObject.Parse(val.Value.ToString());
                             foreach (var row in pair)
                             {
-                                AddToMainDictionary(row.Key, row.Value.ToString());
+                                AddToDictionary(row.Key, row.Value.ToString());
                             }
                         }
                     }
@@ -634,8 +567,8 @@ namespace TranslationMod
                     {
                         Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
                         foreach (var pair in Characters)
-                        {
-                            AddToMainDictionary(pair.Key, pair.Value);
+                        {                            
+                            AddToDictionary(pair.Key, pair.Value);
                         }
                     }
                     else if(dictName == "Mails.json")
@@ -664,7 +597,7 @@ namespace TranslationMod
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
                         foreach (var val in jo)
                         {
-                            AddToMainDictionary(val.Key, val.Value.ToString());
+                            AddToDictionary(val.Key, val.Value.ToString());
                         }
                     }
                     else if (dictName == "_NameGen.json")
@@ -676,22 +609,7 @@ namespace TranslationMod
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)).Replace("@newline", Environment.NewLine));
                         foreach (var pair in jo)
                         {
-                            if ((pair.Key.Contains("@player") || pair.Key.Contains("@farm")) && !pair.Key.Contains("@key") && !pair.Key.Contains("@number") && !pair.Key.Contains("@playerChild") && pair.Key != "@farm Farm")
-                            {
-                                AddToMainDictionary(pair.Key, pair.Value.ToString());
-                            }
-                            else
-                            if (pair.Key.Contains("@"))
-                            {
-                                if (!_fuzzyDictionary.ContainsKey(pair.Key))
-                                    _fuzzyDictionary.Add(pair.Key, pair.Value.ToString());
-                                else if (_fuzzyDictionary[pair.Key] == "" && pair.Value.ToString() != "")
-                                    _fuzzyDictionary[pair.Key] = pair.Value.ToString();
-                            }
-                            else
-                            {
-                                AddToMainDictionary(pair.Key, pair.Value.ToString());
-                            }
+                            AddToDictionary(pair.Key, pair.Value.ToString());
                         }
                     }
                 }
@@ -718,28 +636,20 @@ namespace TranslationMod
                 }
             }
             #endregion
-
-            var collection = new CyrNounCollection();
-            var adjectives = new CyrAdjectiveCollection();
-            cyrPhrase = new CyrPhrase(collection, adjectives);
-
-
-
+            if(ModConfig.LanguageName == "RU")
+            {
+                var collection = new CyrNounCollection();
+                var adjectives = new CyrAdjectiveCollection();
+                cyrPhrase = new CyrPhrase(collection, adjectives);
+            }
             _isConfigLoaded = true;
         }
 
-        private void AddToMainDictionary(string key, string value)
+        private void AddToDictionary(string key, string value)
         {
             if (key != "__comment")
             {
-                if (!_mainDictionary.ContainsKey(key))
-                {
-                    _mainDictionary.Add(key, value);
-                }
-                else if (string.IsNullOrEmpty(_mainDictionary[key]) && !string.IsNullOrEmpty(value))
-                {
-                    _mainDictionary[key] = value;
-                }
+                _fuzzyDictionary.Add(key, value);
             }
         }
 
@@ -1021,30 +931,29 @@ namespace TranslationMod
             // we need to cache the keys to update since we can't
             // modify the collection during enumeration
             var keysToUpdate = new List<string>();
-            foreach (var row in _mainDictionary)
+            foreach (var row in _fuzzyDictionary)
             {
-                if (row.Key.Contains("@player") || row.Key.Contains("@farm") || row.Key.Contains("%farm") || row.Key.Contains("@"))
+                if (row.Key.Contains("@player") || row.Key.Contains("@farm"))// || row.Key.Contains("%farm") || row.Key.Contains("@"))
                 {
                     keysToUpdate.Add(row.Key);
                 }
             }
             foreach (var keyToUpdate in keysToUpdate)
             {
-                var value = _mainDictionary[keyToUpdate];
+                var value = _fuzzyDictionary[keyToUpdate];
 
-                var newKey = keyToUpdate.Replace("@player", playerName).Replace("@farm", farm).Replace("%farm", farm).Replace("@", playerName);
-                var newValue = value.Replace("@player", playerName).Replace("@farm", farm).Replace("%farm", farm).Replace("@", playerName);
+                var newKey = keyToUpdate.Replace("@player", playerName).Replace("@farm", farm);//.Replace("%farm", farm).Replace("@", playerName);
+                var newValue = value.Replace("@player", playerName).Replace("@farm", farm);//.Replace("%farm", farm).Replace("@", playerName);
 
-                _mainDictionary.Remove(keyToUpdate);
-                if (!_mainDictionary.ContainsKey(newKey))
-                    _mainDictionary.Add(newKey, newValue);
+                _fuzzyDictionary.Remove(keyToUpdate);
+                _fuzzyDictionary.Add(newKey, newValue);
             }
 
             foreach (var mail in _mails)
             {
                 var key = mail.Key.Replace("@", playerName);
                 var value = mail.Value.Replace("@", playerName);
-                AddToMainDictionary(key, value);
+                AddToDictionary(key, value);
             }
             _isKeyReplaced = true;
         }
@@ -1242,13 +1151,7 @@ namespace TranslationMod
             return new Rectangle(num * 8 % SpriteText.spriteTexture.Width, num * 8 / SpriteText.spriteTexture.Width * 16 + (junimoText ? 96 : 0), 8, 16);
         }
     }
-
-    public class Person
-    {
-        public string Name { get; set; }
-        public List<KeyValuePair<string, string>> Dialogues { get; set; }
-    }
-
+    
     public class Config
     {
         public string LanguageName { get; set; }

@@ -1,23 +1,21 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace TranslationMod
 {
-    public class FuzzyStringDictionary
+    public class FuzzyStringDictionary : IEnumerable<KeyValuePair<string,string>>
     {
-        private Dictionary<string, string> _dictionary;
+        private Dictionary<string, string> _simpleDictionary;
+        private Dictionary<string, string> _fuzzyDictionary;
         private Dictionary<string, string> _memoryBuffer;
 
-        public FuzzyStringDictionary(Dictionary<string, string> dictioanry)
-        {
-            _dictionary = dictioanry;
-            _memoryBuffer = new Dictionary<string, string>();
-        }
         public FuzzyStringDictionary()
         {
-            _dictionary = new Dictionary<string, string>();
+            _simpleDictionary = new Dictionary<string, string>();
+            _fuzzyDictionary = new Dictionary<string, string>();
             _memoryBuffer = new Dictionary<string, string>();
         }
 
@@ -25,22 +23,26 @@ namespace TranslationMod
         {
             get
             {
-                if (!_memoryBuffer.ContainsKey(key))
+                if (_simpleDictionary.ContainsKey(key))
+                    return _simpleDictionary[key];
+                else
                 {
-                    var translate = _dictionary[CompareKey(key)];
-                    if (_memoryBuffer.Count > 500)
+                    var compareKey = CheckInMemory(key);
+                    if (string.IsNullOrEmpty(compareKey))
                     {
-                        _memoryBuffer.Remove(_memoryBuffer.First().Key);
+                        compareKey = CompareKey(key);
+                        AddToMemory(key, compareKey);
                     }
-                    if (!key.Contains("@") && !_memoryBuffer.ContainsKey(key))
-                        _memoryBuffer.Add(key, translate);
-                    return translate;
+                    return _fuzzyDictionary[compareKey];
                 }
-                else return _memoryBuffer[key];
             }
             set
             {
-                _dictionary[CompareKey(key)] = value;
+                if (_simpleDictionary.ContainsKey(key))
+                {
+                    _simpleDictionary[key] = value;
+                }
+                else _fuzzyDictionary[CompareKey(key)] = value;
             }
         }
 
@@ -48,42 +50,50 @@ namespace TranslationMod
         {
             get
             {
-                return _dictionary.Count;
+                return _fuzzyDictionary.Count + _simpleDictionary.Count;
             }
         }
 
-        public ICollection<string> Keys
+        public IEnumerable<string> Keys
         {
             get
             {
-                return _dictionary.Keys;
+                return _fuzzyDictionary.Keys.Concat(_simpleDictionary.Keys);
             }
         }
 
-        public ICollection<string> Values
+        public IEnumerable<string> Values
         {
             get
             {
-                return _dictionary.Values;
+                return _fuzzyDictionary.Values.Concat(_simpleDictionary.Values);
             }
-        }
+        }        
 
         public void Add(string key, string value)
         {
-            _dictionary.Add(key, value);
+            try
+            {
+                if (!key.Contains("@"))
+                {
+                    _simpleDictionary.Add(key, value);
+                }
+                else _fuzzyDictionary.Add(key, value);
+            }
+            catch (ArgumentException e) { }
         }
-
-        /// <summary>
-        /// Ignore all duplicate keys
-        /// </summary>
-        /// <param name="pairs"></param>
+        
         public void AddRange(IEnumerable<KeyValuePair<string, string>> pairs)
         {
             foreach (var pair in pairs)
             {
                 try
                 {
-                    _dictionary.Add(pair.Key, pair.Value);
+                    if (!pair.Key.Contains("@"))
+                    {
+                        _simpleDictionary.Add(pair.Key, pair.Value);
+                    }
+                    else _fuzzyDictionary.Add(pair.Key, pair.Value);
                 }
                 catch (ArgumentException e) { }
             }
@@ -91,36 +101,71 @@ namespace TranslationMod
 
         public void Clear()
         {
-            _dictionary.Clear();
+            _simpleDictionary.Clear();
+            _fuzzyDictionary.Clear();
         }
 
         public bool ContainsKey(string key)
         {
-            if (_memoryBuffer.ContainsKey(key))
+            if (_simpleDictionary.ContainsKey(key))
                 return true;
-            var removeItem = CompareKey(key);
-            if (string.IsNullOrEmpty(removeItem)) return false;
-            else {
-                if (!_memoryBuffer.ContainsKey(key))
-                    _memoryBuffer.Add(key, removeItem);
+
+            var value = CompareKey(key);
+            if (string.IsNullOrEmpty(value))
+                return false;
+            else
+            {
+                AddToMemory(key, value);
                 return true;
             }
         }
 
         public bool Remove(string key)
         {
+            bool result = false;
+
+            if (_simpleDictionary.ContainsKey(key))
+                result = _simpleDictionary.Remove(key);
+
             var removeItem = CompareKey(key);
-            if (string.IsNullOrEmpty(removeItem)) return false;
-            return _dictionary.Remove(removeItem);
+            if (string.IsNullOrEmpty(removeItem))
+                result = false;
+            else
+                result = _fuzzyDictionary.Remove(removeItem);
+
+            if (!string.IsNullOrEmpty(CheckInMemory(key)))
+                _memoryBuffer.Remove(key);
+
+            return result;
         }
 
-        public KeyValuePair<string, string> GetKeyValue(string key)
+        public KeyValuePair<string, string> GetFuzzyKeyValue(string key)
         {
-            if (!_memoryBuffer.ContainsKey(key))
+            var fuzzyKey = "";
+            var value = "";
+            if(_simpleDictionary.ContainsKey(key))
             {
-                _memoryBuffer.Add(key, CompareKey(key));
+                fuzzyKey = key;
+                value = _simpleDictionary[key];
             }
-            return new KeyValuePair<string, string>(_memoryBuffer[key], _dictionary[_memoryBuffer[key]]);
+            else
+            {
+                var memoryKey = CheckInMemory(key);
+                if (string.IsNullOrEmpty(memoryKey))
+                {
+                    fuzzyKey = CompareKey(key);
+                    AddToMemory(key, fuzzyKey);
+                }
+                else fuzzyKey = memoryKey;
+                value = _fuzzyDictionary[fuzzyKey];
+            }
+
+            return new KeyValuePair<string, string>(fuzzyKey, value);
+        }
+
+        public void ReplacePlayerName(string name)
+        {
+
         }
 
         private string CompareKey(string source)
@@ -140,7 +185,7 @@ namespace TranslationMod
 
             bool flagNoMatch = false;
 
-            foreach (var item in _dictionary)
+            foreach (var item in _fuzzyDictionary)
             {
                 flagNoMatch = false;
                 key = item.Key;
@@ -286,7 +331,7 @@ namespace TranslationMod
                             else if (strI[j].Contains("@key") && strI[j + 1].Contains("@key"))
                             {
                                 //TODO Check this. if we have this word in _mainDictionary, and don't have this + next word in dictionary, then this key is over
-                                if (TranslationMod._mainDictionary.ContainsKey(keyWord) && !TranslationMod._mainDictionary.ContainsKey(keyWord + " " + strS[i + 1]))
+                                if (_simpleDictionary.ContainsKey(keyWord) && !_simpleDictionary.ContainsKey(keyWord + " " + strS[i + 1]))
                                 {
                                     j++;
                                 }
@@ -342,6 +387,34 @@ namespace TranslationMod
             }
 
             return resultString;
+        }
+
+
+
+        public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
+        {
+            return _simpleDictionary.Concat(_fuzzyDictionary).ToDictionary(i => i.Key, i => i.Value).GetEnumerator();
+        }
+        
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _simpleDictionary.Concat(_fuzzyDictionary).ToDictionary(i => i.Key, i => i.Value).GetEnumerator();
+        }
+
+        void AddToMemory(string key, string value)
+        {
+            if (!_memoryBuffer.ContainsKey(key))
+                _memoryBuffer.Add(key, value);
+            if (_memoryBuffer.Count > 500)
+            {
+                _memoryBuffer.Remove(_memoryBuffer.First().Key);
+            }
+        }
+        string CheckInMemory(string key)
+        {
+            if (_memoryBuffer.ContainsKey(key))
+                return _memoryBuffer[key];
+            else return string.Empty;
         }
     }
 
