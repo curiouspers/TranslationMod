@@ -555,7 +555,7 @@ namespace TranslationMod
                             }
                         }
                     }
-                    if (dictName == "Items.json" || dictName == "Achievements.json")
+                    if (dictName == "Items.json")
                     {
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
                         foreach (var val in jo)
@@ -593,9 +593,9 @@ namespace TranslationMod
                             }
                         }
                     }
-                    else if (dictName == "animationDescription.json" || dictName == "EngagementDialogue.json" ||
+                    else if (dictName == "Achievements.json" || dictName == "animationDescription.json" || dictName == "EngagementDialogue.json" ||
                         dictName == "Events.json" || dictName == "Festivals.json" ||
-                        dictName == "NPCGiftTastes.json" || dictName == "ContentQuests.json" || dictName == "schedules.json" ||
+                        dictName == "NPCGiftTastes.json" || dictName == "Quests.json" || dictName == "schedules.json" ||
                         dictName == "TV.json")
                     {
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
