@@ -36,7 +36,8 @@ namespace TranslationMod
         private Regex reToSkip = new Regex("^[0-9: -=.g]+$", RegexOptions.Compiled);
         private CyrPhrase cyrPhrase;
         private int IsTranslated;
-        private static Dictionary<string, string> _memoryBuffer;
+        private Dictionary<string, string> _memoryBuffer;
+        private List<string> _translatedStrings;
         private int _characterPosition;
         private bool _isGameLoaded = false;
         private bool _isKeyReplaced = false;
@@ -392,7 +393,9 @@ namespace TranslationMod
                         _memoryBuffer.Remove(_memoryBuffer.First().Key);
                     }
                     _memoryBuffer.Add(message, resultTranslate);
-
+                    _translatedStrings.Add(resultTranslate);
+                    if (_translatedStrings.Count > 500)
+                        _translatedStrings.RemoveAt(0);
                     return resultTranslate;
                 }
                 else
@@ -509,6 +512,7 @@ namespace TranslationMod
         private void LoadConfig(string ContentRoot)
         {
             _memoryBuffer = new Dictionary<string, string>();
+            _translatedStrings = new List<string>();
             _languages = new Dictionary<string,int>();
             _fuzzyDictionary = new FuzzyStringDictionary();
             _mails = new Dictionary<string, string>();
