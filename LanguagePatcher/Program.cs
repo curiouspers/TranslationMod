@@ -4,15 +4,12 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using MultiLanguage;
-using StardewValley;
-using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace LanguagePatcher
 {
