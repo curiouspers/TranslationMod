@@ -281,14 +281,6 @@ namespace MultiLanguage
                 var translateMessage = Translate(_text);
                 if (!string.IsNullOrEmpty(translateMessage))
                 {
-                    if (translateMessage.Contains("^"))
-                    {
-                        if (Game1.player.IsMale)
-                        {
-                            translateMessage = translateMessage.Split('^')[0];
-                        }
-                        else translateMessage = translateMessage.Split('^')[1];
-                    }
                     _text = translateMessage;
                 }
 
@@ -331,14 +323,6 @@ namespace MultiLanguage
                     var translateMessage = Translate(@event.Text);
                     if (!string.IsNullOrEmpty(translateMessage))
                     {
-                        if (translateMessage.Contains("^") && !@event.Text.Contains("^"))
-                        {
-                            if (Game1.player.IsMale)
-                            {
-                                translateMessage = translateMessage.Split('^')[0];
-                            }
-                            else translateMessage = translateMessage.Split('^')[1];
-                        }
                         translateText = translateMessage;
                     }
                 }
@@ -370,14 +354,6 @@ namespace MultiLanguage
                 if (!string.IsNullOrEmpty(translateMessage))
                 {
                     IsTranslated++;
-                    if (translateMessage.Contains("^"))
-                    {
-                        if (Game1.player.IsMale)
-                        {
-                            translateMessage = translateMessage.Split('^')[0];
-                        }
-                        else translateMessage = translateMessage.Split('^')[1];
-                    }
                     return SpriteText.getWidthOfString(translateMessage);
                 }
                 else if (Characters.ContainsKey(text))
@@ -396,14 +372,6 @@ namespace MultiLanguage
                 if (_translatedStrings.Contains(message))
                     return message;
                 var translateMessage = Translate(message);
-                if (translateMessage.Contains("^"))
-                {
-                    if (Game1.player.IsMale)
-                    {
-                        translateMessage = translateMessage.Split('^')[0];
-                    }
-                    else translateMessage = translateMessage.Split('^')[1];
-                }
                 return translateMessage;
             }
             else return string.Empty;
@@ -417,14 +385,6 @@ namespace MultiLanguage
                 if (_translatedStrings.Contains(message))
                     return message;
                 var translateMessage = Translate(message);
-                if (translateMessage.Contains("^"))
-                {
-                    if (Game1.player.IsMale)
-                    {
-                        translateMessage = translateMessage.Split('^')[0];
-                    }
-                    else translateMessage = translateMessage.Split('^')[1];
-                }
                 return translateMessage;
             }
             else return string.Empty;
@@ -461,7 +421,7 @@ namespace MultiLanguage
         {
             if (Config.LanguageName != "EN")
             {
-                if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message))
+                if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message) || _translatedStrings.Contains(message))
                 {
                     return message;
                 }
@@ -474,16 +434,28 @@ namespace MultiLanguage
                     var resultTranslate = message;
                     var fval = _fuzzyDictionary.GetFuzzyKeyValue(message);
 
-                    if (!string.IsNullOrEmpty(fval.Key) && !string.IsNullOrEmpty(fval.Value))
+                    var tempFKey = fval.Key;
+                    var tempFValue = fval.Value;
+
+                    if (tempFValue.Contains("^") && !tempFKey.Contains("^"))
                     {
-                        if (fval.Key.Contains("@"))
+                        if (Game1.player.IsMale)
                         {
-                            var diff = GetKeysValue(fval.Key, message);
-                            resultTranslate = StringFormatWithKeys(fval.Value, diff.Select(d => d.Value).ToList());
+                            tempFValue = tempFValue.Split('^')[0];
+                        }
+                        else tempFValue = tempFValue.Split('^')[1];
+                    }
+
+                    if (!string.IsNullOrEmpty(tempFKey) && !string.IsNullOrEmpty(tempFValue))
+                    {
+                        if (tempFKey.Contains("@"))
+                        {
+                            var diff = GetKeysValue(tempFKey, message);
+                            resultTranslate = StringFormatWithKeys(tempFValue, diff.Select(d => d.Value).ToList());
                         }
                         else
                         {
-                            resultTranslate = fval.Value;
+                            resultTranslate = tempFValue;
                         }
                     }
 
@@ -499,6 +471,14 @@ namespace MultiLanguage
                 }
                 else
                 {
+                    if (!_memoryBuffer.ContainsKey(message))
+                    {
+                        _memoryBuffer.Add(message, string.Empty);
+                        if (_memoryBuffer.Count > 500)
+                        {
+                            _memoryBuffer.Remove(_memoryBuffer.First().Key);
+                        }
+                    }
                     return message;
                 }
             }
