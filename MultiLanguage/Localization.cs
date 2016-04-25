@@ -237,10 +237,9 @@ namespace MultiLanguage
                 var selectedLang = _languageDescriptions[option[selection]];
                 if (selectedLang != _currentLanguage)
                 {
-                    File.WriteAllBytes(Path.Combine(PathOnDisk, "languages", "Config.json"),
-                        Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new Config { LanguageName = selectedLang })));
+                    Config.LanguageName = selectedLang;
                     _currentLanguage = selectedLang;
-                    Game1.showGlobalMessage("This change will not take effect until you restart the game");
+                    //Game1.showGlobalMessage("This change will not take effect until you restart the game");
                 }
             }
         }
@@ -1084,5 +1083,6 @@ namespace MultiLanguage
             int num = (int)c - 32;
             return new Rectangle(num * 8 % SpriteText.spriteTexture.Width, num * 8 / SpriteText.spriteTexture.Width * 16 + (junimoText ? 96 : 0), 8, 16);
         }
+
     }
 }

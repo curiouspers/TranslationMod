@@ -15,76 +15,116 @@ namespace LanguagePatcher
 {
     class Program
     {
+        static AssemblyDefinition GameAssembly { get; set; }
         static void Main(string[] args)
         {
-            LocalizationBridge.Localization = new MultiLanguage.Localization();
+            LocalizationBridge.Localization = new Localization();
+            GameAssembly = AssemblyDefinition.ReadAssembly(LocalizationBridge.Localization.Config.ExecutingAssembly);
+            if (!CheckPatchedMark())
+            {
+                while(true)
+                {
+                    Console.WriteLine("Version of your game is not localized. Do you want to patch the game? (y = Yes; n = No");
+                    var answer = Console.ReadLine();
+                    if (answer == "y")
+                    {
+                        break;
+                    }
+                    else if(answer == "n")
+                    {
+                        StartGame("Stardew Valley.exe");
+                        return;
+                    }
+                }
+                while (true)
+                {
+                    Console.WriteLine("Do you want to create new 'Stardew Valley (multilang).exe' file (can't using mods) or rewrite  original 'Stardew Valley.exe'? (1 = Create; 2 = Rewrite");
+                    var answer = Console.ReadLine();
+                    if (answer == "1")
+                    {
+                        LocalizationBridge.Localization.Config.ExecutingAssembly = "Stardew Valley (multilang).exe";
+                        break;
+                    }
+                    else if (answer == "2")
+                    {
+                        LocalizationBridge.Localization.Config.ExecutingAssembly = "Stardew Valley.exe";
+                        break;
+                    }
+                }
+                GameAssembly = AssemblyDefinition.ReadAssembly(LocalizationBridge.Localization.Config.ExecutingAssembly);
+                var injectees = GameAssembly.Modules.SelectMany(mod => ModuleDefinitionRocks.GetAllTypes(mod))
+                                                    .SelectMany(t => t.Methods)
+                                                    .Where(method => null != method.Body).ToList();
 
-            var pathcedName = "Stardew Valley.exe";
-            var gameAssembly = AssemblyDefinition.ReadAssembly("Stardew Valley.exe");
+                InjectClientSizeChangedCallback();
+                InjectUpdateCallback();
+                InjectLoadedGameCallback();
+                InjectChangeDropDownOptionsCallback();
+                InjectSetDropDownToProperValueCallback();
+                InjectGetRandomNameCallback();
+                InjectGetOtherFarmerNamesCallback();
+                InjectParseTextCallback();
+                InjectSpriteTextDrawStringCallback();
+                //InjectSpriteTextGetWidthOfStringCallback();
+                InjectSpriteBatchDrawString();
+                InjectSpriteFontMeasureString();
 
-            var injectees = gameAssembly.Modules.SelectMany(mod => ModuleDefinitionRocks.GetAllTypes(mod))
-                                                .SelectMany(t => t.Methods)
-                                                .Where(method => null != method.Body).ToList();
+                GameAssembly.Write(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), LocalizationBridge.Localization.Config.ExecutingAssembly));                
+            }
 
-            InjectClientSizeChangedCallback(gameAssembly);
-            InjectUpdateCallback(gameAssembly);
-            InjectLoadedGameCallback(gameAssembly);
-            InjectChangeDropDownOptionsCallback(gameAssembly);
-            InjectSetDropDownToProperValueCallback(gameAssembly);
-            InjectGetRandomNameCallback(gameAssembly);
-            InjectGetOtherFarmerNamesCallback(gameAssembly);
-            InjectParseTextCallback(gameAssembly);
-            InjectSpriteTextDrawStringCallback(gameAssembly);
-            //InjectSpriteTextGetWidthOfStringCallback(gameAssembly);
-            InjectSpriteBatchDrawString(gameAssembly, injectees);
-            InjectSpriteFontMeasureString(gameAssembly, injectees);
-
-            gameAssembly.Write(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), pathcedName));
-
-            StartGame(pathcedName);
+            StartGame(LocalizationBridge.Localization.Config.ExecutingAssembly);
         }
 
-        static void InjectClientSizeChangedCallback(AssemblyDefinition gameAssembly)
+        static bool CheckPatchedMark()
+        {
+            var some = GameAssembly.MainModule.GetMemberReferences().Where(m => m.FullName.Contains("MultiLanguage"));
+            if(some.Count() > 0)
+            {
+                return true;
+            }
+            else return false;
+        }
+        static void InjectClientSizeChangedCallback()
         {
             var CallbackMethod = typeof(LocalizationBridge).GetMethod("ClientSizeChangedCallback", new Type[] { });
-            var Callback = gameAssembly.MainModule.Import(CallbackMethod);
+            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
-            var injectee = gameAssembly.GetMethod("StardewValley.Game1", "Window_ClientSizeChanged", "(System.Object,System.EventArgs)System.Void");
+            var injectee = GameAssembly.GetMethod("StardewValley.Game1", "Window_ClientSizeChanged", "(System.Object,System.EventArgs)System.Void");
             var injecteeBody = injectee.Body;
             var injecteeInstructions = injecteeBody.Instructions;
             var processor = injecteeBody.GetILProcessor();
             processor.InsertBefore(injecteeInstructions[0], processor.Create(OpCodes.Call, Callback));
         }
-        static void InjectUpdateCallback(AssemblyDefinition gameAssembly)
+        static void InjectUpdateCallback()
         {
             var CallbackMethod = typeof(LocalizationBridge).GetMethod("UpdateCallback", new Type[] { });
-            var Callback = gameAssembly.MainModule.Import(CallbackMethod);
+            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
-            var injectee = gameAssembly.GetMethod("StardewValley.Game1", "Update", "(Microsoft.Xna.Framework.GameTime)System.Void");
+            var injectee = GameAssembly.GetMethod("StardewValley.Game1", "Update", "(Microsoft.Xna.Framework.GameTime)System.Void");
             var injecteeBody = injectee.Body;
             var injecteeInstructions = injecteeBody.Instructions;
             var injecteeInsCount = injecteeInstructions.Count;
             var processor = injecteeBody.GetILProcessor();
             processor.InsertBefore(injecteeInstructions[injecteeInsCount - 1], processor.Create(OpCodes.Call, Callback));
         }
-        static void InjectLoadedGameCallback(AssemblyDefinition gameAssembly)
+        static void InjectLoadedGameCallback()
         {
             var CallbackMethod = typeof(LocalizationBridge).GetMethod("LoadedGameCallback", new Type[] { });
-            var Callback = gameAssembly.MainModule.Import(CallbackMethod);
+            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
-            var injectee = gameAssembly.GetMethod("StardewValley.Game1", "loadForNewGame", "(System.Boolean)System.Void");
+            var injectee = GameAssembly.GetMethod("StardewValley.Game1", "loadForNewGame", "(System.Boolean)System.Void");
             var injecteeBody = injectee.Body;
             var injecteeInstructions = injecteeBody.Instructions;
             var injecteeInsCount = injecteeInstructions.Count;
             var processor = injecteeBody.GetILProcessor();
             processor.InsertBefore(injecteeInstructions[injecteeInsCount - 1], processor.Create(OpCodes.Call, Callback));
         }
-        static void InjectChangeDropDownOptionsCallback(AssemblyDefinition gameAssembly)
+        static void InjectChangeDropDownOptionsCallback()
         {
             var CallbackMethod = typeof(LocalizationBridge).GetMethod("ChangeDropDownOptionCallback", new Type[] { typeof(int), typeof(int), typeof(List<string>) });
-            var Callback = gameAssembly.MainModule.Import(CallbackMethod);            
+            var Callback = GameAssembly.MainModule.Import(CallbackMethod);            
 
-            var injectee = gameAssembly.GetMethod("StardewValley.Options", "changeDropDownOption", "(System.Int32,System.Int32,System.Collections.Generic.List`1)System.Void");
+            var injectee = GameAssembly.GetMethod("StardewValley.Options", "changeDropDownOption", "(System.Int32,System.Int32,System.Collections.Generic.List`1)System.Void");
             var injecteeBody = injectee.Body;
             var injecteeInstructions = injecteeBody.Instructions;
             var injecteeInsCount = injecteeInstructions.Count;
@@ -97,12 +137,12 @@ namespace LanguagePatcher
             processor.InsertBefore(callInstruction, processor.Create(OpCodes.Ldarg_2));
             processor.InsertBefore(callInstruction, processor.Create(OpCodes.Ldarg_3));
         }
-        static void InjectSetDropDownToProperValueCallback(AssemblyDefinition gameAssembly)
+        static void InjectSetDropDownToProperValueCallback()
         {
             var CallbackMethod = typeof(LocalizationBridge).GetMethod("SetDropDownToProperValueCallback", new Type[] { typeof(object) });
-            var Callback = gameAssembly.MainModule.Import(CallbackMethod);
+            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
-            var injectee = gameAssembly.GetMethod("StardewValley.Options", "setDropDownToProperValue", "(StardewValley.Menus.OptionsDropDown)System.Void");
+            var injectee = GameAssembly.GetMethod("StardewValley.Options", "setDropDownToProperValue", "(StardewValley.Menus.OptionsDropDown)System.Void");
             var injecteeBody = injectee.Body;
             var injecteeInstructions = injecteeBody.Instructions;
             var injecteeInsCount = injecteeInstructions.Count;
@@ -113,17 +153,17 @@ namespace LanguagePatcher
             processor.InsertBefore(injecteeInstructions[0], callInstruction);
             processor.InsertBefore(callInstruction, processor.Create(OpCodes.Ldarg_1));
         }
-        static void InjectGetRandomNameCallback(AssemblyDefinition gameAssembly)
+        static void InjectGetRandomNameCallback()
         {
             var CallbackMethod = typeof(LocalizationBridge).GetMethod("GetRandomNameCallback", new Type[] { });
-            var Callback = gameAssembly.MainModule.Import(CallbackMethod);
+            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = gameAssembly.MainModule.Import(hasReturnValue.GetMethod);
+            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetMethod);
             var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = gameAssembly.MainModule.Import(eventReturnValue.GetMethod);
+            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetMethod);
 
-            var injectee = gameAssembly.GetMethod("StardewValley.Dialogue", "randomName", "()System.String");
+            var injectee = GameAssembly.GetMethod("StardewValley.Dialogue", "randomName", "()System.String");
             var injecteeBody = injectee.Body;
             var injecteeInstructions = injecteeBody.Instructions;
             var processor = injecteeBody.GetILProcessor();
@@ -138,17 +178,17 @@ namespace LanguagePatcher
             processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Ret));
             processor.InsertBefore(injectionPoint, jmpTarget);
         }
-        static void InjectGetOtherFarmerNamesCallback(AssemblyDefinition gameAssembly)
+        static void InjectGetOtherFarmerNamesCallback()
         {
             var CallbackMethod = typeof(LocalizationBridge).GetMethod("GetOtherFarmerNamesCallback", new Type[] { });
-            var Callback = gameAssembly.MainModule.Import(CallbackMethod);
+            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = gameAssembly.MainModule.Import(hasReturnValue.GetMethod);
+            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetMethod);
             var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = gameAssembly.MainModule.Import(eventReturnValue.GetMethod);
+            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetMethod);
 
-            var injectee = gameAssembly.GetMethod("StardewValley.Utility", "getOtherFarmerNames", "()System.Collections.Generic.List`1");
+            var injectee = GameAssembly.GetMethod("StardewValley.Utility", "getOtherFarmerNames", "()System.Collections.Generic.List`1");
             var injecteeBody = injectee.Body;
             var injecteeInstructions = injecteeBody.Instructions;
             var processor = injecteeBody.GetILProcessor();
@@ -163,17 +203,17 @@ namespace LanguagePatcher
             processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Ret));
             processor.InsertBefore(injectionPoint, jmpTarget);
         }
-        static void InjectParseTextCallback(AssemblyDefinition gameAssembly)
+        static void InjectParseTextCallback()
         {
             var CallbackMethod = typeof(LocalizationBridge).GetMethod("ParseTextCallback", new Type[] { typeof(string), typeof(object), typeof(int) });
-            var Callback = gameAssembly.MainModule.Import(CallbackMethod);
+            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = gameAssembly.MainModule.Import(hasReturnValue.GetMethod);
+            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetMethod);
             var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = gameAssembly.MainModule.Import(eventReturnValue.GetMethod);
+            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetMethod);
 
-            var injectee = gameAssembly.GetMethod("StardewValley.Game1", "parseText", "(System.String,Microsoft.Xna.Framework.Graphics.SpriteFont,System.Int32)System.String");
+            var injectee = GameAssembly.GetMethod("StardewValley.Game1", "parseText", "(System.String,Microsoft.Xna.Framework.Graphics.SpriteFont,System.Int32)System.String");
             var injecteeBody = injectee.Body;
             var injecteeInstructions = injecteeBody.Instructions;
             var processor = injecteeBody.GetILProcessor();
@@ -192,7 +232,7 @@ namespace LanguagePatcher
             processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Ret));
             processor.InsertBefore(injectionPoint, jmpTarget);
         }
-        static void InjectSpriteTextDrawStringCallback(AssemblyDefinition gameAssembly)
+        static void InjectSpriteTextDrawStringCallback()
         {
             var CallbackMethod = typeof(LocalizationBridge).GetMethod("SpriteTextDrawStringCallback",
                 new Type[] {
@@ -210,14 +250,14 @@ namespace LanguagePatcher
                     typeof(string),
                     typeof(int)
                 });
-            var Callback = gameAssembly.MainModule.Import(CallbackMethod);
+            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = gameAssembly.MainModule.Import(hasReturnValue.GetMethod);
+            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetMethod);
             var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = gameAssembly.MainModule.Import(eventReturnValue.GetMethod);
+            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetMethod);
 
-            var injectee = gameAssembly.GetMethod(
+            var injectee = GameAssembly.GetMethod(
                 "StardewValley.BellsAndWhistles.SpriteText",
                 "drawString",
                 "(Microsoft.Xna.Framework.Graphics.SpriteBatch,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Single,System.Single,System.Boolean,System.Int32,System.String,System.Int32)System.Void"
@@ -247,17 +287,17 @@ namespace LanguagePatcher
             processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Brfalse, injectionPoint));
             processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Ret));
         }
-        static void InjectSpriteTextGetWidthOfStringCallback(AssemblyDefinition gameAssembly)
+        static void InjectSpriteTextGetWidthOfStringCallback()
         {
             var CallbackMethod = typeof(LocalizationBridge).GetMethod("SpriteTextGetWidthOfStringCallback", new Type[] { typeof(string) });
-            var Callback = gameAssembly.MainModule.Import(CallbackMethod);
+            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = gameAssembly.MainModule.Import(hasReturnValue.GetMethod);
+            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetMethod);
             var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = gameAssembly.MainModule.Import(eventReturnValue.GetMethod);
+            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetMethod);
 
-            var injectee = gameAssembly.GetMethod("StardewValley.BellsAndWhistles.SpriteText", "getWidthOfString", "(System.String)System.Int32");
+            var injectee = GameAssembly.GetMethod("StardewValley.BellsAndWhistles.SpriteText", "getWidthOfString", "(System.String)System.Int32");
             var injecteeBody = injectee.Body;
             var injecteeInstructions = injecteeBody.Instructions;
             var processor = injecteeBody.GetILProcessor();
@@ -273,14 +313,17 @@ namespace LanguagePatcher
             processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Ret));
             processor.InsertBefore(injectionPoint, jmpTarget);
         }
-        static void InjectSpriteBatchDrawString(AssemblyDefinition gameAssembly, List<MethodDefinition> injectees)
+        static void InjectSpriteBatchDrawString()
         {
+            var injectees = GameAssembly.Modules.SelectMany(mod => ModuleDefinitionRocks.GetAllTypes(mod))
+                                       .SelectMany(t => t.Methods)
+                                       .Where(method => null != method.Body).ToList();
             var FullCallbackMethod = typeof(LocalizationBridge).GetMethod("SpriteBatchDrawStringCallback", new Type[] { typeof(SpriteBatch),
             typeof(SpriteFont),typeof(string),typeof(Vector2),typeof(Color),typeof(float),typeof(Vector2),typeof(float),typeof(SpriteEffects),typeof(float)});
-            var FullCallback = gameAssembly.MainModule.Import(FullCallbackMethod);
+            var FullCallback = GameAssembly.MainModule.Import(FullCallbackMethod);
             var ShortCallbackMethod = typeof(LocalizationBridge).GetMethod("SpriteBatchDrawStringCallback", new Type[] { typeof(SpriteBatch),
             typeof(SpriteFont),typeof(string),typeof(Vector2),typeof(Color) });
-            var ShortCallback = gameAssembly.MainModule.Import(ShortCallbackMethod);
+            var ShortCallback = GameAssembly.MainModule.Import(ShortCallbackMethod);
 
             int count = 0;
             foreach (var body in injectees.Select(m => m.Body))
@@ -304,10 +347,13 @@ namespace LanguagePatcher
                 }
             }
         }
-        static void InjectSpriteFontMeasureString(AssemblyDefinition gameAssembly, List<MethodDefinition> injectees)
+        static void InjectSpriteFontMeasureString()
         {
+            var injectees = GameAssembly.Modules.SelectMany(mod => ModuleDefinitionRocks.GetAllTypes(mod))
+                                       .SelectMany(t => t.Methods)
+                                       .Where(method => null != method.Body).ToList();
             var CallbackMethod = typeof(LocalizationBridge).GetMethod("SpriteFontMeasureStringCallback", new Type[] { typeof(SpriteFont), typeof(string) });
-            var Callback = gameAssembly.MainModule.Import(CallbackMethod);
+            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
             foreach (var body in injectees.Select(m => m.Body))
             {
                 var processor = body.GetILProcessor();

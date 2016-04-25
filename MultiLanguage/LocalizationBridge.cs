@@ -12,9 +12,18 @@ namespace MultiLanguage
 {
     public static class LocalizationBridge
     {
+        private static Localization _localization;
         public static Localization Localization
         {
-            get; set;
+            get
+            {
+                if (_localization == null) _localization = new Localization();
+                return _localization;
+            }
+            set
+            {
+                _localization = value;
+            }
         }
         public static void ClientSizeChangedCallback()
         {

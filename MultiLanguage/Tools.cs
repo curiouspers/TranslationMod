@@ -1,8 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace MultiLanguage
@@ -470,7 +473,32 @@ namespace MultiLanguage
 
     public class Config
     {
-        public string LanguageName { get; set; }
+        private string _languageName;
+        public string LanguageName
+        {
+            get { return _languageName; }
+            set
+            {
+                _languageName = value;
+                UpdateConfigFile();
+            }
+        }
+        private string _executingAssembly;
+        public string ExecutingAssembly
+        {
+            get { return _executingAssembly; }
+            set
+            {
+                _executingAssembly = value;
+                UpdateConfigFile();
+            }
+        }
+
+        private void UpdateConfigFile()
+        {
+            File.WriteAllBytes(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "languages", "Config.json"),
+                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this, Formatting.Indented)));
+        }
     }
 
 }
