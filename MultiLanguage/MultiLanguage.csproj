@@ -408,6 +408,11 @@
   <ItemGroup>
     <Folder Include="languages\EN\dictionaries\" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Cyriller.dll" />
+    <Content Include="Stardew Valley.exe" />
+    <Content Include="xTile.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
