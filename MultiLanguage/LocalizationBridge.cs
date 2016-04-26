@@ -85,9 +85,19 @@ namespace MultiLanguage
             var result = Localization.OnGetWidthSpriteText(text);
             if(result != -1)
             {
-                return new DetourEvent { ReturnValue = result };
+                var @event = new DetourEvent { ReturnValue = result };
+                return @event;
             }
             else return new DetourEvent();
+        }
+        public static DetourEvent StringBrokeIntoSectionsCallback(string s, int width, int height)
+        {
+            var result = Localization.OnStringBrokeIntoSections(s, width, height);
+            if (result != null && result.Count > 0)
+            {
+                return new DetourEvent { ReturnValue = result };
+            }
+            return new DetourEvent();
         }
 
         public static void SpriteBatchDrawStringCallback(SpriteBatch batch, SpriteFont spriteFont, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth)

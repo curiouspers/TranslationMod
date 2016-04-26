@@ -1069,6 +1069,5 @@ namespace MultiLanguage
                 cyrPhrase = new CyrPhrase(collection, adjectives);
             }
         }
-
     }
 }
