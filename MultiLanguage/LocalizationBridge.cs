@@ -99,6 +99,12 @@ namespace MultiLanguage
             }
             return new DetourEvent();
         }
+        public static string SparklingTextCallback(string text)
+        {
+            var result = Localization.OnSparklingTextCallback(text);
+            if (string.IsNullOrEmpty(result)) return text;
+            else return result;
+        }
 
         public static void SpriteBatchDrawStringCallback(SpriteBatch batch, SpriteFont spriteFont, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth)
         {

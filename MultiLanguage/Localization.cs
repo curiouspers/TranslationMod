@@ -292,6 +292,18 @@ namespace MultiLanguage
             }
             else return null;
         }
+        public string OnSparklingTextCallback(string text)
+        {
+            if (Config.LanguageName != "EN")
+            {
+                var translateMessage = Translate(text);
+                if (!string.IsNullOrEmpty(translateMessage))
+                {
+                    return translateMessage;
+                }
+            }
+            return string.Empty;
+        }
 
         private string Translate(string message)
         {

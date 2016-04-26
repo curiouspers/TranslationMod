@@ -69,6 +69,7 @@ namespace LanguagePatcher
                 InjectSpriteBatchDrawString();
                 InjectSpriteFontMeasureString();
                 InjectStringBrokeIntoSectionsCallback();
+                InjectSparklingTextCallback();
 
                 GameAssembly.Write(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), LocalizationBridge.Localization.Config.ExecutingAssembly));                
             }
@@ -397,7 +398,33 @@ namespace LanguagePatcher
             processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Ret));
             processor.InsertBefore(injectionPoint, jmpTarget);
         }
+        static void InjectSparklingTextCallback()
+        {
+            var CallbackMethod = typeof(LocalizationBridge).GetMethod("SparklingTextCallback", new Type[] { typeof(string) });
+            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
+            var sparklingTextClass = GameAssembly.MainModule.GetType("StardewValley.BellsAndWhistles.SparklingText");
+            var injectee = sparklingTextClass.Methods.First(m => m.IsConstructor && m.Parameters.Count == 9);
+            var injecteeBody = injectee.Body;
+            var injecteeInstructions = injecteeBody.Instructions;
+            var processor = injecteeBody.GetILProcessor();
+            TypeReference stringType = GameAssembly.MainModule.Import(typeof(string));
+            injecteeBody.Variables.Add(new VariableDefinition(stringType));
+
+            foreach (var instruction in injecteeInstructions.ToList())
+            {
+                if (instruction.OpCode == OpCodes.Ldarg_2)
+                {
+                    processor.Replace(instruction, processor.Create(OpCodes.Ldloc_0));
+                }
+            }
+            //var ldarg2instructions = injecteeInstructions.Where(i => i.OpCode == OpCodes.Ldarg_2).ToList();
+
+            var injectionPoint = injecteeInstructions[0];
+            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Ldarg_2));
+            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, Callback));
+            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Stloc_0));           
+        }
         static void StartGame(string name)
         {
             var assembly = Assembly.LoadFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), name));
