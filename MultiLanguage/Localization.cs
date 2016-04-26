@@ -62,6 +62,7 @@ namespace MultiLanguage
         {
             if (_isMenuDrawing) _isMenuDrawing = false;
         }
+
         public void OnUpdate()
         {
             if (!string.IsNullOrEmpty(Game1.player.Name) && currentName != Game1.player.Name)
@@ -107,6 +108,7 @@ namespace MultiLanguage
                     _isMenuDrawing = false;
             }
         }
+
         public void OnChangeLanguage(int which, int selection, List<string> option)
         {
             if (which == 55)
@@ -120,6 +122,7 @@ namespace MultiLanguage
                 }
             }
         }
+
         public void OnSetDropDownPropertyValue(OptionsDropDown dropDown)
         {
             if (dropDown.whichOption == 55)
@@ -127,10 +130,12 @@ namespace MultiLanguage
                 dropDown.dropDownOptions = _languageDescriptions.Keys.ToList();
             }
         }
+
         public void OnGameLoaded()
         {
             _isGameLoaded = true;
         }
+
         public string OnGetRandomName()
         {
             if (Config.LanguageName != "EN")
@@ -139,6 +144,7 @@ namespace MultiLanguage
             }
             else return "";
         }
+
         public List<string> OnGetOtherFarmerNames()
         {
             if (Config.LanguageName != "EN")
@@ -147,6 +153,7 @@ namespace MultiLanguage
             }
             else return null;
         }
+
         public string OnParseText(string text, SpriteFont whichFont, int width)
         {
             if (Config.LanguageName != "EN")
@@ -181,6 +188,7 @@ namespace MultiLanguage
             }
             else return string.Empty;
         }
+
         public void OnDrawStringSpriteText(SpriteTextDrawStringEvent @event)
         {
             if (Config.LanguageName != "EN")
@@ -216,6 +224,7 @@ namespace MultiLanguage
                 @event.ReturnEarly = true;
             }
         }
+
         public int OnGetWidthSpriteText(string text)
         {
             if (Config.LanguageName != "EN")
@@ -241,6 +250,7 @@ namespace MultiLanguage
             }
             else return -1;
         }
+
         public string OnSpriteBatchDrawString(string message)
         {
             if (Config.LanguageName != "EN")
@@ -252,6 +262,7 @@ namespace MultiLanguage
             }
             else return string.Empty;
         }
+
         public string OnSpriteFontMeasureString(string message)
         {
             if (Config.LanguageName != "EN")
@@ -265,6 +276,7 @@ namespace MultiLanguage
             }
             else return string.Empty;
         }
+
         public List<string> OnStringBrokeIntoSections(string letter, int width, int height)
         {
             if (Config.LanguageName != "EN")
@@ -292,6 +304,7 @@ namespace MultiLanguage
             }
             else return null;
         }
+
         public string OnSparklingTextCallback(string text)
         {
             if (Config.LanguageName != "EN")
@@ -372,6 +385,7 @@ namespace MultiLanguage
             }
             return "";
         }
+
         private static List<KeyValuePair<string, string>> GetKeysValue(string template, string str)
         {
             List<KeyValuePair<string, string>> result = new List<KeyValuePair<string, string>>();
@@ -397,6 +411,7 @@ namespace MultiLanguage
             }
             return result;
         }
+
         private string StringFormatWithKeys(string format, List<string> args)
         {
             string result = format;
@@ -435,6 +450,7 @@ namespace MultiLanguage
             }
             return result;
         }
+
         private string Decline(string message, string _case)
         {
             try
@@ -473,6 +489,7 @@ namespace MultiLanguage
                 throw;
             }
         }
+
         private void AddToDictionary(string key, string value)
         {
             if (key != "__comment")
@@ -480,6 +497,7 @@ namespace MultiLanguage
                 _fuzzyDictionary.Add(key, value);
             }
         }
+
         private void KeyReplace(string playerName, string farm)
         {
             // we need to cache the keys to update since we can't
@@ -511,6 +529,7 @@ namespace MultiLanguage
             }
             _isKeyReplaced = true;
         }
+
         private string randomName()
         {
             string str;
@@ -659,6 +678,7 @@ namespace MultiLanguage
             }
             return str1;
         }
+
         private List<string> getOtherFarmerNames()
         {
             List<string> strs = new List<string>();
@@ -782,6 +802,7 @@ namespace MultiLanguage
             strs.Add(str);
             return strs;
         }
+
         private void drawString(SpriteBatch b, string s, int x, int y, int characterPosition,
                                 int width, int height, float alpha, float layerDepth, bool junimoText,
                                 int drawBGScroll, string placeHolderScrollWidthText, int color)

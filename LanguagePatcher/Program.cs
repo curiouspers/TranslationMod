@@ -51,10 +51,6 @@ namespace LanguagePatcher
                         break;
                     }
                 }
-                GameAssembly = AssemblyDefinition.ReadAssembly(LocalizationBridge.Localization.Config.ExecutingAssembly);
-                var injectees = GameAssembly.Modules.SelectMany(mod => ModuleDefinitionRocks.GetAllTypes(mod))
-                                                    .SelectMany(t => t.Methods)
-                                                    .Where(method => null != method.Body).ToList();
 
                 InjectClientSizeChangedCallback();
                 InjectUpdateCallback();
@@ -70,7 +66,7 @@ namespace LanguagePatcher
                 InjectSpriteFontMeasureString();
                 InjectStringBrokeIntoSectionsCallback();
                 InjectSparklingTextCallback();
-
+                SetPatchedMark();
                 GameAssembly.Write(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), LocalizationBridge.Localization.Config.ExecutingAssembly));                
             }
 
@@ -79,12 +75,18 @@ namespace LanguagePatcher
 
         static bool CheckPatchedMark()
         {
-            var some = GameAssembly.MainModule.GetMemberReferences().Where(m => m.FullName.Contains("MultiLanguage"));
-            if(some.Count() > 0)
+            var patchedType = GameAssembly.MainModule.GetType("StardewValley.Game1");
+            var patched = patchedType.Fields.Where(f => f.FullName == "System.Boolean StardewValley.Game1::patched").Count() > 0;// (new FieldDefinition("patched", Mono.Cecil.FieldAttributes.Private, GameAssembly.MainModule.Import(typeof(bool))));
+            if (patched)
             {
                 return true;
             }
             else return false;
+        }
+        static void SetPatchedMark()
+        {
+            var patchedType = GameAssembly.MainModule.GetType("StardewValley.Game1");
+            patchedType.Fields.Add(new FieldDefinition("patched", Mono.Cecil.FieldAttributes.Private, GameAssembly.MainModule.Import(typeof(bool))));
         }
         static void InjectClientSizeChangedCallback()
         {
@@ -418,13 +420,13 @@ namespace LanguagePatcher
                     processor.Replace(instruction, processor.Create(OpCodes.Ldloc_0));
                 }
             }
-            //var ldarg2instructions = injecteeInstructions.Where(i => i.OpCode == OpCodes.Ldarg_2).ToList();
 
             var injectionPoint = injecteeInstructions[0];
             processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Ldarg_2));
             processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, Callback));
             processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Stloc_0));           
         }
+
         static void StartGame(string name)
         {
             var assembly = Assembly.LoadFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), name));

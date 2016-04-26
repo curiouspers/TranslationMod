@@ -25,26 +25,32 @@ namespace MultiLanguage
                 _localization = value;
             }
         }
+
         public static void ClientSizeChangedCallback()
         {
             Localization.OnWindowsSizeChanged();
         }
+
         public static void UpdateCallback()
         {
             Localization.OnUpdate();
         }
+
         public static void ChangeDropDownOptionCallback(int which, int selection, List<string> option)
         {
             Localization.OnChangeLanguage(which, selection, option);
         }
+
         public static void SetDropDownToProperValueCallback(object dropdown)
         {
             Localization.OnSetDropDownPropertyValue(dropdown as OptionsDropDown);
         }
+
         public static void LoadedGameCallback()
         {
             Localization.OnGameLoaded();
         }
+
         public static DetourEvent GetRandomNameCallback()
         {
             var result = Localization.OnGetRandomName();
@@ -54,6 +60,7 @@ namespace MultiLanguage
             }
             return new DetourEvent();
         }
+
         public static DetourEvent GetOtherFarmerNamesCallback()
         {
             var result = Localization.OnGetOtherFarmerNames();
@@ -63,6 +70,7 @@ namespace MultiLanguage
             }
             return new DetourEvent();
         }
+
         public static DetourEvent ParseTextCallback(string text, object whichFont, int width)
         {
             var result = Localization.OnParseText(text, whichFont as SpriteFont, width);
@@ -72,6 +80,7 @@ namespace MultiLanguage
             }
             else return new DetourEvent();
         }
+
         public static DetourEvent SpriteTextDrawStringCallback(object b, string s, int x, int y, int characterPosition,
             int width, int height, float alpha, float layerDepth, bool junimoText,
             int drawBGScroll, string placeHolderScrollWidthText, int color)
@@ -80,6 +89,7 @@ namespace MultiLanguage
             Localization.OnDrawStringSpriteText(@event);
             return @event;
         }
+
         public static DetourEvent SpriteTextGetWidthOfStringCallback(string text)
         {
             var result = Localization.OnGetWidthSpriteText(text);
@@ -90,6 +100,7 @@ namespace MultiLanguage
             }
             else return new DetourEvent();
         }
+
         public static DetourEvent StringBrokeIntoSectionsCallback(string s, int width, int height)
         {
             var result = Localization.OnStringBrokeIntoSections(s, width, height);
@@ -99,6 +110,7 @@ namespace MultiLanguage
             }
             return new DetourEvent();
         }
+
         public static string SparklingTextCallback(string text)
         {
             var result = Localization.OnSparklingTextCallback(text);
@@ -118,6 +130,7 @@ namespace MultiLanguage
                 batch.DrawString(spriteFont, result, position, color, rotation, origin, scale, effects, layerDepth);
             }
         }
+
         public static void SpriteBatchDrawStringCallback(SpriteBatch batch, SpriteFont spriteFont, string text, Vector2 position, Color color)
         {
             var result = Localization.OnSpriteBatchDrawString(text);
@@ -130,6 +143,7 @@ namespace MultiLanguage
                 batch.DrawString(spriteFont, result, position, color);
             }
         }
+
         public static Vector2 SpriteFontMeasureStringCallback(SpriteFont spriteFont, string text)
         {
             var result = Localization.OnSpriteFontMeasureString(text);
