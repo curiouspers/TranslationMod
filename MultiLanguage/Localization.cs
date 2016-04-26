@@ -44,20 +44,6 @@ namespace MultiLanguage
         public Localization()
         {
             PathOnDisk = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            _memoryBuffer = new Dictionary<string, string>();
-            _translatedStrings = new List<string>();
-            _languages = new Dictionary<string, int>();
-            _fuzzyDictionary = new FuzzyStringDictionary();
-            _mails = new Dictionary<string, string>();
-            Characters = new Dictionary<string, string>();
-            var jobj = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "descriptions.json"))));
-            _languageDescriptions = new Dictionary<string, string>();
-            foreach (var directory in Directory.GetDirectories(Path.Combine(PathOnDisk, "languages")).Select((o, i) => new { Value = o, Index = i }))
-            {
-                var shortName = directory.Value.Split('\\').Last();
-                _languageDescriptions.Add(jobj[shortName].ToString(), shortName);
-                _languages.Add(shortName, directory.Index);
-            }
             var configLocation = Path.Combine(PathOnDisk, "languages", "Config.json");
             if (!File.Exists(configLocation))
             {
@@ -69,116 +55,7 @@ namespace MultiLanguage
             {
                 Config = JsonConvert.DeserializeObject<Config>(Encoding.UTF8.GetString(File.ReadAllBytes(configLocation)));
             }
-            _currentLanguage = Config.LanguageName;
-            var dictionariesFolder = Path.Combine(PathOnDisk, "languages", Config.LanguageName, "dictionaries");
-            if (Directory.Exists(dictionariesFolder) && Directory.GetFiles(dictionariesFolder).Count() > 0)
-            {
-                foreach (var dict in Directory.GetFiles(dictionariesFolder))
-                {
-                    var dictName = Path.GetFileName(dict);
-                    if (dictName == "Dialogues.json")
-                    {
-                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
-                        foreach (var val in jo)
-                        {
-                            var pair = JObject.Parse(val.Value.ToString());
-                            foreach (var row in pair)
-                            {
-                                AddToDictionary(row.Key, row.Value.ToString());
-                            }
-                        }
-                    }
-                    if (dictName == "Items.json")
-                    {
-                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
-                        foreach (var val in jo)
-                        {
-                            var pair = JObject.Parse(val.Value.ToString());
-                            foreach (var row in pair)
-                            {
-                                AddToDictionary(row.Key, row.Value.ToString());
-                            }
-                        }
-                    }
-                    else if (dictName == "Characters.json")
-                    {
-                        Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
-                        foreach (var pair in Characters)
-                        {
-                            AddToDictionary(pair.Key, pair.Value);
-                        }
-                    }
-                    else if (dictName == "Mails.json")
-                    {
-                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
-                        foreach (var val in jo)
-                        {
-                            if (val.Key != "__comment")
-                            {
-                                if (!_mails.ContainsKey(val.Key))
-                                {
-                                    _mails.Add(val.Key, val.Value.ToString());
-                                }
-                                else if (string.IsNullOrEmpty(_mails[val.Key]) && string.IsNullOrEmpty(val.Value.ToString()))
-                                {
-                                    _mails[val.Key] = val.Value.ToString();
-                                }
-                            }
-                        }
-                    }
-                    else if (dictName == "Achievements.json" || dictName == "animationDescription.json" || dictName == "EngagementDialogue.json" ||
-                        dictName == "Events.json" || dictName == "Festivals.json" ||
-                        dictName == "NPCGiftTastes.json" || dictName == "Quests.json" || dictName == "schedules.json" ||
-                        dictName == "TV.json")
-                    {
-                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
-                        foreach (var val in jo)
-                        {
-                            AddToDictionary(val.Key, val.Value.ToString());
-                        }
-                    }
-                    else if (dictName == "_NameGen.json")
-                    {
-                        _dataRandName = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
-                    }
-                    else
-                    {
-                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)).Replace("@newline", Environment.NewLine));
-                        foreach (var pair in jo)
-                        {
-                            AddToDictionary(pair.Key, pair.Value.ToString());
-                        }
-                    }
-                }
-            }
-
-            #region upload content to the game
-            var modeContentFolder = Path.Combine(PathOnDisk, "languages", Config.LanguageName, "content");
-            var gameContentFolder = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), "Content");// Game1.content.RootDirectory);
-            foreach (var directory in Directory.GetDirectories(modeContentFolder))
-            {
-                var files = Directory.GetFiles(directory).Where(f => Path.GetExtension(f) == ".xnb");
-                foreach (var file in files)
-                {
-                    var fileName = Path.GetFileName(file);
-                    var gameFile = new FileInfo(Path.Combine(gameContentFolder, directory.Split('\\').Last(), fileName));
-                    var modeFile = new FileInfo(Path.Combine(directory, fileName));
-                    if (gameFile.Exists)
-                    {
-                        if (gameFile.LastWriteTime != modeFile.LastWriteTime)
-                        {
-                            modeFile.CopyTo(gameFile.FullName, true);
-                        }
-                    }
-                }
-            }
-            #endregion
-            if (Config.LanguageName == "RU")
-            {
-                var collection = new CyrNounCollection();
-                var adjectives = new CyrAdjectiveCollection();
-                cyrPhrase = new CyrPhrase(collection, adjectives);
-            }
+            LoadDictionary();
         }
 
         public void OnWindowsSizeChanged()
@@ -1082,6 +959,135 @@ namespace MultiLanguage
         {
             int num = (int)c - 32;
             return new Rectangle(num * 8 % SpriteText.spriteTexture.Width, num * 8 / SpriteText.spriteTexture.Width * 16 + (junimoText ? 96 : 0), 8, 16);
+        }
+
+        private void LoadDictionary()
+        {
+            _memoryBuffer = new Dictionary<string, string>();
+            _translatedStrings = new List<string>();
+            _languages = new Dictionary<string, int>();
+            _fuzzyDictionary = new FuzzyStringDictionary();
+            _mails = new Dictionary<string, string>();
+            Characters = new Dictionary<string, string>();
+            var jobj = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "descriptions.json"))));
+            _languageDescriptions = new Dictionary<string, string>();
+            foreach (var directory in Directory.GetDirectories(Path.Combine(PathOnDisk, "languages")).Select((o, i) => new { Value = o, Index = i }))
+            {
+                var shortName = directory.Value.Split('\\').Last();
+                _languageDescriptions.Add(jobj[shortName].ToString(), shortName);
+                _languages.Add(shortName, directory.Index);
+            }
+
+            _currentLanguage = Config.LanguageName;
+            var dictionariesFolder = Path.Combine(PathOnDisk, "languages", Config.LanguageName, "dictionaries");
+            if (Directory.Exists(dictionariesFolder) && Directory.GetFiles(dictionariesFolder).Count() > 0)
+            {
+                foreach (var dict in Directory.GetFiles(dictionariesFolder))
+                {
+                    var dictName = Path.GetFileName(dict);
+                    if (dictName == "Dialogues.json")
+                    {
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        foreach (var val in jo)
+                        {
+                            var pair = JObject.Parse(val.Value.ToString());
+                            foreach (var row in pair)
+                            {
+                                AddToDictionary(row.Key, row.Value.ToString());
+                            }
+                        }
+                    }
+                    if (dictName == "Items.json")
+                    {
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        foreach (var val in jo)
+                        {
+                            var pair = JObject.Parse(val.Value.ToString());
+                            foreach (var row in pair)
+                            {
+                                AddToDictionary(row.Key, row.Value.ToString());
+                            }
+                        }
+                    }
+                    else if (dictName == "Characters.json")
+                    {
+                        Characters = JsonConvert.DeserializeObject<Dictionary<string, string>>(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        foreach (var pair in Characters)
+                        {
+                            AddToDictionary(pair.Key, pair.Value);
+                        }
+                    }
+                    else if (dictName == "Mails.json")
+                    {
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        foreach (var val in jo)
+                        {
+                            if (val.Key != "__comment")
+                            {
+                                if (!_mails.ContainsKey(val.Key))
+                                {
+                                    _mails.Add(val.Key, val.Value.ToString());
+                                }
+                                else if (string.IsNullOrEmpty(_mails[val.Key]) && string.IsNullOrEmpty(val.Value.ToString()))
+                                {
+                                    _mails[val.Key] = val.Value.ToString();
+                                }
+                            }
+                        }
+                    }
+                    else if (dictName == "Achievements.json" || dictName == "animationDescription.json" || dictName == "EngagementDialogue.json" ||
+                        dictName == "Events.json" || dictName == "Festivals.json" ||
+                        dictName == "NPCGiftTastes.json" || dictName == "Quests.json" || dictName == "schedules.json" ||
+                        dictName == "TV.json")
+                    {
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                        foreach (var val in jo)
+                        {
+                            AddToDictionary(val.Key, val.Value.ToString());
+                        }
+                    }
+                    else if (dictName == "_NameGen.json")
+                    {
+                        _dataRandName = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                    }
+                    else
+                    {
+                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)).Replace("@newline", Environment.NewLine));
+                        foreach (var pair in jo)
+                        {
+                            AddToDictionary(pair.Key, pair.Value.ToString());
+                        }
+                    }
+                }
+            }
+
+            #region upload content to the game
+            var modeContentFolder = Path.Combine(PathOnDisk, "languages", Config.LanguageName, "content");
+            var gameContentFolder = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), "Content");// Game1.content.RootDirectory);
+            foreach (var directory in Directory.GetDirectories(modeContentFolder))
+            {
+                var files = Directory.GetFiles(directory).Where(f => Path.GetExtension(f) == ".xnb");
+                foreach (var file in files)
+                {
+                    var fileName = Path.GetFileName(file);
+                    var gameFile = new FileInfo(Path.Combine(gameContentFolder, directory.Split('\\').Last(), fileName));
+                    var modeFile = new FileInfo(Path.Combine(directory, fileName));
+                    if (gameFile.Exists)
+                    {
+                        if (gameFile.LastWriteTime != modeFile.LastWriteTime)
+                        {
+                            modeFile.CopyTo(gameFile.FullName, true);
+                        }
+                    }
+                }
+            }
+            #endregion
+            if (Config.LanguageName == "RU")
+            {
+                var collection = new CyrNounCollection();
+                var adjectives = new CyrAdjectiveCollection();
+                cyrPhrase = new CyrPhrase(collection, adjectives);
+            }
         }
 
     }
