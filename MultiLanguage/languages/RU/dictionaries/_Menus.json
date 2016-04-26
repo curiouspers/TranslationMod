@@ -259,6 +259,7 @@
   "Great! I'll send little @key to her new home right away.": "",
   "Purchased @key": "Приобретен @key",
   "Not Enough Money": "Не хватает денег",
+  "Not enough money": "Не хватает денег",
   "Well cared-for adult chickens lay eggs every day.@newline Lives in the coop.": "",
   "Happy adults lay duck eggs every other day. @newline Lives in the coop.": "",
   "These are wooly rabbits! They shed precious wool every few days. @newline Lives in the coop.": "",
@@ -327,6 +328,14 @@
   "@number Pickaxe Efficiency": "",
   "@number Health": "@number Здоровья",
   "@number Energy": "@number Энергии",
+
+  "@number Speed": "@number Скорости",
+  "@number Farming": "@number Фермерство",
+  "@number Foraging": "@number Собирательство",
+  "@number Mining": "@number Добыча",
+  "@number Fishing": "@number Рыболовство",
+  "@number Combat": "@number Бой",
+
   "Wallet": "Бумажник",
   "HA! Now that's what I like to see! Here, have a star token.": "",
   "Strength Level: @key": "Уровень силы: @key",

@@ -1,12 +1,16 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 
-namespace TranslationMod
+namespace MultiLanguage
 {
-    public class FuzzyStringDictionary : IEnumerable<KeyValuePair<string,string>>
+    public class FuzzyStringDictionary : IEnumerable<KeyValuePair<string, string>>
     {
         private Dictionary<string, string> _simpleDictionary;
         private Dictionary<string, string> _fuzzyDictionary;
@@ -68,7 +72,7 @@ namespace TranslationMod
             {
                 return _fuzzyDictionary.Values.Concat(_simpleDictionary.Values);
             }
-        }        
+        }
 
         public void Add(string key, string value)
         {
@@ -82,7 +86,7 @@ namespace TranslationMod
             }
             catch (ArgumentException e) { }
         }
-        
+
         public void AddRange(IEnumerable<KeyValuePair<string, string>> pairs)
         {
             foreach (var pair in pairs)
@@ -143,7 +147,7 @@ namespace TranslationMod
         {
             var fuzzyKey = "";
             var value = "";
-            if(_simpleDictionary.ContainsKey(key))
+            if (_simpleDictionary.ContainsKey(key))
             {
                 fuzzyKey = key;
                 value = _simpleDictionary[key];
@@ -172,7 +176,7 @@ namespace TranslationMod
         {
             if (_memoryBuffer.ContainsKey(source))
                 return _memoryBuffer[source];
-            
+
             double score = 0;
             string resultString = "";
             string resultingValue = "";
@@ -207,9 +211,9 @@ namespace TranslationMod
                 double tempScore = 0;
                 double keyWordsScore = 0;
 
-                if (source.IndexOf(nlnl) != source.LastIndexOf(nlnl) && source.Split(new string[] { nlnl }, StringSplitOptions.None).Length - 1 == 2 )
+                if (source.IndexOf(nlnl) != source.LastIndexOf(nlnl) && source.Split(new string[] { nlnl }, StringSplitOptions.None).Length - 1 == 2)
                 {
-                    return "@key"+nlnl+"@key"+nlnl+"@key";
+                    return "@key" + nlnl + "@key" + nlnl + "@key";
                 }
 
 
@@ -259,9 +263,10 @@ namespace TranslationMod
                         j++;
                         if (j >= strI.Length) j = strI.Length - 1;
                         continue;
-                    } else
+                    }
+                    else
                     {
-                        if (strS[i].Length>0 && j < strI.Length && strI[j].IndexOf("@number") > -1 && !Tools.numberArr.Contains(strS[i][0]))
+                        if (strS[i].Length > 0 && j < strI.Length && strI[j].IndexOf("@number") > -1 && !Tools.numberArr.Contains(strS[i][0]))
                         {
                             prevKeyWordIndex = -1;
                             break;
@@ -338,7 +343,7 @@ namespace TranslationMod
                             }
                         }
 
-                        if (j >= strI.Length) j = strI.Length-1;
+                        if (j >= strI.Length) j = strI.Length - 1;
                         continue;
                     }
                     else if (j < strI.Length && strI[j] == strS[i])
@@ -349,7 +354,7 @@ namespace TranslationMod
                         curKeyIndex += strI[j].Length;
                         curSourceIndex += strS[i].Length;
                         j++;
-                        if (j >= strI.Length) j = strI.Length-1;
+                        if (j >= strI.Length) j = strI.Length - 1;
                     }
                     else if (prevKeyWordIndex > -1)
                     {
@@ -365,11 +370,11 @@ namespace TranslationMod
                             prevKeyWordIndex = -1;
                             break;
                         }
-                            
+
                         curKeyIndex += strI[j].Length;
                         curSourceIndex += strS[i].Length;
                         j++;
-                        if (j >= strI.Length) j = strI.Length-1;
+                        if (j >= strI.Length) j = strI.Length - 1;
                     }
                     else
                     {
@@ -389,13 +394,11 @@ namespace TranslationMod
             return resultString;
         }
 
-
-
         public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
         {
             return _simpleDictionary.Concat(_fuzzyDictionary).ToDictionary(i => i.Key, i => i.Value).GetEnumerator();
         }
-        
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return _simpleDictionary.Concat(_fuzzyDictionary).ToDictionary(i => i.Key, i => i.Value).GetEnumerator();
@@ -451,5 +454,51 @@ namespace TranslationMod
             dic[toKey] = value;
         }
 
+        public static object GetInstanceField(Type type, object instance, string fieldName)
+        {
+            BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+                | BindingFlags.Static;
+            FieldInfo field = type.GetField(fieldName, bindFlags);
+            return field.GetValue(instance);
+        }
+        public static void SetInstanceField(Type type, object instance, string fieldName, object value)
+        {
+            BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+                | BindingFlags.Static;
+            FieldInfo field = type.GetField(fieldName, bindFlags);
+            field.SetValue(instance, value);
+        }
+
     }
+
+    public class Config
+    {
+        private string _languageName;
+        public string LanguageName
+        {
+            get { return _languageName; }
+            set
+            {
+                _languageName = value;
+                UpdateConfigFile();
+            }
+        }
+        private string _executingAssembly;
+        public string ExecutingAssembly
+        {
+            get { return _executingAssembly; }
+            set
+            {
+                _executingAssembly = value;
+                UpdateConfigFile();
+            }
+        }
+
+        private void UpdateConfigFile()
+        {
+            File.WriteAllBytes(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "languages", "Config.json"),
+                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this, Formatting.Indented)));
+        }
+    }
+
 }
