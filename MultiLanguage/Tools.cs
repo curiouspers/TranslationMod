@@ -382,7 +382,7 @@ namespace MultiLanguage
                         break;
                     }
                 }
-                tempScore /= (source.Length - keyWordsScore);
+                tempScore = tempScore / (source.Length - keyWordsScore) + tempScore / 100;
                 if (tempScore >= 0.70 && tempScore > score)
                 {
                     score = tempScore;

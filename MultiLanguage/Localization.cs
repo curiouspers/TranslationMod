@@ -67,9 +67,9 @@ namespace MultiLanguage
         {
             if (!string.IsNullOrEmpty(Game1.player.Name) && currentName != Game1.player.Name)
             {
-                currentName = Game1.player.Name;
                 if (_isGameLoaded && !_isKeyReplaced)
                 {
+                    currentName = Game1.player.Name;
                     KeyReplace(Game1.player.Name, Game1.player.farmName);
                 }
             }
