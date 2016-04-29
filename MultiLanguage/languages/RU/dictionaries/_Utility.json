@@ -170,7 +170,7 @@
   "__comment": "Emily says",
   "Don't be sad, @player... We still love you.": "Не расстраивайся, @player... Мы все еще любим тебя.",
   "__comment": "message",
-  "Final score: @number\\r\\nBetter luck next time!": "Окончательный результат: @number\\r\\nУдачи в следующий раз!",
+  "Final score: @number@newlineBetter luck next time!": "Окончательный результат: @number@newlineУдачи в следующий раз!",
   "Unfortunately, @player was so jealous of my incredible farm that he did everything possible to drag me down!": "К сожалению, @player настолько сильно завидовал, что сделал все возможное, чтобы унизить меня!",
   "...@player.": "...@player.",
   "Congratulations, @player! You earned it with a whopping @number points!": "Поздравляем, @player! Ты заработал колоссальные @number очки!",
