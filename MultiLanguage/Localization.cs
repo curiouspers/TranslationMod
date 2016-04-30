@@ -38,6 +38,8 @@ namespace MultiLanguage
         private int _characterPosition;
         private bool _isGameLoaded = false;
         private bool _isKeyReplaced = false;
+        private int _currentUpdate = 0;
+        private int _updatesBeforeReplace = 60;
         private string currentName;
         private string PathOnDisk;
 
@@ -69,8 +71,14 @@ namespace MultiLanguage
             {
                 if (_isGameLoaded && !_isKeyReplaced)
                 {
-                    currentName = Game1.player.Name;
-                    KeyReplace(Game1.player.Name, Game1.player.farmName);
+                    if (_currentUpdate > _updatesBeforeReplace)
+                    {
+                        currentName = Game1.player.Name;
+                        KeyReplace(Game1.player.Name, Game1.player.farmName);
+                    } else
+                    {
+                        _currentUpdate++;
+                    }
                 }
             }
             if (Game1.activeClickableMenu != null && Game1.activeClickableMenu is GameMenu)
@@ -234,7 +242,7 @@ namespace MultiLanguage
                     IsTranslated = 0;
                     return -1;
                 }
-                var translateMessage = Translate(text);
+                var translateMessage = Translate(text, false);
 
                 if (!string.IsNullOrEmpty(translateMessage))
                 {
@@ -318,17 +326,23 @@ namespace MultiLanguage
             return string.Empty;
         }
 
-        private string Translate(string message)
+        private string Translate(string message, bool needTrim = true)
         {
             if (Config.LanguageName != "EN")
             {
+                if (needTrim)
+                    message = message.Trim();
+
                 if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message) || _translatedStrings.Contains(message))
                 {
                     return message;
                 }
                 if (_memoryBuffer.ContainsKey(message))
                 {
-                    return _memoryBuffer[message];
+                    if (!_memoryBuffer[message].IsNullOrEmpty())
+                        return _memoryBuffer[message];
+                    else
+                        return message;
                 }
                 if (_fuzzyDictionary.ContainsKey(message))
                 {
@@ -494,7 +508,7 @@ namespace MultiLanguage
         {
             if (key != "__comment")
             {
-                _fuzzyDictionary.Add(key, value);
+                _fuzzyDictionary.Add(key.Trim(), value);
             }
         }
 
@@ -516,7 +530,7 @@ namespace MultiLanguage
 
                 var newKey = keyToUpdate.Replace("@player", playerName).Replace("@farm", farm);//.Replace("%farm", farm).Replace("@", playerName);
                 var newValue = value.Replace("@player", playerName).Replace("@farm", farm);//.Replace("%farm", farm).Replace("@", playerName);
-
+                
                 _fuzzyDictionary.Remove(keyToUpdate);
                 _fuzzyDictionary.Add(newKey, newValue);
             }

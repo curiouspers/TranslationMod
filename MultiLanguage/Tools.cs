@@ -329,7 +329,7 @@ namespace MultiLanguage
                         prevKeyWordIndex = j;
                         if (j + 1 < strI.Length && i + 1 < strS.Length)
                         {
-                            if (strI[j + 1] == strS[i + 1])
+                            if (strI[j + 1] == strS[i + 1] || strI[j + 1].Contains("@key"))
                             {
                                 j++;
                             }
