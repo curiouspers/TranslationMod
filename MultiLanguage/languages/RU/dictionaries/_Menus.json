@@ -20,7 +20,7 @@
   "@key's Birthday": "День рождения @keyR",
   "@key' Birthday": "День рождения @keyR",
   "Nothing is posted today.": "Сегодня нет объявлений.",
-  "Accept Quest": "Принять",
+  "Accept Quest": "   Принять  ",    
   "__comment Menus/BlueprintsMenu.cs": "__comment Menus/BlueprintsMenu.cs",
   "Not Enough Resources": "Не хватает ресурсов",
   "Incorrect Building Type": "Неправильный тип здания",

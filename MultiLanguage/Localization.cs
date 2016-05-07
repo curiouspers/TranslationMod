@@ -293,7 +293,8 @@ namespace MultiLanguage
                 {
                     KeyReplace(Game1.player.Name, Game1.player.farmName);
                 }
-                var translateMessage = Translate(letter);
+                var translateMessage = Translate(letter);           
+
                 if (!string.IsNullOrEmpty(translateMessage))
                 {
                     List<string> list = new List<string>();
@@ -359,6 +360,39 @@ namespace MultiLanguage
                             tempFValue = tempFValue.Split('^')[0];
                         }
                         else tempFValue = tempFValue.Split('^')[1];
+                    }
+
+                    if(tempFValue.Contains("/"))
+                    {
+                        var genderSplit = tempFValue.Split(' ')
+                            .Where(s => s.Contains('/'))
+                            .Select(s => new KeyValuePair<string, string>(s, Game1.player.IsMale ? s.Split('/')[0] : s.Split('/')[1]));
+                        foreach (var gend in genderSplit)
+                        {
+                            tempFValue = tempFValue.Replace(gend.Key, gend.Value);
+                        }
+                    }
+                    if (tempFValue.Contains("|"))
+                    {
+                        NPC npc = null;
+                        if (Game1.currentSpeaker != null)
+                        {
+                            npc = Game1.currentSpeaker;
+                        }
+                        else if(string.IsNullOrEmpty(Game1.player.spouse))
+                        {
+                            npc = Game1.getCharacterFromName(Game1.player.spouse);
+                        }
+                        if(npc != null)
+                        {
+                            var genderSplit = tempFValue.Split(' ')
+                                .Where(s => s.Contains('|'))
+                                .Select(s => new KeyValuePair<string, string>(s, npc.gender == 1 ? s.Split('|')[1] : s.Split('|')[0]));
+                            foreach (var gend in genderSplit)
+                            {
+                                tempFValue = tempFValue.Replace(gend.Key, gend.Value);
+                            }
+                        }
                     }
 
                     if (!string.IsNullOrEmpty(tempFKey) && !string.IsNullOrEmpty(tempFValue))
@@ -1044,27 +1078,28 @@ namespace MultiLanguage
                             AddToDictionary(pair.Key, pair.Value);
                         }
                     }
-                    else if (dictName == "Mails.json")
-                    {
-                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
-                        foreach (var val in jo)
-                        {
-                            if (val.Key != "__comment")
-                            {
-                                if (!_mails.ContainsKey(val.Key))
-                                {
-                                    _mails.Add(val.Key, val.Value.ToString());
-                                }
-                                else if (string.IsNullOrEmpty(_mails[val.Key]) && string.IsNullOrEmpty(val.Value.ToString()))
-                                {
-                                    _mails[val.Key] = val.Value.ToString();
-                                }
-                            }
-                        }
-                    }
+                    //else if ()
+                    //{
+                    //    var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+                    //    foreach (var val in jo)
+                    //    {
+                    //        if (val.Key != "__comment")
+                    //        {
+                    //            if (!_mails.ContainsKey(val.Key))
+                    //            {
+                    //                _mails.Add(val.Key, val.Value.ToString());
+                    //            }
+                    //            else if (string.IsNullOrEmpty(_mails[val.Key]) && string.IsNullOrEmpty(val.Value.ToString()))
+                    //            {
+                    //                _mails[val.Key] = val.Value.ToString();
+                    //            }
+                    //        }
+                    //    }
+                    //}
                     else if (dictName == "Achievements.json" || dictName == "animationDescription.json" || dictName == "EngagementDialogue.json" ||
                         dictName == "Events.json" || dictName == "Festivals.json" ||
-                        dictName == "NPCGiftTastes.json" || dictName == "Quests.json" || dictName == "schedules.json" ||
+                        dictName == "Mails.json" || dictName == "Quests.json" ||
+                        dictName == "NPCGiftTastes.json"  || dictName == "schedules.json" ||
                         dictName == "TV.json")
                     {
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));

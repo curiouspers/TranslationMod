@@ -164,7 +164,7 @@
   "...Without further ado, ladies and gentleman...": "..Без лишних слов, дамы и господа...",
   "The next Stardew Hero will be...": "Новым Героем Стардью становится...",
   "...@key.": "...@key.",
-  "Well, congratulations @key... It looks like you outscored @player by @number points. ": "Что ж, поздравляем тебя @key... Ты смог|смогла обогнать @player на @number очков. ",
+  "Well, congratulations @key... It looks like you outscored @player by @number points. ": "Что ж, поздравляем тебя @key... Ты смог обогнать @player на @number очков. $h^Что ж, поздравляем тебя @key... Ты смогла обогнать @player на @number очков. $h",
   "Of course I did. I never considered @player a threat even for a millisecond.": "Конечно же, я сделал это. Я все время был уверен, что @player не представляет угрозы для меня.",
   "...Sorry @player. You did well, but you didn't accomplish enough to win.": "...Мне жаль, @player. Ты сделал все, что мог, но этого оказалось не достаточно для победы.^...Мне жаль, @player. Ты сделала все, что могла, но этого оказалось не достаточно для победы.",
   "__comment": "Emily says",
@@ -178,6 +178,6 @@
   "Good job, buddy!": "Хорошая работа, приятель!",
   "__comment": "pierre says",
   "I told you my seeds would get the job done!": "Я же говорил, что мои семена сработают!",
-  "This is the stupidest town I've ever set my foot in!": "Это самый тупой город, в котором я был|была!",
+  "This is the stupidest town I've ever set my foot in!": "Это самый тупой город, в котором я был!$s^Это самый тупой город, в котором я была!$s",
   "@key was never heard from again...": "Больше никто не слышал о @keyP..."
 }
