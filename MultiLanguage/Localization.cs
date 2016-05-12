@@ -26,11 +26,11 @@ namespace MultiLanguage
         private JObject _dataRandName { get; set; }
         private Dictionary<string, int> _languages;
         private Dictionary<string, string> _languageDescriptions;
-        private FuzzyStringDictionary _fuzzyDictionary;
+        private static FuzzyStringDictionary _fuzzyDictionary;
         private Dictionary<string, string> _mails;
         private string _currentLanguage;
         private bool _isMenuDrawing;
-        private Regex reToSkip = new Regex("^[0-9: -=.g]+$", RegexOptions.Compiled);
+        private static Regex reToSkip = new Regex("^[0-9: -=.g]+$", RegexOptions.Compiled);
         private CyrPhrase cyrPhrase;
         private int IsTranslated;
         private Dictionary<string, string> _memoryBuffer;
@@ -333,7 +333,7 @@ namespace MultiLanguage
                 if (needTrim)
                     message = message.Trim();
 
-                if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message) || _translatedStrings.Contains(message))
+                if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message) || _translatedStrings.Contains(message.Replace("\r\n", "").Replace("\n", "")))
                 {
                     return message;
                 }
@@ -415,13 +415,19 @@ namespace MultiLanguage
             }
 
             pattern += "$";
+        TryAgain:
             Regex r = new Regex(pattern, RegexOptions.Singleline);
             Match m = r.Match(str);
-
             for (int i = 1; i < m.Groups.Count; i++)
             {
                 var key = result[i - 1].Key;
                 result[i - 1] = new KeyValuePair<string, string>(key, m.Groups[i].Value);
+                //if we have (.+?)\ (.+?) in pattern, on second (.+?) we need to this check:
+                if (pattern.IndexOf(@"(.+?)\ (.+?)") > -1 && !reToSkip.IsMatch(m.Groups[i].Value) && !_fuzzyDictionary.ContainsKey(m.Groups[i].Value)) {
+                    // change first "(.+?)" to "(.+?\ .+?)" and start from begining of cycle
+                    pattern = pattern.ReplaceFirst("(.+?)", "(.+? .+?)");
+                    goto TryAgain;
+                }
             }
             return result;
         }
@@ -537,8 +543,8 @@ namespace MultiLanguage
 
             foreach (var mail in _mails)
             {
-                var key = mail.Key.Replace("@", playerName);
-                var value = mail.Value.Replace("@", playerName);
+                var key = mail.Key.Replace("@player", playerName).Replace("@farm", farm);
+                var value = mail.Value.Replace("@player", playerName).Replace("@farm", farm);
                 AddToDictionary(key, value);
             }
             _isKeyReplaced = true;
