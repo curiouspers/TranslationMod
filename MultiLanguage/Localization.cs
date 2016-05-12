@@ -27,7 +27,6 @@ namespace MultiLanguage
         private Dictionary<string, int> _languages;
         private Dictionary<string, string> _languageDescriptions;
         private static FuzzyStringDictionary _fuzzyDictionary;
-        private Dictionary<string, string> _mails;
         private string _currentLanguage;
         private bool _isMenuDrawing;
         private static Regex reToSkip = new Regex("^[0-9: -=.g]+$", RegexOptions.Compiled);
@@ -294,6 +293,7 @@ namespace MultiLanguage
                     KeyReplace(Game1.player.Name, Game1.player.farmName);
                 }
                 var translateMessage = Translate(letter);
+
                 if (!string.IsNullOrEmpty(translateMessage))
                 {
                     List<string> list = new List<string>();
@@ -359,6 +359,39 @@ namespace MultiLanguage
                             tempFValue = tempFValue.Split('^')[0];
                         }
                         else tempFValue = tempFValue.Split('^')[1];
+                    }
+
+                    if(tempFValue.Contains("/"))
+                    {
+                        var genderSplit = tempFValue.Split(' ')
+                            .Where(s => s.Contains('/'))
+                            .Select(s => new KeyValuePair<string, string>(s, Game1.player.IsMale ? s.Split('/')[0] : s.Split('/')[1]));
+                        foreach (var gend in genderSplit)
+                        {
+                            tempFValue = tempFValue.Replace(gend.Key, gend.Value);
+                        }
+                    }
+                    if (tempFValue.Contains("|"))
+                    {
+                        NPC npc = null;
+                        if (Game1.currentSpeaker != null)
+                        {
+                            npc = Game1.currentSpeaker;
+                        }
+                        else if(string.IsNullOrEmpty(Game1.player.spouse))
+                        {
+                            npc = Game1.getCharacterFromName(Game1.player.spouse);
+                        }
+                        if(npc != null)
+                        {
+                            var genderSplit = tempFValue.Split(' ')
+                                .Where(s => s.Contains('|'))
+                                .Select(s => new KeyValuePair<string, string>(s, npc.gender == 1 ? s.Split('|')[1] : s.Split('|')[0]));
+                            foreach (var gend in genderSplit)
+                            {
+                                tempFValue = tempFValue.Replace(gend.Key, gend.Value);
+                            }
+                        }
                     }
 
                     if (!string.IsNullOrEmpty(tempFKey) && !string.IsNullOrEmpty(tempFValue))
@@ -541,12 +574,6 @@ namespace MultiLanguage
                 _fuzzyDictionary.Add(newKey, newValue);
             }
 
-            foreach (var mail in _mails)
-            {
-                var key = mail.Key.Replace("@player", playerName).Replace("@farm", farm);
-                var value = mail.Value.Replace("@player", playerName).Replace("@farm", farm);
-                AddToDictionary(key, value);
-            }
             _isKeyReplaced = true;
         }
 
@@ -1000,7 +1027,6 @@ namespace MultiLanguage
             _translatedStrings = new List<string>();
             _languages = new Dictionary<string, int>();
             _fuzzyDictionary = new FuzzyStringDictionary();
-            _mails = new Dictionary<string, string>();
             Characters = new Dictionary<string, string>();
             var jobj = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(PathOnDisk, "languages", "descriptions.json"))));
             _languageDescriptions = new Dictionary<string, string>();
@@ -1050,27 +1076,10 @@ namespace MultiLanguage
                             AddToDictionary(pair.Key, pair.Value);
                         }
                     }
-                    else if (dictName == "Mails.json")
-                    {
-                        var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
-                        foreach (var val in jo)
-                        {
-                            if (val.Key != "__comment")
-                            {
-                                if (!_mails.ContainsKey(val.Key))
-                                {
-                                    _mails.Add(val.Key, val.Value.ToString());
-                                }
-                                else if (string.IsNullOrEmpty(_mails[val.Key]) && string.IsNullOrEmpty(val.Value.ToString()))
-                                {
-                                    _mails[val.Key] = val.Value.ToString();
-                                }
-                            }
-                        }
-                    }
                     else if (dictName == "Achievements.json" || dictName == "animationDescription.json" || dictName == "EngagementDialogue.json" ||
                         dictName == "Events.json" || dictName == "Festivals.json" ||
-                        dictName == "NPCGiftTastes.json" || dictName == "Quests.json" || dictName == "schedules.json" ||
+                        dictName == "Mails.json" || dictName == "Quests.json" ||
+                        dictName == "NPCGiftTastes.json"  || dictName == "schedules.json" ||
                         dictName == "TV.json")
                     {
                         var jo = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
