@@ -89,7 +89,7 @@
   "@number-@number Damage": "@number-@number Урон",
   "+ @number @key": "+ @number @key",
   "@number @key": "@number @key",
-  "Requires @key@newline@keys": "Требуется @key@newline@key",
+  "Requires @key@newline@keys": "Требуется @key@newline@keyS",
   "@farm Farm": "@farm Ферма",
   "Current Funds: @numberg": "Текущие средства: @numberg",
   "Total Earnings: @numberg": "Всего заработано: @numberg",

@@ -26,10 +26,10 @@ namespace MultiLanguage
         private JObject _dataRandName { get; set; }
         private Dictionary<string, int> _languages;
         private Dictionary<string, string> _languageDescriptions;
-        private static FuzzyStringDictionary _fuzzyDictionary;
+        private FuzzyStringDictionary _fuzzyDictionary;
         private string _currentLanguage;
         private bool _isMenuDrawing;
-        private static Regex reToSkip = new Regex("^[0-9: -=.g]+$", RegexOptions.Compiled);
+        private Regex reToSkip = new Regex("^[0-9: -=.g]+$", RegexOptions.Compiled);
         private CyrPhrase cyrPhrase;
         private int IsTranslated;
         private Dictionary<string, string> _memoryBuffer;
@@ -363,7 +363,7 @@ namespace MultiLanguage
 
                     if(tempFValue.Contains("/"))
                     {
-                        var genderSplit = tempFValue.Split(' ')
+                        var genderSplit = tempFValue.Split(' ', ',', '.', '!', '?', '<', '=', '-', ':', '^')
                             .Where(s => s.Contains('/'))
                             .Select(s => new KeyValuePair<string, string>(s, Game1.player.IsMale ? s.Split('/')[0] : s.Split('/')[1]));
                         foreach (var gend in genderSplit)
@@ -384,7 +384,7 @@ namespace MultiLanguage
                         }
                         if(npc != null)
                         {
-                            var genderSplit = tempFValue.Split(' ')
+                            var genderSplit = tempFValue.Split(' ', ',', '.', '!', '?', '<', '=', '-', ':', '^')
                                 .Where(s => s.Contains('|'))
                                 .Select(s => new KeyValuePair<string, string>(s, npc.gender == 1 ? s.Split('|')[1] : s.Split('|')[0]));
                             foreach (var gend in genderSplit)
@@ -433,7 +433,7 @@ namespace MultiLanguage
             return "";
         }
 
-        private static List<KeyValuePair<string, string>> GetKeysValue(string template, string str)
+        private List<KeyValuePair<string, string>> GetKeysValue(string template, string str)
         {
             List<KeyValuePair<string, string>> result = new List<KeyValuePair<string, string>>();
             string pattern = Regex.Escape(template);
@@ -470,7 +470,7 @@ namespace MultiLanguage
             string result = format;
             MatchCollection matches;
             int i = 0;
-            while ((matches = Regex.Matches(result, "@key[RDVTP]{0,1}|@number|@farm|@player|@playerChild")).Count != 0)
+            while ((matches = Regex.Matches(result, "@key[RDVTPS]{0,1}|@keyS[RDVTPS]{0,1}|@number|@farm|@player|@playerChild")).Count != 0)
             {
                 var value = args[i];
                 if (matches[0].Value.Contains("@key"))
@@ -492,9 +492,18 @@ namespace MultiLanguage
                             value = tmp;
                     }
 
-                    if (matches[0].Value.Length == 5 && Config.LanguageName == "RU")
+                    if(Config.LanguageName == "RU")
                     {
-                        value = Decline(value, matches[0].Value.Last().ToString());
+                        if(matches[0].Value.Length >= 5)
+                        {
+                            if(matches[0].Value[4] == 'S')
+                            {
+                                if (matches[0].Value.Length == 5)
+                                    value = Decline(value, "I", true);
+                                else value = Decline(value, matches[0].Value.Last().ToString(), true);
+                            }
+                            else value = Decline(value, matches[0].Value.Last().ToString());
+                        }
                     }
                 }
                 result = result.Remove(matches[0].Index, matches[0].Length);
@@ -504,12 +513,12 @@ namespace MultiLanguage
             return result;
         }
 
-        private string Decline(string message, string _case)
+        private string Decline(string message, string _case, bool plural = false)
         {
             try
             {
-
                 var result = cyrPhrase.Decline(message, GetConditionsEnum.Similar);
+                if (plural) result = cyrPhrase.DeclinePlural(message, GetConditionsEnum.Similar);
                 string res = "";
                 switch (_case)
                 {
@@ -1121,9 +1130,22 @@ namespace MultiLanguage
                             modeFile.CopyTo(gameFile.FullName, true);
                         }
                     }
+                    if (fileName == "townInterior.xnb" || 
+                        fileName == "HospitalTiles.xnb")
+                    {
+                        gameFile = new FileInfo(Path.Combine(gameContentFolder, fileName));
+                        if (gameFile.Exists)
+                        {
+                            if (gameFile.LastWriteTime != modeFile.LastWriteTime)
+                            {
+                                modeFile.CopyTo(gameFile.FullName, true);
+                            }
+                        }
+                    }
                 }
             }
             #endregion
+
             if (Config.LanguageName == "RU")
             {
                 var collection = new CyrNounCollection();
