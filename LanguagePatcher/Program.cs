@@ -57,8 +57,8 @@ namespace LanguagePatcher
                 InjectLoadedGameCallback();
                 InjectChangeDropDownOptionsCallback();
                 InjectSetDropDownToProperValueCallback();
-                InjectGetRandomNameCallback();
-                InjectGetOtherFarmerNamesCallback();
+                //InjectGetRandomNameCallback();
+                //InjectGetOtherFarmerNamesCallback();
                 InjectParseTextCallback();
                 InjectSpriteTextDrawStringCallback();
                 InjectSpriteTextGetWidthOfStringCallback();

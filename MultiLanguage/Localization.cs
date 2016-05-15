@@ -26,6 +26,8 @@ namespace MultiLanguage
         private JObject _dataRandName { get; set; }
         private Dictionary<string, int> _languages;
         private Dictionary<string, string> _languageDescriptions;
+        private List<KeyValuePair<string, string>> _nameEnToRu = new List<KeyValuePair<string, string>>();
+        private List<KeyValuePair<string, string>> _nameRuToEn = new List<KeyValuePair<string, string>>();
         private static FuzzyStringDictionary _fuzzyDictionary;
         private string _currentLanguage;
         private bool _isMenuDrawing;
@@ -74,6 +76,41 @@ namespace MultiLanguage
                     {
                         currentName = Game1.player.Name;
                         KeyReplace(Game1.player.Name, Game1.player.farmName);
+
+                        // uncomment to test
+                        /*
+                        var name = Game1.player.Name;
+                        var nameEn = translitName(name, true);
+                        var nameEnRu = translitName(nameEn);
+                        Console.WriteLine(name + " " + nameEn + " " + nameEnRu);
+
+                        var farmName = Game1.player.farmName;
+                        var farmNameEn = translitName(farmName, true);
+                        var farmNameEnRu = translitName(farmNameEn);
+                        Console.WriteLine(farmName + " " + farmNameEn + " " + farmNameEnRu);
+
+                        name = Game1.player.favoriteThing;
+                        nameEn = translitName(name, true);
+                        nameEnRu = translitName(nameEn);
+                        Console.WriteLine(name + " " + nameEn + " " + nameEnRu);
+
+                        for (int i = 0; i < 10000; i++)
+                        {
+                            name = StardewValley.Dialogue.randomName();
+                            var newName = translitName(name);
+                            var newEnName = translitName(newName, true);
+                            var newRuName = translitName(newEnName);
+                            if (newName != newRuName)
+                                Console.WriteLine(name + " " + newName + " " + newEnName + " " + newRuName);
+                        }
+
+
+                        var n = StardewValley.Utility.getOtherFarmerNames();
+                        Console.WriteLine(n[0] + " " + Translate(n[0]));
+                        Console.WriteLine(n[1] + " " + Translate(n[1]));
+                        Console.WriteLine(n[2] + " " + Translate(n[2]));
+                         */
+
                     } else
                     {
                         _currentUpdate++;
@@ -361,9 +398,9 @@ namespace MultiLanguage
                         else tempFValue = tempFValue.Split('^')[1];
                     }
 
-                    if(tempFValue.Contains("/"))
+                    if (tempFValue.Contains("/"))
                     {
-                        var genderSplit = tempFValue.Split(' ')
+                        var genderSplit = tempFValue.Split(' ', ',', '.', '!', '?', '<', '=', '-', ':', '^')
                             .Where(s => s.Contains('/'))
                             .Select(s => new KeyValuePair<string, string>(s, Game1.player.IsMale ? s.Split('/')[0] : s.Split('/')[1]));
                         foreach (var gend in genderSplit)
@@ -378,13 +415,13 @@ namespace MultiLanguage
                         {
                             npc = Game1.currentSpeaker;
                         }
-                        else if(string.IsNullOrEmpty(Game1.player.spouse))
+                        else if (string.IsNullOrEmpty(Game1.player.spouse))
                         {
                             npc = Game1.getCharacterFromName(Game1.player.spouse);
                         }
-                        if(npc != null)
+                        if (npc != null)
                         {
-                            var genderSplit = tempFValue.Split(' ')
+                            var genderSplit = tempFValue.Split(' ', ',', '.', '!', '?', '<', '=', '-', ':', '^')
                                 .Where(s => s.Contains('|'))
                                 .Select(s => new KeyValuePair<string, string>(s, npc.gender == 1 ? s.Split('|')[1] : s.Split('|')[0]));
                             foreach (var gend in genderSplit)
@@ -409,12 +446,19 @@ namespace MultiLanguage
 
                     if (_memoryBuffer.Count > 500)
                     {
-                        _memoryBuffer.Remove(_memoryBuffer.First().Key);
+                        //_memoryBuffer.Remove(_memoryBuffer.First().Key);
+                        _memoryBuffer.Remove(_memoryBuffer.ElementAt(Tools.rand.Next(0, _memoryBuffer.Count)).Key);
                     }
-                    _memoryBuffer.Add(message, resultTranslate);
-                    _translatedStrings.Add(resultTranslate);
-                    if (_translatedStrings.Count > 500)
-                        _translatedStrings.RemoveAt(0);
+                    if (!_memoryBuffer.ContainsKey(message))
+                    {
+                        _memoryBuffer.Add(message, resultTranslate);
+                    }
+                    if (!_translatedStrings.Contains(resultTranslate))
+                    {
+                        _translatedStrings.Add(resultTranslate);
+                        if (_translatedStrings.Count > 500)
+                            _translatedStrings.RemoveAt(0);
+                    }
                     return resultTranslate;
                 }
                 else
@@ -424,7 +468,8 @@ namespace MultiLanguage
                         _memoryBuffer.Add(message, string.Empty);
                         if (_memoryBuffer.Count > 500)
                         {
-                            _memoryBuffer.Remove(_memoryBuffer.First().Key);
+                            //_memoryBuffer.Remove(_memoryBuffer.First().Key);
+                            _memoryBuffer.Remove(_memoryBuffer.ElementAt(Tools.rand.Next(0, _memoryBuffer.Count)).Key);
                         }
                     }
                     return message;
@@ -569,12 +614,41 @@ namespace MultiLanguage
 
                 var newKey = keyToUpdate.Replace("@player", playerName).Replace("@farm", farm);//.Replace("%farm", farm).Replace("@", playerName);
                 var newValue = value.Replace("@player", playerName).Replace("@farm", farm);//.Replace("%farm", farm).Replace("@", playerName);
-                
+
                 _fuzzyDictionary.Remove(keyToUpdate);
                 _fuzzyDictionary.Add(newKey, newValue);
             }
 
             _isKeyReplaced = true;
+        }
+
+        private string translitName(string name, bool RuToEn = false)
+        {
+            var newName = name;
+            if (!RuToEn)
+            {
+                for (int i = _nameEnToRu.Count()-1; i >= 0; i--)
+                {
+                    var key = _nameEnToRu[i].Key;
+                    var val = _nameEnToRu[i].Value;
+                    if (newName.Contains(key))
+                    {
+                        newName = newName.Replace(key, val);
+                    }
+                }
+            } else
+            {
+                for (int i = _nameRuToEn.Count() - 1; i >= 0; i--)
+                {
+                    var key = _nameRuToEn[i].Key;
+                    var val = _nameRuToEn[i].Value;
+                    if (newName.Contains(key))
+                    {
+                        newName = newName.Replace(key, val);
+                    }
+                }
+            }
+            return newName;
         }
 
         private string randomName()
@@ -1091,6 +1165,40 @@ namespace MultiLanguage
                     else if (dictName == "_NameGen.json")
                     {
                         _dataRandName = JObject.Parse(Encoding.UTF8.GetString(File.ReadAllBytes(dict)));
+
+                        foreach (var row in _dataRandName)
+                        {
+                            if (row.Value.ToList().Count > 0)
+                            {
+                                var pair = JObject.Parse(row.Value.ToString());
+                                foreach (var item in pair)
+                                {
+                                    if (item.Key != "" && item.Value.ToString() != "")
+                                    {
+                                        if (row.Key[0] == 'n')
+                                        {
+                                            AddToDictionary(item.Key, item.Value.ToString());
+                                        }
+                                        else
+                                        {
+                                            if (row.Key != "bad")
+                                            {
+                                                if (_nameEnToRu.Where(kvp => kvp.Key == item.Key).Count() == 0)
+                                                {
+                                                    _nameEnToRu.Add(new KeyValuePair<string, string>(item.Key, item.Value.ToString()));
+                                                }
+                                                if (_nameRuToEn.Where(kvp => kvp.Key == item.Value.ToString()).Count() == 0)
+                                                {
+                                                    _nameRuToEn.Add(new KeyValuePair<string, string>(item.Value.ToString(), item.Key));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        _nameEnToRu.Sort((x, y) => x.Key.Length.CompareTo(y.Key.Length));
+                        _nameRuToEn.Sort((x, y) => x.Value.Length.CompareTo(y.Value.Length));
                     }
                     else
                     {
@@ -1121,9 +1229,22 @@ namespace MultiLanguage
                             modeFile.CopyTo(gameFile.FullName, true);
                         }
                     }
+                    if (fileName == "townInterior.xnb" || 
+                         fileName == "HospitalTiles.xnb")
+                     {
+                         gameFile = new FileInfo(Path.Combine(gameContentFolder, fileName));
+                         if (gameFile.Exists)
+                         {
+                             if (gameFile.LastWriteTime != modeFile.LastWriteTime)
+                             {
+                                 modeFile.CopyTo(gameFile.FullName, true);
+                             }
+                         }
+                     }
                 }
             }
             #endregion
+
             if (Config.LanguageName == "RU")
             {
                 var collection = new CyrNounCollection();

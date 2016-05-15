@@ -1,4 +1,8 @@
 {
+	"__comment":"fixing for translit method for russian language",
+	"16":{"d":"д","C":"К","i":"и","I":"И","que":"ке", "K":"К", "y":"й", "Y":"Й", "sch":"щ", "Sch":"Щ", "'":"ь", "''":"Ь", "II":"Ы", "ii":"ы", "ya":"я", "Ya":"Я" },
+	"new key forTranslit":{"@key @key":"@key @key"},
+
 	"__comment":"This part is StardewValley.Game1.randomName() localization",
 	"0": {
 		"B": "Б",
@@ -76,7 +80,7 @@
 			"Logan":"Логан",
 			"Stu":"Стю",
 			"Mike":"Майк",
-			"Jake":"Джей",
+			"Jake":"Джейк",
 			"Nick":"Ник",
 			"Ben":"Бен",
 			"Daniel":"Даниель",
@@ -205,5 +209,5 @@
 	"n9":{ "Farmer":"Фермерша",
 			"Rancher":"Скотоводша",
 			"Cowgirl":"Каугёрл",
-			"Farmgirl":"Девочка с фермы" }
+			"Farmgirl":"Девочка с фермы" },
 }

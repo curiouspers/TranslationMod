@@ -31,7 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Cyriller">
-      <HintPath>..\TranslationMod\packages\Cyriller\Cyriller.dll</HintPath>
+      <HintPath>..\packages\Cyriller\Cyriller.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
@@ -54,7 +54,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Stardew Valley">
-      <HintPath>..\TranslationMod\packages\Stardew Valley\Stardew Valley.exe</HintPath>
+      <HintPath>..\packages\Stardew Valley\Stardew Valley.exe</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -413,11 +413,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="languages\EN\dictionaries\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Cyriller.dll" />
-    <Content Include="Stardew Valley.exe" />
-    <Content Include="xTile.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
