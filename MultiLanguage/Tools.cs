@@ -130,12 +130,14 @@ namespace MultiLanguage
 
             if (_simpleDictionary.ContainsKey(key))
                 result = _simpleDictionary.Remove(key);
-
-            var removeItem = CompareKey(key);
-            if (string.IsNullOrEmpty(removeItem))
-                result = false;
             else
-                result = _fuzzyDictionary.Remove(removeItem);
+            {
+                var removeItem = CompareKey(key);
+                if (string.IsNullOrEmpty(removeItem))
+                    result = false;
+                else
+                    result = _fuzzyDictionary.Remove(removeItem);
+            }
 
             if (!string.IsNullOrEmpty(CheckInMemory(key)))
                 _memoryBuffer.Remove(key);
@@ -165,11 +167,6 @@ namespace MultiLanguage
             }
 
             return new KeyValuePair<string, string>(fuzzyKey, value);
-        }
-
-        public void ReplacePlayerName(string name)
-        {
-
         }
 
         private string CompareKey(string source)
@@ -413,6 +410,7 @@ namespace MultiLanguage
                 _memoryBuffer.Remove(_memoryBuffer.First().Key);
             }
         }
+
         string CheckInMemory(string key)
         {
             if (_memoryBuffer.ContainsKey(key))
@@ -500,5 +498,4 @@ namespace MultiLanguage
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this, Formatting.Indented)));
         }
     }
-
 }

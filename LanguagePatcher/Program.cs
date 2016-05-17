@@ -163,9 +163,9 @@ namespace LanguagePatcher
             var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetMethod);
+            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetGetMethod());
             var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetMethod);
+            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetGetMethod());
 
             var injectee = GameAssembly.GetMethod("StardewValley.Dialogue", "randomName", "()System.String");
             var injecteeBody = injectee.Body;
@@ -188,9 +188,9 @@ namespace LanguagePatcher
             var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetMethod);
+            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetGetMethod());
             var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetMethod);
+            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetGetMethod());
 
             var injectee = GameAssembly.GetMethod("StardewValley.Utility", "getOtherFarmerNames", "()System.Collections.Generic.List`1");
             var injecteeBody = injectee.Body;
@@ -213,9 +213,9 @@ namespace LanguagePatcher
             var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetMethod);
+            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetGetMethod());
             var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetMethod);
+            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetGetMethod());
 
             var injectee = GameAssembly.GetMethod("StardewValley.Game1", "parseText", "(System.String,Microsoft.Xna.Framework.Graphics.SpriteFont,System.Int32)System.String");
             var injecteeBody = injectee.Body;
@@ -257,9 +257,9 @@ namespace LanguagePatcher
             var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetMethod);
+            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetGetMethod());
             var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetMethod);
+            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetGetMethod());
 
             var injectee = GameAssembly.GetMethod(
                 "StardewValley.BellsAndWhistles.SpriteText",
@@ -297,9 +297,9 @@ namespace LanguagePatcher
             var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetMethod);
+            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetGetMethod());
             var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetMethod);
+            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetGetMethod());
 
             var injectee = GameAssembly.GetMethod("StardewValley.BellsAndWhistles.SpriteText", "getWidthOfString", "(System.String)System.Int32");
             var injecteeBody = injectee.Body;
@@ -378,9 +378,9 @@ namespace LanguagePatcher
             var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetMethod);
+            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetGetMethod());
             var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetMethod);
+            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetGetMethod());
 
             var injectee = GameAssembly.GetMethod("StardewValley.BellsAndWhistles.SpriteText", "getStringBrokenIntoSectionsOfHeight", "(System.String,System.Int32,System.Int32)System.Collections.Generic.List`1");
             var injecteeBody = injectee.Body;
