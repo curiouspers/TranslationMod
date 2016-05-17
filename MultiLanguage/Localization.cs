@@ -30,7 +30,6 @@ namespace MultiLanguage
         private string _currentLanguage;
         private bool _isMenuDrawing;
         private Regex reToSkip = new Regex("^[0-9: -=.g]+$", RegexOptions.Compiled);
-        private CyrPhrase cyrPhrase;
         private int IsTranslated;
         private Dictionary<string, string> _memoryBuffer;
         private List<string> _translatedStrings;
@@ -41,6 +40,13 @@ namespace MultiLanguage
         private int _updatesBeforeReplace = 60;
         private string currentName;
         private string PathOnDisk;
+
+        #region Cyrillic
+        private CyrPhrase cyrPhrase;
+        private CyrNumber cyrNumber;
+        private CyrNounCollection nounCollection;
+        private CyrAdjectiveCollection adjectiveCollection;
+        #endregion
 
         public Localization()
         {
@@ -361,7 +367,12 @@ namespace MultiLanguage
                         else tempFValue = tempFValue.Split('^')[1];
                     }
 
-                    if(tempFValue.Contains("/"))
+                    if (tempFValue.Contains("/") &&
+                        !tempFValue.Contains("@number/") &&
+                        !tempFValue.Contains("Бег/Ходьба") &&
+                        !tempFValue.Contains("Проверить/Выполнить") &&
+                        !tempFValue.Contains("24/7") &&
+                        !tempFValue.Contains("http"))
                     {
                         var genderSplit = tempFValue.Split(' ', ',', '.', '!', '?', '<', '=', '-', ':', '^')
                             .Where(s => s.Contains('/'))
@@ -470,7 +481,9 @@ namespace MultiLanguage
             string result = format;
             MatchCollection matches;
             int i = 0;
-            while ((matches = Regex.Matches(result, "@key[RDVTPS]{0,1}|@keyS[RDVTPS]{0,1}|@number|@farm|@player|@playerChild")).Count != 0)
+            var originalMatches = Regex.Matches(format, "@keyS[RDVTP]{0,1}|@key[RDVTP]{0,1}|@number|@farm|@player|@playerChild");
+            decimal lanstNumber = -1;
+            while ((matches = Regex.Matches(result, "@keyS[RDVTP]{0,1}|@key[RDVTP]{0,1}|@number|@farm|@player|@playerChild")).Count != 0)
             {
                 var value = args[i];
                 if (matches[0].Value.Contains("@key"))
@@ -498,12 +511,32 @@ namespace MultiLanguage
                         {
                             if(matches[0].Value[4] == 'S')
                             {
-                                if (matches[0].Value.Length == 5)
-                                    value = Decline(value, "I", true);
-                                else value = Decline(value, matches[0].Value.Last().ToString(), true);
+                                if(lanstNumber != -1)
+                                {
+                                    if (matches[0].Value.Length == 5)
+                                        value = DeclinePlural(value, "I", lanstNumber);
+                                    else value = DeclinePlural(value, matches[0].Value.Last().ToString(), lanstNumber);
+                                }
+                                else
+                                {
+                                    if (matches[0].Value.Length == 5)
+                                        value = DeclinePlural(value, "I");
+                                    else value = DeclinePlural(value, matches[0].Value.Last().ToString());
+                                }
                             }
                             else value = Decline(value, matches[0].Value.Last().ToString());
                         }
+                    }
+                }
+                else if(matches[0].Value == "@number")
+                {
+                    try
+                    {
+                        lanstNumber = Convert.ToDecimal(value);
+                    }
+                    catch
+                    {
+                        lanstNumber = Convert.ToDecimal(Regex.Match(value, @"\d+").Value);
                     }
                 }
                 result = result.Remove(matches[0].Index, matches[0].Length);
@@ -513,12 +546,11 @@ namespace MultiLanguage
             return result;
         }
 
-        private string Decline(string message, string _case, bool plural = false)
+        private string Decline(string message, string _case)
         {
             try
             {
                 var result = cyrPhrase.Decline(message, GetConditionsEnum.Similar);
-                if (plural) result = cyrPhrase.DeclinePlural(message, GetConditionsEnum.Similar);
                 string res = "";
                 switch (_case)
                 {
@@ -550,6 +582,98 @@ namespace MultiLanguage
                 return message;
                 throw;
             }
+        }
+        private string DeclinePlural(string message, string _case)
+        {
+            try
+            {
+                var result = new CyrResult();
+                CyrNoun noun;
+                CyrAdjective adj;
+                if (message.Contains(" "))
+                {
+                    noun = nounCollection.Get(message.Split(' ').Last(), GetConditionsEnum.Similar);
+                    adj = adjectiveCollection.Get(message.Split(' ').First(), GetConditionsEnum.Similar, noun.Gender);
+                    result.Add(adj.DeclinePlural(noun.Animate));
+                    result.Add(noun.DeclinePlural());
+                }
+                else
+                {
+                    noun = nounCollection.Get(message, GetConditionsEnum.Similar);
+                    result.Add(noun.DeclinePlural());
+                }
+                string res = "";
+                switch (_case)
+                {
+                    case "R":
+                        res = result.Genitive.Replace("-", " ");
+                        break;
+                    case "D":
+                        res = result.Dative.Replace("-", " ");
+                        break;
+                    case "V":
+                        res = result.Accusative.Replace("-", " ");
+                        break;
+                    case "T":
+                        res = result.Instrumental.Replace("-", " ");
+                        break;
+                    case "P":
+                        res = result.Prepositional.Replace("-", " ");
+                        break;
+                    case "N":
+                    default:
+                        res = result.Nominative.Replace("-", " ");
+                        break;
+                }
+                return res;
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Decline Exception, try to add a word " + message);
+                return message;
+                throw;
+            }
+        }
+        private string DeclinePlural(string message, string _case, decimal number)
+        {
+            CyrNumber cyr = new CyrNumber();
+            CyrNoun noun;
+            CyrNumber.Item item;
+            if (message.Contains(" "))
+            {
+                noun = nounCollection.Get(message.Split(' ').Last(), GetConditionsEnum.Similar);
+                item = new CyrNumber.Item(noun, message.Split(' ')[0]);
+            }
+            else
+            {
+                noun = nounCollection.Get(message, GetConditionsEnum.Similar);
+                item = new CyrNumber.Item(noun);
+            }
+            var result = cyr.Decline(number, item);
+            string res = "";
+            switch (_case)
+            {
+                case "R":
+                    res = string.Join(" ", result.Genitive.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
+                    break;
+                case "D":
+                    res = string.Join(" ", result.Dative.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
+                    break;
+                case "V":
+                    res = string.Join(" ", result.Accusative.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
+                    break;
+                case "T":
+                    res = string.Join(" ", result.Instrumental.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
+                    break;
+                case "P":
+                    res = string.Join(" ", result.Prepositional.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
+                    break;
+                case "N":
+                default:
+                    res = string.Join(" ", result.Nominative.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
+                    break;
+            }
+            return res;
         }
 
         private void AddToDictionary(string key, string value)
@@ -1148,9 +1272,10 @@ namespace MultiLanguage
 
             if (Config.LanguageName == "RU")
             {
-                var collection = new CyrNounCollection();
-                var adjectives = new CyrAdjectiveCollection();
-                cyrPhrase = new CyrPhrase(collection, adjectives);
+                nounCollection = new CyrNounCollection();
+                adjectiveCollection = new CyrAdjectiveCollection();
+                cyrPhrase = new CyrPhrase(nounCollection, adjectiveCollection);
+                cyrNumber = new CyrNumber();
             }
         }
     }
