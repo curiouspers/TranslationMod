@@ -4,17 +4,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using StardewValley;
-using StardewValley.BellsAndWhistles;
-using StardewValley.Menus;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace MultiLanguage
 {
@@ -40,6 +37,8 @@ namespace MultiLanguage
         private int _updatesBeforeReplace = 60;
         private string currentName;
         private string PathOnDisk;
+        private Assembly _gameAssembly;
+        private dynamic _player;
 
         #region Cyrillic
         private CyrPhrase cyrPhrase;
@@ -70,52 +69,60 @@ namespace MultiLanguage
             if (_isMenuDrawing) _isMenuDrawing = false;
         }
 
-        public void OnUpdate()
+        public void OnUpdate(dynamic player, dynamic activeClickableMenu)
         {
-            if (!string.IsNullOrEmpty(Game1.player.Name) && currentName != Game1.player.Name)
+            if(_gameAssembly == null)
+            {
+                _gameAssembly = Assembly.LoadFile(Path.Combine(PathOnDisk, Config.ExecutingAssembly));
+            }
+            if (!string.IsNullOrEmpty(player.Name) && currentName != player.Name)
             {
                 if (_isGameLoaded && !_isKeyReplaced)
                 {
                     if (_currentUpdate > _updatesBeforeReplace)
                     {
-                        currentName = Game1.player.Name;
-                        KeyReplace(Game1.player.Name, Game1.player.farmName);
+                        currentName = player.Name;
+                        KeyReplace(player.Name, player.farmName);
+                        _player = player;// _gameAssembly.GetType("StardewValley.Game1").GetField("player", BindingFlags.Static | BindingFlags.Public).GetValue(null);
                     } else
                     {
                         _currentUpdate++;
                     }
                 }
             }
-            if (Game1.activeClickableMenu != null && Game1.activeClickableMenu is GameMenu)
+            if (activeClickableMenu != null && activeClickableMenu.GetType().ToString() == "StardewValley.Menus.GameMenu")
             {
-                var menu = Game1.activeClickableMenu as GameMenu;
-                var pages = Tools.GetInstanceField(typeof(GameMenu), menu, "pages") as List<IClickableMenu>;
-
-
-                var optionPage = pages.FirstOrDefault(p => p is OptionsPage);
+                var gameMenuType = _gameAssembly.GetType("StardewValley.Menus.GameMenu");
+                var optionElementType = _gameAssembly.GetType("StardewValley.Menus.OptionsElement");
+                var optionPageType = _gameAssembly.GetType("StardewValley.Menus.OptionsPage");
+                var optionsDropDownType = _gameAssembly.GetType("StardewValley.Menus.OptionsDropDown");
+                var pages = (Tools.GetInstanceField(gameMenuType, activeClickableMenu, "pages") as IList).Cast<object>();
+                
+                var optionPage = pages.FirstOrDefault(p => optionPageType == p.GetType());
                 if (optionPage != null)
                 {
-                    var options = Tools.GetInstanceField(typeof(OptionsPage), optionPage, "options") as List<OptionsElement>;
+                    var options = Tools.GetInstanceField(optionPageType, optionPage, "options") as IList;
                     if (!_isMenuDrawing)
                     {
-                        var newOptions = new List<OptionsElement>();
-                        var dropdownoption = options.Find(o => o is OptionsDropDown);
-                        foreach (var option in options)
+                        var listType = typeof(List<>);
+                        var constructedListType = listType.MakeGenericType(optionElementType);
+                        var newOptions = Activator.CreateInstance(constructedListType) as IList;
+                        foreach (var option in options.Cast<dynamic>())
                         {
                             if (option.label == "Sound:")
                             {
-                                var languageDropDown = new OptionsDropDown("Language", 55);
+                                dynamic languageDropDown = Activator.CreateInstance(optionsDropDownType, "Language", 55, -1, -1);
                                 languageDropDown.selectedOption = _languages[_currentLanguage];
                                 newOptions.Add(languageDropDown);
                             }
                             newOptions.Add(option);
                         }
-                        Tools.SetInstanceField(typeof(OptionsPage), optionPage, "options", newOptions);
+                        Tools.SetInstanceField(optionPageType, optionPage, "options", newOptions);
                         _isMenuDrawing = true;
                     }
                 }
             }
-            else if (Game1.activeClickableMenu == null)
+            else if (activeClickableMenu == null)
             {
                 if (_isMenuDrawing)
                     _isMenuDrawing = false;
@@ -136,7 +143,7 @@ namespace MultiLanguage
             }
         }
 
-        public void OnSetDropDownPropertyValue(OptionsDropDown dropDown)
+        public void OnSetDropDownPropertyValue(dynamic dropDown)
         {
             if (dropDown.whichOption == 55)
             {
@@ -252,12 +259,18 @@ namespace MultiLanguage
                 if (!string.IsNullOrEmpty(translateMessage))
                 {
                     IsTranslated++;
-                    return SpriteText.getWidthOfString(translateMessage);
+                    var spriteTextType = _gameAssembly.GetType("StardewValley.BellsAndWhistles.SpriteText");
+                    var methodInfo = spriteTextType.GetMethod("getWidthOfString", BindingFlags.Public | BindingFlags.Static);
+                    var result = Convert.ToInt32(methodInfo.Invoke(null, new object[] { translateMessage }));
+                    return result;
                 }
                 else if (Characters.ContainsKey(text))
                 {
                     IsTranslated++;
-                    return SpriteText.getWidthOfString(Characters[text]);
+                    var spriteTextType = _gameAssembly.GetType("StardewValley.BellsAndWhistles.SpriteText");
+                    var methodInfo = spriteTextType.GetMethod("getWidthOfString", BindingFlags.Public | BindingFlags.Static);
+                    var result = Convert.ToInt32(methodInfo.Invoke(null, new object[] { Characters[text] }));
+                    return result;
                 }
                 else return -1;
             }
@@ -296,7 +309,7 @@ namespace MultiLanguage
             {
                 if (!_isKeyReplaced)
                 {
-                    KeyReplace(Game1.player.Name, Game1.player.farmName);
+                    KeyReplace(_player.Name, _player.farmName);
                 }
                 var translateMessage = Translate(letter);
 
@@ -306,7 +319,9 @@ namespace MultiLanguage
                     var s = translateMessage;
                     for (; s.Length > 0; s = s.Substring(list.Last().Length))
                     {
-                        string thisHeightCutoff = SpriteText.getStringPreviousToThisHeightCutoff(s, width, height);
+                        var spriteTextType = _gameAssembly.GetType("StardewValley.BellsAndWhistles.SpriteText");
+                        var methodInfo = spriteTextType.GetMethod("getStringPreviousToThisHeightCutoff", BindingFlags.Public | BindingFlags.Static);
+                        string thisHeightCutoff = methodInfo.Invoke(null, new object[] { s, width, height }).ToString();
                         if (thisHeightCutoff.Length > 0)
                             list.Add(thisHeightCutoff);
                         else
@@ -360,7 +375,7 @@ namespace MultiLanguage
 
                     if (tempFValue.Contains("^") && !tempFKey.Contains("^"))
                     {
-                        if (Game1.player.IsMale)
+                        if (_player.IsMale)
                         {
                             tempFValue = tempFValue.Split('^')[0];
                         }
@@ -376,22 +391,20 @@ namespace MultiLanguage
                     {
                         var genderSplit = tempFValue.Split(' ', ',', '.', '!', '?', '<', '=', '-', ':', '^')
                             .Where(s => s.Contains('/'))
-                            .Select(s => new KeyValuePair<string, string>(s, Game1.player.IsMale ? s.Split('/')[0] : s.Split('/')[1]));
+                            .Select(s => new KeyValuePair<string, string>(s, _player.IsMale ? s.Split('/')[0] : s.Split('/')[1]));
                         foreach (var gend in genderSplit)
                         {
                             tempFValue = tempFValue.Replace(gend.Key, gend.Value);
                         }
                     }
                     if (tempFValue.Contains("|"))
-                    {
-                        NPC npc = null;
-                        if (Game1.currentSpeaker != null)
+                    {                        
+                        dynamic npc = _gameAssembly.GetType("StardewValley.Game1").GetField("currentSpeaker", BindingFlags.Static | BindingFlags.Public).GetValue(null);
+                        if (npc == null && string.IsNullOrEmpty(_player.spouse))
                         {
-                            npc = Game1.currentSpeaker;
-                        }
-                        else if(string.IsNullOrEmpty(Game1.player.spouse))
-                        {
-                            npc = Game1.getCharacterFromName(Game1.player.spouse);
+                            var spriteTextType = _gameAssembly.GetType("StardewValley.Game1");
+                            var methodInfo = spriteTextType.GetMethod("getCharacterFromName", BindingFlags.Public | BindingFlags.Static);
+                            npc = methodInfo.Invoke(null, new object[] { _player.spouse });
                         }
                         if(npc != null)
                         {
@@ -712,9 +725,11 @@ namespace MultiLanguage
 
         private string randomName()
         {
+            var game1Type = _gameAssembly.GetType("StardewValley.Game1");
+            dynamic random = game1Type.GetField("random", BindingFlags.Static | BindingFlags.Public).GetValue(null);
             string str;
             string str1 = "";
-            int num = Game1.random.Next(3, 6);
+            int num = random.Next(3, 6);
             string[] strArrays = new string[] { _dataRandName["0"]["B"].ToString(),_dataRandName["0"]["Br"].ToString(), _dataRandName["0"]["J"].ToString(),
                 _dataRandName["0"]["F"].ToString(), _dataRandName["0"]["S"].ToString(), _dataRandName["0"]["M"].ToString(), _dataRandName["0"]["C"].ToString(),
                 _dataRandName["0"]["Ch"].ToString(), _dataRandName["0"]["L"].ToString(), _dataRandName["0"]["P"].ToString(), _dataRandName["0"]["K"].ToString(),
@@ -781,28 +796,28 @@ namespace MultiLanguage
                 _dataRandName["13"]["bba"].ToString(), _dataRandName["13"]["rt"].ToString(), _dataRandName["13"]["s"].ToString(), _dataRandName["13"]["mby"].ToString(),
                 _dataRandName["13"]["mbo"].ToString(), _dataRandName["13"]["mbus"].ToString(), _dataRandName["13"]["ngus"].ToString(), _dataRandName["13"]["cky"].ToString() };
             strs1.Add(_dataRandName["2"]["u"].ToString(), strArrays17);
-            str1 = string.Concat(str1, strArrays1[Game1.random.Next(strArrays1.Count<string>() - 1)]);
+            str1 = string.Concat(str1, strArrays1[random.Next(strArrays1.Count<string>() - 1)]);
             for (int i = 1; i < num - 1; i++)
             {
-                str1 = (i % 2 != 0 ? string.Concat(str1, strArrays5[Game1.random.Next(strArrays5.Length)]) : string.Concat(str1, strArrays3[Game1.random.Next(strArrays3.Length)]));
+                str1 = (i % 2 != 0 ? string.Concat(str1, strArrays5[random.Next(strArrays5.Length)]) : string.Concat(str1, strArrays3[random.Next(strArrays3.Length)]));
                 if (str1.Count<char>() >= num)
                 {
                     break;
                 }
             }
-            if (Game1.random.NextDouble() < 0.5 && !strArrays5.Contains<string>(string.Concat(str1.ElementAt<char>(str1.Length - 1))))
+            if (random.NextDouble() < 0.5 && !strArrays5.Contains<string>(string.Concat(str1.ElementAt<char>(str1.Length - 1))))
             {
-                str1 = string.Concat(str1, strArrays7[Game1.random.Next((int)strArrays7.Length)]);
+                str1 = string.Concat(str1, strArrays7[random.Next((int)strArrays7.Length)]);
             }
             else if (!strArrays5.Contains<string>(string.Concat(str1.ElementAt<char>(str1.Length - 1))))
             {
-                str1 = string.Concat(str1, strArrays5[Game1.random.Next((int)strArrays5.Length)]);
+                str1 = string.Concat(str1, strArrays5[random.Next((int)strArrays5.Length)]);
             }
-            else if (Game1.random.NextDouble() < 0.8)
+            else if (random.NextDouble() < 0.8)
             {
                 str1 = (str1.Count() > 3 ?
-                    string.Concat(str1, strs[string.Concat(str1.ElementAt(str1.Length - 1))].ElementAt(Game1.random.Next(strs[string.Concat(str1.ElementAt(str1.Length - 1))].Count() - 1))) :
-                    string.Concat(str1, strs1[string.Concat(str1.ElementAt(str1.Length - 1))].ElementAt(Game1.random.Next(strs1[string.Concat(str1.ElementAt(str1.Length - 1))].Count() - 1))));
+                    string.Concat(str1, strs[string.Concat(str1.ElementAt(str1.Length - 1))].ElementAt((int)random.Next(strs[string.Concat(str1.ElementAt(str1.Length - 1))].Count() - 1))) :
+                    string.Concat(str1, strs1[string.Concat(str1.ElementAt(str1.Length - 1))].ElementAt((int)random.Next(strs1[string.Concat(str1.ElementAt(str1.Length - 1))].Count() - 1))));
             }
             for (int j = str1.Count<char>() - 1; j > 2; j--)
             {
@@ -826,20 +841,20 @@ namespace MultiLanguage
                     }
                 }
             }
-            if (str1.Count<char>() <= 3 && Game1.random.NextDouble() < 0.1)
+            if (str1.Count<char>() <= 3 && random.NextDouble() < 0.1)
             {
-                str1 = (Game1.random.NextDouble() < 0.5 ? string.Concat(str1, str1) : string.Concat(str1, "-", str1));
+                str1 = (random.NextDouble() < 0.5 ? string.Concat(str1, str1) : string.Concat(str1, "-", str1));
             }
             if (str1.Count<char>() <= 2 && str1.Last<char>() == _dataRandName["15"]["e"].ToString()[0])
             {
                 string str2 = str1;
-                if (Game1.random.NextDouble() < 0.3)
+                if (random.NextDouble() < 0.3)
                 {
                     str = _dataRandName["15"]["m"].ToString();
                 }
                 else
                 {
-                    str = (Game1.random.NextDouble() < 0.5 ? _dataRandName["15"]["p"].ToString() : _dataRandName["15"]["b"].ToString());
+                    str = (random.NextDouble() < 0.5 ? _dataRandName["15"]["p"].ToString() : _dataRandName["15"]["b"].ToString());
                 }
                 str1 = string.Concat(str2, str);
             }
@@ -854,16 +869,20 @@ namespace MultiLanguage
             }
             if (isBad)
             {
-                str1 = (Game1.random.NextDouble() < 0.5 ? _dataRandName["badReplace"]["Bobo"].ToString() : _dataRandName["badReplace"]["Wumbus"].ToString());
+                str1 = (random.NextDouble() < 0.5 ? _dataRandName["badReplace"]["Bobo"].ToString() : _dataRandName["badReplace"]["Wumbus"].ToString());
             }
             return str1;
         }
 
         private List<string> getOtherFarmerNames()
         {
+            var game1Type = _gameAssembly.GetType("StardewValley.Game1");
+            int uniqueIDForThisGame = (int)game1Type.GetField("uniqueIDForThisGame", BindingFlags.Static | BindingFlags.Public).GetValue(null);
+            dynamic stats = game1Type.GetField("stats", BindingFlags.Static | BindingFlags.Public).GetValue(null);
+
             List<string> strs = new List<string>();
-            Random random = new Random((int)Game1.uniqueIDForThisGame);
-            Random random1 = new Random((int)((int)Game1.uniqueIDForThisGame + Game1.stats.DaysPlayed));
+            Random random = new Random(uniqueIDForThisGame);
+            Random random1 = new Random((int)(uniqueIDForThisGame + stats.DaysPlayed));
             string[] strArrays = new string[] { _dataRandName["n1"]["Ron"].ToString(), _dataRandName["n1"]["Desmond"].ToString(),
                 _dataRandName["n1"]["Gary"].ToString(), _dataRandName["n1"]["Bart"].ToString(), _dataRandName["n1"]["Willy"].ToString(),
                 _dataRandName["n1"]["Tex"].ToString(), _dataRandName["n1"]["Chris"].ToString(), _dataRandName["n1"]["Lenny"].ToString(),
@@ -931,12 +950,12 @@ namespace MultiLanguage
             string[] strArrays15 = new string[] { _dataRandName["n9"]["Farmer"].ToString(), _dataRandName["n9"]["Rancher"].ToString(),
                 _dataRandName["n9"]["Cowgirl"].ToString(), _dataRandName["n9"]["Farmgirl"].ToString() };
             string str = "";
-            if (!Game1.player.isMale)
+            if (!_player.isMale)
             {
                 str = strArrays3[random.Next(strArrays3.Count<string>())];
                 for (int i = 0; i < 2; i++)
                 {
-                    while (strs.Contains(str) || Game1.player.name.Equals(str))
+                    while (strs.Contains(str) || _player.name.Equals(str))
                     {
                         str = (i != 0 ? strArrays3[random1.Next(strArrays3.Count<string>())] :
                             strArrays3[random.Next(strArrays3.Count<string>())]);
@@ -951,7 +970,7 @@ namespace MultiLanguage
                 str = strArrays1[random.Next(strArrays1.Count<string>())];
                 for (int j = 0; j < 2; j++)
                 {
-                    while (strs.Contains(str) || Game1.player.name.Equals(str))
+                    while (strs.Contains(str) || _player.name.Equals(str))
                     {
                         str = (j != 0 ? strArrays1[random1.Next(strArrays1.Count<string>())] : strArrays1[random.Next(strArrays1.Count<string>())]);
                     }
@@ -963,7 +982,7 @@ namespace MultiLanguage
             if (random1.NextDouble() >= 0.5)
             {
                 str = strArrays3[random1.Next(strArrays3.Count<string>())];
-                while (Game1.player.name.Equals(str))
+                while (_player.name.Equals(str))
                 {
                     str = strArrays3[random1.Next(strArrays3.Count<string>())];
                 }
@@ -972,7 +991,7 @@ namespace MultiLanguage
             else
             {
                 str = strArrays1[random1.Next(strArrays1.Count<string>())];
-                while (Game1.player.name.Equals(str))
+                while (_player.name.Equals(str))
                 {
                     str = strArrays1[random1.Next(strArrays1.Count<string>())];
                 }
@@ -987,27 +1006,40 @@ namespace MultiLanguage
                                 int width, int height, float alpha, float layerDepth, bool junimoText,
                                 int drawBGScroll, string placeHolderScrollWidthText, int color)
         {
+            var spriteTextType = _gameAssembly.GetType("StardewValley.BellsAndWhistles.SpriteText");
+            var game1Type = _gameAssembly.GetType("StardewValley.Game1");
+            int fontPixelZoom = (int)spriteTextType.GetField("fontPixelZoom", BindingFlags.Static | BindingFlags.Public).GetValue(null);
+            int pixelZoom = (int)game1Type.GetField("pixelZoom", BindingFlags.Static | BindingFlags.Public).GetValue(null);
+            dynamic graphics = game1Type.GetField("graphics", BindingFlags.Static | BindingFlags.Public).GetValue(null);
+            Texture2D mouseCursors = game1Type.GetField("mouseCursors", BindingFlags.Static | BindingFlags.Public).GetValue(null) as Texture2D;
+            dynamic coloredTexture = spriteTextType.GetField("coloredTexture", BindingFlags.Static | BindingFlags.Public).GetValue(null) as Texture2D;
+            dynamic spriteTexture = spriteTextType.GetField("spriteTexture", BindingFlags.Static | BindingFlags.Public).GetValue(null) as Texture2D;
+
+            var getWidthOfStringInfo = spriteTextType.GetMethod("getWidthOfString", BindingFlags.Public | BindingFlags.Static);
+            var getWidthOffsetForCharInfo = spriteTextType.GetMethod("getWidthOffsetForChar", BindingFlags.Public | BindingFlags.Static);
+            var positionOfNextSpaceInfo = spriteTextType.GetMethod("positionOfNextSpace", BindingFlags.Public | BindingFlags.Static);
+            var getColorFromIndexInfo = spriteTextType.GetMethod("getColorFromIndex", BindingFlags.Public | BindingFlags.Static);
+
             if (width == -1)
             {
-                width = Game1.graphics.GraphicsDevice.Viewport.Width - x;
+                width = graphics.GraphicsDevice.Viewport.Width - x;
                 if (drawBGScroll == 1)
                 {
-                    width = SpriteText.getWidthOfString(s) * 2;
+                    width = Convert.ToInt32(getWidthOfStringInfo.Invoke(null, new object[] { s })) * 2;
                 }
             }
-            if (SpriteText.fontPixelZoom < 4)
+            if (fontPixelZoom < 4)
             {
-                y = y + (4 - SpriteText.fontPixelZoom) * Game1.pixelZoom;
+                y = y + (4 - fontPixelZoom) * pixelZoom;
             }
-            Vector2 position = new Vector2((float)x, (float)y);
+            Vector2 position = new Vector2(x, y);
             int accumulatedHorizontalSpaceBetweenCharacters = 0;
             if (drawBGScroll != 1)
             {
-                if (position.X + (float)width >
-                    (float)(Game1.graphics.GraphicsDevice.Viewport.Width - Game1.pixelZoom))
+                if (position.X + width > graphics.GraphicsDevice.Viewport.Width - pixelZoom)
                 {
-                    Viewport viewport = Game1.graphics.GraphicsDevice.Viewport;
-                    position.X = (float)(viewport.Width - width - Game1.pixelZoom);
+                    Viewport viewport = graphics.GraphicsDevice.Viewport;
+                    position.X = (float)(viewport.Width - width - pixelZoom);
                 }
                 if (position.X < 0f)
                 {
@@ -1016,100 +1048,84 @@ namespace MultiLanguage
             }
             if (drawBGScroll == 0)
             {
-                b.Draw(Game1.mouseCursors, position + (new Vector2(-12f, -3f) * (float)Game1.pixelZoom),
+                b.Draw(mouseCursors, position + (new Vector2(-12f, -3f) * (float)pixelZoom),
                     new Rectangle?(new Rectangle(325, 318, 12, 18)), Color.White * alpha, 0f, Vector2.Zero,
-                    (float)Game1.pixelZoom, SpriteEffects.None, layerDepth - 0.001f);
-                b.Draw(Game1.mouseCursors, position + (new Vector2(0f, -3f) * (float)Game1.pixelZoom),
+                    (float)pixelZoom, SpriteEffects.None, layerDepth - 0.001f);
+                b.Draw(mouseCursors, position + (new Vector2(0f, -3f) * (float)pixelZoom),
                     new Rectangle?(new Rectangle(337, 318, 1, 18)), Color.White * alpha, 0f, Vector2.Zero,
-                    new Vector2(
-                        (float)
-                            SpriteText.getWidthOfString((placeHolderScrollWidthText.Count<char>() > 0
+                    new Vector2((float)getWidthOfStringInfo.Invoke(null, new object[] { (placeHolderScrollWidthText.Count<char>() > 0
                                 ? placeHolderScrollWidthText
-                                : s)), (float)Game1.pixelZoom), SpriteEffects.None, layerDepth - 0.001f);
-                b.Draw(Game1.mouseCursors,
-                    position +
-                    new Vector2(
-                        (float)
-                            SpriteText.getWidthOfString((placeHolderScrollWidthText.Count<char>() > 0
-                                ? placeHolderScrollWidthText
-                                : s)), (float)(-3 * Game1.pixelZoom)), new Rectangle?(new Rectangle(338, 318, 12, 18)),
-                    Color.White * alpha, 0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None,
-                    layerDepth - 0.001f);
+                                : s) }), (float)pixelZoom),
+                    SpriteEffects.None, layerDepth - 0.001f);
+                b.Draw(mouseCursors,
+                    position + new Vector2((float)getWidthOfStringInfo.Invoke(null, new object[] { placeHolderScrollWidthText.Count<char>() > 0 ? placeHolderScrollWidthText : s }),
+                                (float)(-3 * pixelZoom)), new Rectangle?(new Rectangle(338, 318, 12, 18)),
+                                Color.White * alpha, 0f, Vector2.Zero, (float)pixelZoom, SpriteEffects.None,
+                                layerDepth - 0.001f);
                 if (placeHolderScrollWidthText.Count<char>() > 0)
                 {
-                    x = x +
-                        (SpriteText.getWidthOfString(placeHolderScrollWidthText) / 2 - SpriteText.getWidthOfString(s) / 2);
+                    x = x + ((int)getWidthOfStringInfo.Invoke(null, new object[] { placeHolderScrollWidthText }) / 2 - (int)getWidthOfStringInfo.Invoke(null, new object[] { (s) }) / 2);
                     position.X = (float)x;
                 }
-                position.Y = position.Y + (float)((4 - SpriteText.fontPixelZoom) * Game1.pixelZoom);
+                position.Y = position.Y + (float)((4 - fontPixelZoom) * pixelZoom);
             }
             else if (drawBGScroll == 1)
             {
-                b.Draw(Game1.mouseCursors, position + (new Vector2(-7f, -3f) * (float)Game1.pixelZoom),
+                b.Draw(mouseCursors, position + (new Vector2(-7f, -3f) * (float)pixelZoom),
                     new Rectangle?(new Rectangle(324, 299, 7, 17)), Color.White * alpha, 0f, Vector2.Zero,
-                    (float)Game1.pixelZoom, SpriteEffects.None, layerDepth - 0.001f);
-                b.Draw(Game1.mouseCursors, position + (new Vector2(0f, -3f) * (float)Game1.pixelZoom),
+                    (float)pixelZoom, SpriteEffects.None, layerDepth - 0.001f);
+                b.Draw(mouseCursors, position + (new Vector2(0f, -3f) * (float)pixelZoom),
                     new Rectangle?(new Rectangle(331, 299, 1, 17)), Color.White * alpha, 0f, Vector2.Zero,
-                    new Vector2(
-                        (float)
-                            SpriteText.getWidthOfString((placeHolderScrollWidthText.Count<char>() > 0
+                    new Vector2((float)getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count<char>() > 0
                                 ? placeHolderScrollWidthText
-                                : s)), (float)Game1.pixelZoom), SpriteEffects.None, layerDepth - 0.001f);
-                b.Draw(Game1.mouseCursors,
+                                : s)}), (float)pixelZoom), SpriteEffects.None, layerDepth - 0.001f);
+                b.Draw(mouseCursors,
                     position +
-                    new Vector2(
-                        (float)
-                            SpriteText.getWidthOfString((placeHolderScrollWidthText.Count<char>() > 0
+                    new Vector2((float)getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count<char>() > 0
                                 ? placeHolderScrollWidthText
-                                : s)), (float)(-3 * Game1.pixelZoom)), new Rectangle?(new Rectangle(332, 299, 7, 17)),
-                    Color.White * alpha, 0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None,
+                                : s)}), (float)(-3 * pixelZoom)), new Rectangle?(new Rectangle(332, 299, 7, 17)),
+                    Color.White * alpha, 0f, Vector2.Zero, (float)pixelZoom, SpriteEffects.None,
                     layerDepth - 0.001f);
-                b.Draw(Game1.mouseCursors,
-                    position +
-                    new Vector2(
-                        (float)
-                            (SpriteText.getWidthOfString((placeHolderScrollWidthText.Count<char>() > 0
-                                ? placeHolderScrollWidthText
-                                : s)) / 2), (float)(13 * Game1.pixelZoom)), new Rectangle?(new Rectangle(341, 308, 6, 5)),
-                    Color.White * alpha, 0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None,
+                b.Draw(mouseCursors, position + new Vector2((float)getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count<char>() > 0
+                                                                ? placeHolderScrollWidthText : s)}) / 2, (float)(13 * pixelZoom)), new Rectangle?(new Rectangle(341, 308, 6, 5)),
+                    Color.White * alpha, 0f, Vector2.Zero, (float)pixelZoom, SpriteEffects.None,
                     layerDepth - 0.0001f);
                 if (placeHolderScrollWidthText.Count<char>() > 0)
                 {
-                    x = x +
-                        (SpriteText.getWidthOfString(placeHolderScrollWidthText) / 2 - SpriteText.getWidthOfString(s) / 2);
+                    x = x + (int)getWidthOfStringInfo.Invoke(null, new object[] { placeHolderScrollWidthText }) / 2 - (int)getWidthOfStringInfo.Invoke(null, new object[] { s }) / 2;
                     position.X = (float)x;
                 }
-                position.Y = position.Y + (float)((4 - SpriteText.fontPixelZoom) * Game1.pixelZoom);
+                position.Y = position.Y + (float)((4 - fontPixelZoom) * pixelZoom);
             }
             else if (drawBGScroll == 2)
             {
-                b.Draw(Game1.mouseCursors, position + (new Vector2(-3f, -3f) * (float)Game1.pixelZoom),
+                b.Draw(mouseCursors, position + (new Vector2(-3f, -3f) * (float)pixelZoom),
                     new Rectangle?(new Rectangle(327, 281, 3, 17)), Color.White * alpha, 0f, Vector2.Zero,
-                    (float)Game1.pixelZoom, SpriteEffects.None, layerDepth - 0.001f);
-                b.Draw(Game1.mouseCursors, position + (new Vector2(0f, -3f) * (float)Game1.pixelZoom),
+                    (float)pixelZoom, SpriteEffects.None, layerDepth - 0.001f);
+                b.Draw(mouseCursors, position + (new Vector2(0f, -3f) * (float)pixelZoom),
                     new Rectangle?(new Rectangle(330, 281, 1, 17)), Color.White * alpha, 0f, Vector2.Zero,
                     new Vector2(
                         (float)
-                            (SpriteText.getWidthOfString((placeHolderScrollWidthText.Count<char>() > 0
+                            ((int)getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count<char>() > 0
                                 ? placeHolderScrollWidthText
-                                : s)) + Game1.pixelZoom), (float)Game1.pixelZoom), SpriteEffects.None,
+                                : s) }) + pixelZoom), (float)pixelZoom), SpriteEffects.None,
                     layerDepth - 0.001f);
-                b.Draw(Game1.mouseCursors,
+                b.Draw(mouseCursors,
                     position +
                     new Vector2(
                         (float)
-                            (SpriteText.getWidthOfString((placeHolderScrollWidthText.Count<char>() > 0
+                            ((int)getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count<char>() > 0
                                 ? placeHolderScrollWidthText
-                                : s)) + Game1.pixelZoom), (float)(-3 * Game1.pixelZoom)),
+                                : s) }) + pixelZoom), (float)(-3 * pixelZoom)),
                     new Rectangle?(new Rectangle(333, 281, 3, 17)), Color.White * alpha, 0f, Vector2.Zero,
-                    (float)Game1.pixelZoom, SpriteEffects.None, layerDepth - 0.001f);
+                    (float)pixelZoom, SpriteEffects.None, layerDepth - 0.001f);
                 if (placeHolderScrollWidthText.Count<char>() > 0)
                 {
                     x = x +
-                        (SpriteText.getWidthOfString(placeHolderScrollWidthText) / 2 - SpriteText.getWidthOfString(s) / 2);
+                        ((int)getWidthOfStringInfo.Invoke(null, new object[] { placeHolderScrollWidthText }) / 2 - (int)getWidthOfStringInfo.Invoke(null, new object[] { s }) / 2);
                     position.X = (float)x;
                 }
-                position.Y = position.Y + (float)((4 - SpriteText.fontPixelZoom) * Game1.pixelZoom);
+                position.Y = position.Y + (float)((4 - fontPixelZoom) * pixelZoom);
             }
             s = s.Replace(Environment.NewLine, "");
             for (int i = 0; i < Math.Min(s.Length, characterPosition); i++)
@@ -1119,29 +1135,26 @@ namespace MultiLanguage
                     if (i > 0)
                     {
                         position.X = position.X +
-                                     (float)
-                                         (8 * SpriteText.fontPixelZoom + accumulatedHorizontalSpaceBetweenCharacters +
-                                          (SpriteText.getWidthOffsetForChar(s[i]) +
-                                           SpriteText.getWidthOffsetForChar(s[i - 1])) * SpriteText.fontPixelZoom);
+                            (float)(8 * fontPixelZoom + accumulatedHorizontalSpaceBetweenCharacters +
+                            (int)getWidthOffsetForCharInfo.Invoke(null, new object[] { s[i] }) +
+                            (int)getWidthOffsetForCharInfo.Invoke(null, new object[] { s[i - 1] }) * fontPixelZoom);
                     }
-                    int num = SpriteText.fontPixelZoom;
+                    int num = fontPixelZoom;
                     accumulatedHorizontalSpaceBetweenCharacters = 0;
-                    if (
-                        SpriteText.positionOfNextSpace(s, i, (int)position.X,
-                            accumulatedHorizontalSpaceBetweenCharacters) >= x + width - Game1.pixelZoom)
+                    if ((int)positionOfNextSpaceInfo.Invoke(null, new object[] { s, i, (int)position.X, accumulatedHorizontalSpaceBetweenCharacters }) >= x + width - pixelZoom)
                     {
-                        position.Y = position.Y + (float)(18 * SpriteText.fontPixelZoom);
+                        position.Y = position.Y + (float)(18 * fontPixelZoom);
                         accumulatedHorizontalSpaceBetweenCharacters = 0;
                         position.X = (float)x;
                     }
-                    b.Draw((color != -1 ? SpriteText.coloredTexture : SpriteText.spriteTexture), position,
+                    b.Draw((color != -1 ? coloredTexture : spriteTexture), position,
                         new Rectangle?(getSourceRectForChar(s[i], junimoText)),
-                        SpriteText.getColorFromIndex(color) * alpha, 0f, Vector2.Zero, (float)SpriteText.fontPixelZoom,
+                        (Color)getColorFromIndexInfo.Invoke(null, new object[] { color }) * alpha, 0f, Vector2.Zero, (float)fontPixelZoom,
                         SpriteEffects.None, layerDepth);
                 }
                 else
                 {
-                    position.Y = position.Y + (float)(18 * SpriteText.fontPixelZoom);
+                    position.Y = position.Y + (float)(18 * fontPixelZoom);
                     position.X = (float)x;
                     accumulatedHorizontalSpaceBetweenCharacters = 0;
                 }
@@ -1150,8 +1163,10 @@ namespace MultiLanguage
 
         private Rectangle getSourceRectForChar(char c, bool junimoText)
         {
+            var spriteTextType = _gameAssembly.GetType("StardewValley.BellsAndWhistles.SpriteText");
+            dynamic spriteTexture = spriteTextType.GetField("spriteTexture", BindingFlags.Static | BindingFlags.Public).GetValue(null) as Texture2D;
             int num = (int)c - 32;
-            return new Rectangle(num * 8 % SpriteText.spriteTexture.Width, num * 8 / SpriteText.spriteTexture.Width * 16 + (junimoText ? 96 : 0), 8, 16);
+            return new Rectangle(num * 8 % spriteTexture.Width, num * 8 / spriteTexture.Width * 16 + (junimoText ? 96 : 0), 8, 16);
         }
 
         private void LoadDictionary()

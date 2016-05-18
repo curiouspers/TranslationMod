@@ -70,7 +70,7 @@ namespace LanguagePatcher
                 GameAssembly.Write(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), LocalizationBridge.Localization.Config.ExecutingAssembly));                
             }
 
-            StartGame(LocalizationBridge.Localization.Config.ExecutingAssembly);
+            //StartGame(LocalizationBridge.Localization.Config.ExecutingAssembly);
         }
 
         static bool CheckPatchedMark()
@@ -101,7 +101,7 @@ namespace LanguagePatcher
         }
         static void InjectUpdateCallback()
         {
-            var CallbackMethod = typeof(LocalizationBridge).GetMethod("UpdateCallback", new Type[] { });
+            var CallbackMethod = typeof(LocalizationBridge).GetMethod("UpdateCallback", new Type[] { typeof(object), typeof(object) });
             var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var injectee = GameAssembly.GetMethod("StardewValley.Game1", "Update", "(Microsoft.Xna.Framework.GameTime)System.Void");
@@ -109,7 +109,17 @@ namespace LanguagePatcher
             var injecteeInstructions = injecteeBody.Instructions;
             var injecteeInsCount = injecteeInstructions.Count;
             var processor = injecteeBody.GetILProcessor();
-            processor.InsertBefore(injecteeInstructions[injecteeInsCount - 1], processor.Create(OpCodes.Call, Callback));
+
+            var callInstruction = processor.Create(OpCodes.Call, Callback);
+
+            var playerField = GameAssembly.GetField("StardewValley.Game1", "player", "StardewValley.Farmer");
+            var activeClickableMenuField = GameAssembly.GetField("StardewValley.Game1", "activeClickableMenu", "StardewValley.Menus.IClickableMenu");
+
+            processor.InsertBefore(injecteeInstructions[injecteeInsCount - 1], callInstruction);
+            processor.InsertBefore(callInstruction, processor.Create(OpCodes.Ldarg_0));
+            processor.InsertBefore(callInstruction, processor.Create(OpCodes.Ldfld, playerField));
+            processor.InsertBefore(callInstruction, processor.Create(OpCodes.Ldarg_0));
+            processor.InsertBefore(callInstruction, processor.Create(OpCodes.Ldfld, activeClickableMenuField));
         }
         static void InjectLoadedGameCallback()
         {
@@ -507,6 +517,21 @@ namespace LanguagePatcher
             }
             var td = tds.First();
             return td.Methods.FirstOrDefault(m => m.Name.Equals(name) && DescriptionOf(m).Equals(desc.Replace(" ", string.Empty)));
+        }
+
+        public static FieldDefinition GetField(this AssemblyDefinition asm, string type, string name, string fieldType)
+        {
+            var tds = asm.Modules.Where(m => m.GetType(type) != null).Select(m => m.GetType(type));
+            if (tds.Count() == 0)
+            {
+                return null;
+            }
+            if (tds.Count() > 1)
+            {
+                throw new Exception();
+            }
+            var td = tds.First();
+            return td.Fields.FirstOrDefault(f => f.Name.Equals(name) && f.FieldType.Resolve().FullName.Equals(fieldType));
         }
     }
 }
