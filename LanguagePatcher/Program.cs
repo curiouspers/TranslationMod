@@ -70,7 +70,7 @@ namespace LanguagePatcher
                 GameAssembly.Write(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), LocalizationBridge.Localization.Config.ExecutingAssembly));                
             }
 
-            //StartGame(LocalizationBridge.Localization.Config.ExecutingAssembly);
+            StartGame(LocalizationBridge.Localization.Config.ExecutingAssembly);
         }
 
         static bool CheckPatchedMark()

@@ -39,6 +39,18 @@ namespace MultiLanguage
         private string PathOnDisk;
         private Assembly _gameAssembly;
         private dynamic _player;
+        private dynamic Player
+        {
+            get
+            {
+                if(_player == null)
+                {
+                    var game1Type = _gameAssembly.GetType("StardewValley.Game1");
+                    _player = game1Type.GetField("player", BindingFlags.Static | BindingFlags.Public).GetValue(null);
+                }
+                return _player;
+            }
+        }
 
         #region Cyrillic
         private CyrPhrase cyrPhrase;
@@ -309,7 +321,7 @@ namespace MultiLanguage
             {
                 if (!_isKeyReplaced)
                 {
-                    KeyReplace(_player.Name, _player.farmName);
+                    KeyReplace(Player.Name, Player.farmName);
                 }
                 var translateMessage = Translate(letter);
 
@@ -375,7 +387,7 @@ namespace MultiLanguage
 
                     if (tempFValue.Contains("^") && !tempFKey.Contains("^"))
                     {
-                        if (_player.IsMale)
+                        if (Player.IsMale)
                         {
                             tempFValue = tempFValue.Split('^')[0];
                         }
@@ -391,7 +403,7 @@ namespace MultiLanguage
                     {
                         var genderSplit = tempFValue.Split(' ', ',', '.', '!', '?', '<', '=', '-', ':', '^')
                             .Where(s => s.Contains('/'))
-                            .Select(s => new KeyValuePair<string, string>(s, _player.IsMale ? s.Split('/')[0] : s.Split('/')[1]));
+                            .Select(s => new KeyValuePair<string, string>(s, Player.IsMale ? s.Split('/')[0] : s.Split('/')[1]));
                         foreach (var gend in genderSplit)
                         {
                             tempFValue = tempFValue.Replace(gend.Key, gend.Value);
@@ -400,11 +412,11 @@ namespace MultiLanguage
                     if (tempFValue.Contains("|"))
                     {                        
                         dynamic npc = _gameAssembly.GetType("StardewValley.Game1").GetField("currentSpeaker", BindingFlags.Static | BindingFlags.Public).GetValue(null);
-                        if (npc == null && string.IsNullOrEmpty(_player.spouse))
+                        if (npc == null && string.IsNullOrEmpty(Player.spouse))
                         {
                             var spriteTextType = _gameAssembly.GetType("StardewValley.Game1");
                             var methodInfo = spriteTextType.GetMethod("getCharacterFromName", BindingFlags.Public | BindingFlags.Static);
-                            npc = methodInfo.Invoke(null, new object[] { _player.spouse });
+                            npc = methodInfo.Invoke(null, new object[] { Player.spouse });
                         }
                         if(npc != null)
                         {
@@ -877,7 +889,7 @@ namespace MultiLanguage
         private List<string> getOtherFarmerNames()
         {
             var game1Type = _gameAssembly.GetType("StardewValley.Game1");
-            int uniqueIDForThisGame = (int)game1Type.GetField("uniqueIDForThisGame", BindingFlags.Static | BindingFlags.Public).GetValue(null);
+            int uniqueIDForThisGame = Convert.ToInt32(game1Type.GetField("uniqueIDForThisGame", BindingFlags.Static | BindingFlags.Public).GetValue(null));
             dynamic stats = game1Type.GetField("stats", BindingFlags.Static | BindingFlags.Public).GetValue(null);
 
             List<string> strs = new List<string>();
@@ -950,12 +962,12 @@ namespace MultiLanguage
             string[] strArrays15 = new string[] { _dataRandName["n9"]["Farmer"].ToString(), _dataRandName["n9"]["Rancher"].ToString(),
                 _dataRandName["n9"]["Cowgirl"].ToString(), _dataRandName["n9"]["Farmgirl"].ToString() };
             string str = "";
-            if (!_player.isMale)
+            if (!Player.isMale)
             {
                 str = strArrays3[random.Next(strArrays3.Count<string>())];
                 for (int i = 0; i < 2; i++)
                 {
-                    while (strs.Contains(str) || _player.name.Equals(str))
+                    while (strs.Contains(str) || Player.name.Equals(str))
                     {
                         str = (i != 0 ? strArrays3[random1.Next(strArrays3.Count<string>())] :
                             strArrays3[random.Next(strArrays3.Count<string>())]);
@@ -970,7 +982,7 @@ namespace MultiLanguage
                 str = strArrays1[random.Next(strArrays1.Count<string>())];
                 for (int j = 0; j < 2; j++)
                 {
-                    while (strs.Contains(str) || _player.name.Equals(str))
+                    while (strs.Contains(str) || Player.name.Equals(str))
                     {
                         str = (j != 0 ? strArrays1[random1.Next(strArrays1.Count<string>())] : strArrays1[random.Next(strArrays1.Count<string>())]);
                     }
@@ -982,7 +994,7 @@ namespace MultiLanguage
             if (random1.NextDouble() >= 0.5)
             {
                 str = strArrays3[random1.Next(strArrays3.Count<string>())];
-                while (_player.name.Equals(str))
+                while (Player.name.Equals(str))
                 {
                     str = strArrays3[random1.Next(strArrays3.Count<string>())];
                 }
@@ -991,7 +1003,7 @@ namespace MultiLanguage
             else
             {
                 str = strArrays1[random1.Next(strArrays1.Count<string>())];
-                while (_player.name.Equals(str))
+                while (Player.name.Equals(str))
                 {
                     str = strArrays1[random1.Next(strArrays1.Count<string>())];
                 }
@@ -1053,21 +1065,21 @@ namespace MultiLanguage
                     (float)pixelZoom, SpriteEffects.None, layerDepth - 0.001f);
                 b.Draw(mouseCursors, position + (new Vector2(0f, -3f) * (float)pixelZoom),
                     new Rectangle?(new Rectangle(337, 318, 1, 18)), Color.White * alpha, 0f, Vector2.Zero,
-                    new Vector2((float)getWidthOfStringInfo.Invoke(null, new object[] { (placeHolderScrollWidthText.Count<char>() > 0
+                    new Vector2(Convert.ToSingle(getWidthOfStringInfo.Invoke(null, new object[] { (placeHolderScrollWidthText.Count<char>() > 0
                                 ? placeHolderScrollWidthText
-                                : s) }), (float)pixelZoom),
+                                : s) })), (float)pixelZoom),
                     SpriteEffects.None, layerDepth - 0.001f);
                 b.Draw(mouseCursors,
-                    position + new Vector2((float)getWidthOfStringInfo.Invoke(null, new object[] { placeHolderScrollWidthText.Count<char>() > 0 ? placeHolderScrollWidthText : s }),
+                    position + new Vector2(Convert.ToSingle(getWidthOfStringInfo.Invoke(null, new object[] { placeHolderScrollWidthText.Count<char>() > 0 ? placeHolderScrollWidthText : s })),
                                 (float)(-3 * pixelZoom)), new Rectangle?(new Rectangle(338, 318, 12, 18)),
                                 Color.White * alpha, 0f, Vector2.Zero, (float)pixelZoom, SpriteEffects.None,
                                 layerDepth - 0.001f);
                 if (placeHolderScrollWidthText.Count<char>() > 0)
                 {
                     x = x + ((int)getWidthOfStringInfo.Invoke(null, new object[] { placeHolderScrollWidthText }) / 2 - (int)getWidthOfStringInfo.Invoke(null, new object[] { (s) }) / 2);
-                    position.X = (float)x;
+                    position.X = x;
                 }
-                position.Y = position.Y + (float)((4 - fontPixelZoom) * pixelZoom);
+                position.Y = position.Y + (4 - fontPixelZoom) * pixelZoom;
             }
             else if (drawBGScroll == 1)
             {
@@ -1076,24 +1088,24 @@ namespace MultiLanguage
                     (float)pixelZoom, SpriteEffects.None, layerDepth - 0.001f);
                 b.Draw(mouseCursors, position + (new Vector2(0f, -3f) * (float)pixelZoom),
                     new Rectangle?(new Rectangle(331, 299, 1, 17)), Color.White * alpha, 0f, Vector2.Zero,
-                    new Vector2((float)getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count<char>() > 0
+                    new Vector2(Convert.ToSingle(getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count() > 0
                                 ? placeHolderScrollWidthText
-                                : s)}), (float)pixelZoom), SpriteEffects.None, layerDepth - 0.001f);
+                                : s)})), pixelZoom), SpriteEffects.None, layerDepth - 0.001f);
                 b.Draw(mouseCursors,
                     position +
-                    new Vector2((float)getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count<char>() > 0
+                    new Vector2(Convert.ToSingle(getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count() > 0
                                 ? placeHolderScrollWidthText
-                                : s)}), (float)(-3 * pixelZoom)), new Rectangle?(new Rectangle(332, 299, 7, 17)),
-                    Color.White * alpha, 0f, Vector2.Zero, (float)pixelZoom, SpriteEffects.None,
+                                : s)})), -3 * pixelZoom), new Rectangle?(new Rectangle(332, 299, 7, 17)),
+                    Color.White * alpha, 0f, Vector2.Zero, pixelZoom, SpriteEffects.None,
                     layerDepth - 0.001f);
-                b.Draw(mouseCursors, position + new Vector2((float)getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count<char>() > 0
-                                                                ? placeHolderScrollWidthText : s)}) / 2, (float)(13 * pixelZoom)), new Rectangle?(new Rectangle(341, 308, 6, 5)),
-                    Color.White * alpha, 0f, Vector2.Zero, (float)pixelZoom, SpriteEffects.None,
+                b.Draw(mouseCursors, position + new Vector2(Convert.ToSingle(getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count() > 0
+                                                                ? placeHolderScrollWidthText : s)})) / 2, 13 * pixelZoom), new Rectangle?(new Rectangle(341, 308, 6, 5)),
+                    Color.White * alpha, 0f, Vector2.Zero, pixelZoom, SpriteEffects.None,
                     layerDepth - 0.0001f);
                 if (placeHolderScrollWidthText.Count<char>() > 0)
                 {
                     x = x + (int)getWidthOfStringInfo.Invoke(null, new object[] { placeHolderScrollWidthText }) / 2 - (int)getWidthOfStringInfo.Invoke(null, new object[] { s }) / 2;
-                    position.X = (float)x;
+                    position.X = x;
                 }
                 position.Y = position.Y + (float)((4 - fontPixelZoom) * pixelZoom);
             }
@@ -1104,9 +1116,7 @@ namespace MultiLanguage
                     (float)pixelZoom, SpriteEffects.None, layerDepth - 0.001f);
                 b.Draw(mouseCursors, position + (new Vector2(0f, -3f) * (float)pixelZoom),
                     new Rectangle?(new Rectangle(330, 281, 1, 17)), Color.White * alpha, 0f, Vector2.Zero,
-                    new Vector2(
-                        (float)
-                            ((int)getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count<char>() > 0
+                    new Vector2(Convert.ToSingle((int)getWidthOfStringInfo.Invoke(null, new object[] {(placeHolderScrollWidthText.Count<char>() > 0
                                 ? placeHolderScrollWidthText
                                 : s) }) + pixelZoom), (float)pixelZoom), SpriteEffects.None,
                     layerDepth - 0.001f);
