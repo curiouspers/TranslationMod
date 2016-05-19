@@ -134,10 +134,18 @@ namespace MultiLanguage
                     }
                 }
             }
+            else if(activeClickableMenu != null && activeClickableMenu.GetType().ToString() == "StardewValley.Menus.DialogueBox")
+            {
+                var dialogues = _gameAssembly.GetType("StardewValley.Menus.DialogueBox").GetField("dialogues", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(activeClickableMenu);
+            }
             else if (activeClickableMenu == null)
             {
                 if (_isMenuDrawing)
                     _isMenuDrawing = false;
+            }
+            if(activeClickableMenu != null)
+            {
+
             }
         }
 
@@ -219,6 +227,48 @@ namespace MultiLanguage
                 return str2 + str1;
             }
             else return string.Empty;
+        }
+
+        public string OnDrawObjectDialogue(string dialogue)
+        {
+            if (Config.LanguageName != "EN")
+            {
+                if (_translatedStrings.Contains(dialogue))
+                    return dialogue;
+                var translateMessage = Translate(dialogue);
+                return translateMessage;
+            }
+            else return string.Empty;
+        }
+
+        public DialogueQuestion OnDrawObjectQuestionDialogue(string dialogue, List<string> choices)
+        {
+            var result = new DialogueQuestion();
+            if (Config.LanguageName != "EN")
+            {
+                if (_translatedStrings.Contains(dialogue))
+                {
+                    result.Dialogue = dialogue;
+                }
+                var translateDialogue = Translate(dialogue);
+                result.Dialogue = translateDialogue;
+                result.Choices = new List<string>();
+                foreach(var chois in choices)
+                {
+                    if (_translatedStrings.Contains(chois))
+                    {
+                        result.Choices.Add(chois);
+                    }
+                    var translateChois = Translate(chois);
+                    result.Choices.Add(chois);
+                }
+            }
+            else
+            {
+                result.Dialogue = dialogue;
+                result.Choices = choices;
+            }
+            return result;
         }
 
         public void OnDrawStringSpriteText(SpriteTextDrawStringEvent @event)
@@ -1303,5 +1353,10 @@ namespace MultiLanguage
                 cyrNumber = new CyrNumber();
             }
         }
+    }
+    public class DialogueQuestion
+    {
+        public string Dialogue { get; set; }
+        public List<string> Choices { get; set; }
     }
 }
