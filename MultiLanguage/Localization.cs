@@ -229,19 +229,21 @@ namespace MultiLanguage
             else return string.Empty;
         }
 
-        public string OnDrawObjectDialogue(string dialogue)
+        public DialogueQuestion OnDrawObjectDialogue(string dialogue)
         {
+            var result = new DialogueQuestion();
             if (Config.LanguageName != "EN")
             {
                 if (_translatedStrings.Contains(dialogue))
-                    return dialogue;
+                    result.Dialogue = dialogue;
                 var translateMessage = Translate(dialogue);
-                return translateMessage;
+                result.Dialogue = translateMessage;
             }
-            else return string.Empty;
+            else result.Dialogue = dialogue;
+            return result;
         }
 
-        public DialogueQuestion OnDrawObjectQuestionDialogue(string dialogue, List<string> choices)
+        public DialogueQuestion OnDrawObjectQuestionDialogue(string dialogue, List<string> choices = null)
         {
             var result = new DialogueQuestion();
             if (Config.LanguageName != "EN")
@@ -253,14 +255,17 @@ namespace MultiLanguage
                 var translateDialogue = Translate(dialogue);
                 result.Dialogue = translateDialogue;
                 result.Choices = new List<string>();
-                foreach(var chois in choices)
+                if(choices != null)
                 {
-                    if (_translatedStrings.Contains(chois))
+                    foreach (var chois in choices)
                     {
+                        if (_translatedStrings.Contains(chois))
+                        {
+                            result.Choices.Add(chois);
+                        }
+                        var translateChois = Translate(chois);
                         result.Choices.Add(chois);
                     }
-                    var translateChois = Translate(chois);
-                    result.Choices.Add(chois);
                 }
             }
             else
@@ -1358,5 +1363,9 @@ namespace MultiLanguage
     {
         public string Dialogue { get; set; }
         public List<string> Choices { get; set; }
+        public DialogueQuestion()
+        {
+            Choices = new List<string>();
+        }
     }
 }
