@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -28,7 +29,7 @@ namespace MultiLanguage
         private bool _isMenuDrawing;
         private Regex reToSkip = new Regex("^[0-9: -=.g]+$", RegexOptions.Compiled);
         private int IsTranslated;
-        private Dictionary<string, string> _memoryBuffer;
+        private OrderedDictionary _memoryBuffer;
         private List<string> _translatedStrings;
         private int _characterPosition;
         private bool _isGameLoaded = false;
@@ -95,7 +96,7 @@ namespace MultiLanguage
                     {
                         currentName = player.Name;
                         KeyReplace(player.Name, player.farmName);
-                        _player = player;// _gameAssembly.GetType("StardewValley.Game1").GetField("player", BindingFlags.Static | BindingFlags.Public).GetValue(null);
+                        //_player = player; _gameAssembly.GetType("StardewValley.Game1").GetField("player", BindingFlags.Static | BindingFlags.Public).GetValue(null);
                     } else
                     {
                         _currentUpdate++;
@@ -425,10 +426,10 @@ namespace MultiLanguage
                 {
                     return message;
                 }
-                if (_memoryBuffer.ContainsKey(message))
+                if (_memoryBuffer.Keys.Cast<string>().Contains(message))
                 {
-                    if (!_memoryBuffer[message].IsNullOrEmpty())
-                        return _memoryBuffer[message];
+                    if (!_memoryBuffer[message].ToString().IsNullOrEmpty())
+                        return _memoryBuffer[message].ToString();
                     else
                         return message;
                 }
@@ -500,10 +501,9 @@ namespace MultiLanguage
 
                     if (_memoryBuffer.Count > 500)
                     {
-                        _memoryBuffer.Remove(_memoryBuffer.First().Key);
-                        _memoryBuffer.Remove(_memoryBuffer.ElementAt(Tools.rand.Next(0, _memoryBuffer.Count)).Key);
+                        _memoryBuffer.RemoveAt(0);
                     }
-                    if (!_memoryBuffer.ContainsKey(message))
+                    if (!_memoryBuffer.Keys.Cast<string>().Contains(message))
                     {
                         _memoryBuffer.Add(message, resultTranslate);
                     }
@@ -517,12 +517,12 @@ namespace MultiLanguage
                 }
                 else
                 {
-                    if (!_memoryBuffer.ContainsKey(message))
+                    if (!_memoryBuffer.Keys.Cast<string>().Contains(message))
                     {
                         _memoryBuffer.Add(message, string.Empty);
                         if (_memoryBuffer.Count > 500)
                         {
-                            _memoryBuffer.Remove(_memoryBuffer.ElementAt(Tools.rand.Next(0, _memoryBuffer.Count)).Key);
+                            _memoryBuffer.RemoveAt(0);
                         }
                     }
                     return message;
@@ -1243,7 +1243,7 @@ namespace MultiLanguage
 
         private void LoadDictionary()
         {
-            _memoryBuffer = new Dictionary<string, string>();
+            _memoryBuffer = new OrderedDictionary();
             _translatedStrings = new List<string>();
             _languages = new Dictionary<string, int>();
             _fuzzyDictionary = new FuzzyStringDictionary();
