@@ -501,11 +501,18 @@ namespace MultiLanguage
                     if (_memoryBuffer.Count > 500)
                     {
                         _memoryBuffer.Remove(_memoryBuffer.First().Key);
+                        _memoryBuffer.Remove(_memoryBuffer.ElementAt(Tools.rand.Next(0, _memoryBuffer.Count)).Key);
                     }
-                    _memoryBuffer.Add(message, resultTranslate);
-                    _translatedStrings.Add(resultTranslate);
-                    if (_translatedStrings.Count > 500)
-                        _translatedStrings.RemoveAt(0);
+                    if (!_memoryBuffer.ContainsKey(message))
+                    {
+                        _memoryBuffer.Add(message, resultTranslate);
+                    }
+                    if (!_translatedStrings.Contains(resultTranslate))
+                    {
+                        _translatedStrings.Add(resultTranslate);
+                        if (_translatedStrings.Count > 500)
+                            _translatedStrings.RemoveAt(0);
+                    }
                     return resultTranslate;
                 }
                 else
@@ -515,7 +522,7 @@ namespace MultiLanguage
                         _memoryBuffer.Add(message, string.Empty);
                         if (_memoryBuffer.Count > 500)
                         {
-                            _memoryBuffer.Remove(_memoryBuffer.First().Key);
+                            _memoryBuffer.Remove(_memoryBuffer.ElementAt(Tools.rand.Next(0, _memoryBuffer.Count)).Key);
                         }
                     }
                     return message;

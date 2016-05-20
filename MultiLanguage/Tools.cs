@@ -407,7 +407,7 @@ namespace MultiLanguage
                 _memoryBuffer.Add(key, value);
             if (_memoryBuffer.Count > 500)
             {
-                _memoryBuffer.Remove(_memoryBuffer.First().Key);
+                _memoryBuffer.Remove(_memoryBuffer.ElementAt(Tools.rand.Next(0, _memoryBuffer.Count)).Key);
             }
         }
 
@@ -423,6 +423,7 @@ namespace MultiLanguage
     {
         public static Regex reNumber = new Regex("[\\d +-.,:]+(am|pm)*", RegexOptions.Compiled);
         public static char[] numberArr = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '+', '-', '.', ',', ':' };
+        public static Random rand = new Random();
         public static string ReplaceFirst(this string text, string search, string replace)
         {
             int pos = text.IndexOf(search);
