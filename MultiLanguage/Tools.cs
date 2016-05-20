@@ -172,7 +172,7 @@ namespace MultiLanguage
 
         private string CompareKey(string source)
         {
-            if (_memoryBuffer.Keys.Cast<string>().Contains(source))
+            if (_memoryBuffer.Contains(source))
                 return _memoryBuffer[source].ToString();
 
             double score = 0;
@@ -404,7 +404,7 @@ namespace MultiLanguage
 
         void AddToMemory(string key, string value)
         {
-            if (!_memoryBuffer.Keys.Cast<string>().Contains(key))
+            if (!_memoryBuffer.Contains(key))
                 _memoryBuffer.Add(key, value);
             if (_memoryBuffer.Count > 500)
             {
@@ -414,7 +414,7 @@ namespace MultiLanguage
 
         string CheckInMemory(string key)
         {
-            if (_memoryBuffer.Keys.Cast<string>().Contains(key))
+            if (_memoryBuffer.Contains(key))
                 return _memoryBuffer[key].ToString();
             else return string.Empty;
         }

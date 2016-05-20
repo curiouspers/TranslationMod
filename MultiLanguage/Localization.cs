@@ -426,7 +426,7 @@ namespace MultiLanguage
                 {
                     return message;
                 }
-                if (_memoryBuffer.Keys.Cast<string>().Contains(message))
+                if (_memoryBuffer.Contains(message))
                 {
                     if (!_memoryBuffer[message].ToString().IsNullOrEmpty())
                         return _memoryBuffer[message].ToString();
@@ -503,7 +503,7 @@ namespace MultiLanguage
                     {
                         _memoryBuffer.RemoveAt(0);
                     }
-                    if (!_memoryBuffer.Keys.Cast<string>().Contains(message))
+                    if (!_memoryBuffer.Contains(message))
                     {
                         _memoryBuffer.Add(message, resultTranslate);
                     }
@@ -517,7 +517,7 @@ namespace MultiLanguage
                 }
                 else
                 {
-                    if (!_memoryBuffer.Keys.Cast<string>().Contains(message))
+                    if (!_memoryBuffer.Contains(message))
                     {
                         _memoryBuffer.Add(message, string.Empty);
                         if (_memoryBuffer.Count > 500)
