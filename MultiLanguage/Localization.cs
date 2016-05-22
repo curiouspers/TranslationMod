@@ -615,7 +615,7 @@ namespace MultiLanguage
                         }
                     }
                 }
-                else if(matches[0].Value == "@number")
+                else if(matches[0].Value == "@number" && value != "" && Regex.Match(value, @"\d+").Length > 0)
                 {
                     try
                     {
@@ -723,44 +723,53 @@ namespace MultiLanguage
         }
         private string DeclinePlural(string message, string _case, decimal number)
         {
-            CyrNumber cyr = new CyrNumber();
-            CyrNoun noun;
-            CyrNumber.Item item;
-            if (message.Contains(" "))
+            try
             {
-                noun = nounCollection.Get(message.Split(' ').Last(), GetConditionsEnum.Similar);
-                item = new CyrNumber.Item(noun, message.Split(' ')[0]);
+                CyrNumber cyr = new CyrNumber();
+                CyrNoun noun;
+                CyrNumber.Item item;
+                if (message.Contains(" "))
+                {
+                    noun = nounCollection.Get(message.Split(' ').Last(), GetConditionsEnum.Similar);
+                    item = new CyrNumber.Item(noun, message.Split(' ')[0]);
+                }
+                else
+                {
+                    noun = nounCollection.Get(message, GetConditionsEnum.Similar);
+                    item = new CyrNumber.Item(noun);
+                }
+                var result = cyr.Decline(number, item);
+                string res = "";
+                switch (_case)
+                {
+                    case "R":
+                        res = string.Join(" ", result.Genitive.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
+                        break;
+                    case "D":
+                        res = string.Join(" ", result.Dative.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
+                        break;
+                    case "V":
+                        res = string.Join(" ", result.Accusative.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
+                        break;
+                    case "T":
+                        res = string.Join(" ", result.Instrumental.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
+                        break;
+                    case "P":
+                        res = string.Join(" ", result.Prepositional.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
+                        break;
+                    case "N":
+                    default:
+                        res = string.Join(" ", result.Nominative.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
+                        break;
+                }
+                return res;
             }
-            else
+            catch (Exception)
             {
-                noun = nounCollection.Get(message, GetConditionsEnum.Similar);
-                item = new CyrNumber.Item(noun);
+                Console.WriteLine("Decline Exception, try to add a word " + message);
+                return message;
+                throw;
             }
-            var result = cyr.Decline(number, item);
-            string res = "";
-            switch (_case)
-            {
-                case "R":
-                    res = string.Join(" ", result.Genitive.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
-                    break;
-                case "D":
-                    res = string.Join(" ", result.Dative.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
-                    break;
-                case "V":
-                    res = string.Join(" ", result.Accusative.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
-                    break;
-                case "T":
-                    res = string.Join(" ", result.Instrumental.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
-                    break;
-                case "P":
-                    res = string.Join(" ", result.Prepositional.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
-                    break;
-                case "N":
-                default:
-                    res = string.Join(" ", result.Nominative.Split(' ').SubArray(1, result.Genitive.Split(' ').Length - 1));
-                    break;
-            }
-            return res;
         }
 
         private void AddToDictionary(string key, string value)
