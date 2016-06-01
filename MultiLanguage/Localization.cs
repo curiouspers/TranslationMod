@@ -99,7 +99,7 @@ namespace MultiLanguage
             var uniqueIDForThisGame = Tools.GetInstanceField(gameType, game, "uniqueIDForThisGame");
             dynamic graphics = Tools.GetInstanceField(gameType, game, "graphics");
             #endregion
-            #region create log-package (Shift+Alt+L)
+            #region create report-package (Shift+Alt+L)
             var keyState = Keyboard.GetState();
             if((keyState.IsKeyDown(Keys.LeftShift) || keyState.IsKeyDown(Keys.RightShift)) && 
                 (keyState.IsKeyDown(Keys.LeftAlt) || keyState.IsKeyDown(Keys.RightAlt)) 
@@ -107,9 +107,13 @@ namespace MultiLanguage
             {
                 if (_isGameLoaded)
                 {
+                    var reportTime = DateTime.Now;
                     var tempFolder = Directory.CreateDirectory(Path.Combine(PathOnDisk, "temp"));
                     if (!Directory.Exists(Path.Combine(PathOnDisk, "reports")))
                         Directory.CreateDirectory(Path.Combine(PathOnDisk, "reports"));
+                    var reportFolder = Path.Combine(PathOnDisk, "reports", player.Name + "_" + reportTime.ToString("dd_MM_yyyy_HH_mm_ss"));
+                    if (!Directory.Exists(reportFolder))
+                        Directory.CreateDirectory(reportFolder);
                     #region screeshot
                     int width = graphics.IsFullScreen ? graphics.PreferredBackBufferWidth : game.Window.ClientBounds.Width;
                     int height = graphics.IsFullScreen ? graphics.PreferredBackBufferHeight : game.Window.ClientBounds.Height;
@@ -121,7 +125,7 @@ namespace MultiLanguage
                     graphics.GraphicsDevice.GetBackBufferData(backBuffer);
                     var screenshot = new Texture2D(graphics.GraphicsDevice, width, height);
                     screenshot.SetData(backBuffer);
-                    Stream stream = File.OpenWrite(Path.Combine(tempFolder.FullName, @"screenshot" + DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss") + @".jpg"));
+                    Stream stream = File.OpenWrite(Path.Combine(reportFolder, @"screenshot" + reportTime.ToString("dd_MM_yyyy_HH_mm_ss") + @".jpg"));
                     screenshot.SaveAsJpeg(stream, width, height);
                     stream.Dispose();
                     screenshot.Dispose();
@@ -152,7 +156,7 @@ namespace MultiLanguage
                     #endregion
                     #region zip
                     FastZip fastZip = new FastZip();
-                    fastZip.CreateZip(Path.Combine(PathOnDisk,"reports", player.Name + "_" + DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss") + ".zip"),
+                    fastZip.CreateZip(Path.Combine(reportFolder, "report.zip"),
                         tempFolder.FullName, true, null);
                     //_gameAssembly.GetType("StardewValley.Game1")
                     //    .GetMethod("showGlobalMessage", BindingFlags.Static | BindingFlags.Public)
