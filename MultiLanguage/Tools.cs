@@ -467,8 +467,7 @@ namespace MultiLanguage
                 | BindingFlags.Static;
             FieldInfo field = type.GetField(fieldName, bindFlags);
             field.SetValue(instance, value);
-        }
-
+        }        
     }
 
     public class Config

@@ -1,5 +1,6 @@
 ﻿using Cyriller;
 using Cyriller.Model;
+using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -85,23 +86,85 @@ namespace MultiLanguage
             if (_isMenuDrawing) _isMenuDrawing = false;
         }
 
-        public void OnUpdate(dynamic player, dynamic activeClickableMenu)
+        public void OnUpdate(dynamic game)
         {
-            #region create log-package (Shift+Alt+L)
-            var keyState = Keyboard.GetState();
-            if((keyState.IsKeyDown(Keys.LeftShift) || keyState.IsKeyDown(Keys.RightShift)) && (keyState.IsKeyDown(Keys.LeftAlt) || keyState.IsKeyDown(Keys.RightAlt)) && keyState.IsKeyDown(Keys.L))
-            {
-
-            }
-            #endregion
             #region load game assembly
             if (_gameAssembly == null)
             {
                 _gameAssembly = Assembly.LoadFile(Path.Combine(PathOnDisk, Config.ExecutingAssembly));
             }
+            var gameType = _gameAssembly.GetType("StardewValley.Game1");
+            var player = Tools.GetInstanceField(gameType, game, "player");
+            var activeClickableMenu = Tools.GetInstanceField(gameType, game, "activeClickableMenu");
+            var uniqueIDForThisGame = Tools.GetInstanceField(gameType, game, "uniqueIDForThisGame");
+            dynamic graphics = Tools.GetInstanceField(gameType, game, "graphics");
+            #endregion
+            #region create log-package (Shift+Alt+L)
+            var keyState = Keyboard.GetState();
+            if((keyState.IsKeyDown(Keys.LeftShift) || keyState.IsKeyDown(Keys.RightShift)) && 
+                (keyState.IsKeyDown(Keys.LeftAlt) || keyState.IsKeyDown(Keys.RightAlt)) 
+                && keyState.IsKeyDown(Keys.L))
+            {
+                if (_isGameLoaded)
+                {
+                    var tempFolder = Directory.CreateDirectory(Path.Combine(PathOnDisk, "temp"));
+                    if (!Directory.Exists(Path.Combine(PathOnDisk, "reports")))
+                        Directory.CreateDirectory(Path.Combine(PathOnDisk, "reports"));
+                    #region screeshot
+                    int width = graphics.IsFullScreen ? graphics.PreferredBackBufferWidth : game.Window.ClientBounds.Width;
+                    int height = graphics.IsFullScreen ? graphics.PreferredBackBufferHeight : game.Window.ClientBounds.Height;
+                    _gameAssembly.GetType("StardewValley.Game1")
+                        .GetMethod("Draw", BindingFlags.Instance | BindingFlags.NonPublic)
+                        .Invoke(game,
+                        new object[] { new GameTime() });                    
+                    int[] backBuffer = new int[width * height];
+                    graphics.GraphicsDevice.GetBackBufferData(backBuffer);
+                    var screenshot = new Texture2D(graphics.GraphicsDevice, width, height);
+                    screenshot.SetData(backBuffer);
+                    Stream stream = File.OpenWrite(Path.Combine(tempFolder.FullName, @"screenshot" + DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss") + @".jpg"));
+                    screenshot.SaveAsJpeg(stream, width, height);
+                    stream.Dispose();
+                    screenshot.Dispose();
+                    #endregion
+                    #region copy save files
+                    var save = player.Name + "_" + uniqueIDForThisGame.ToString();
+                    var savesFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StardewValley", "Saves"); 
+                    foreach(var fileName in Directory.GetFiles(Path.Combine(savesFolder, save)))
+                    {
+                        File.Copy(fileName, Path.Combine(tempFolder.FullName, Path.GetFileName(fileName)));
+                    }
+                    #endregion
+                    #region report info
+                    dynamic location = Tools.GetInstanceField(gameType, game, "currentLocation");
+                    dynamic year = Tools.GetInstanceField(gameType, game, "year");
+                    dynamic season = Tools.GetInstanceField(gameType, game, "currentSeason");
+                    dynamic day = Tools.GetInstanceField(gameType, game, "dayOfMonth");
+                    dynamic time = Tools.GetInstanceField(gameType, game, "timeOfDay");
+                    File.WriteAllBytes(Path.Combine(tempFolder.FullName, "reportInfo.json"),
+                                    Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
+                                    {
+                                        Location = location.Name,
+                                        Year = year,
+                                        Season = season,
+                                        Day = day,
+                                        Time = time
+                                    })));
+                    #endregion
+                    #region zip
+                    FastZip fastZip = new FastZip();
+                    fastZip.CreateZip(Path.Combine(PathOnDisk,"reports", player.Name + "_" + DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss") + ".zip"),
+                        tempFolder.FullName, true, null);
+                    //_gameAssembly.GetType("StardewValley.Game1")
+                    //    .GetMethod("showGlobalMessage", BindingFlags.Static | BindingFlags.Public)
+                    //    .Invoke(game,
+                    //    new object[] { string.Format("Report file {0} is created", save + "_" + DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss") + ".zip") });
+                    #endregion
+                    tempFolder.Delete(true);
+                }
+            }
             #endregion
             #region set new player's name
-            if (!string.IsNullOrEmpty(player.Name) && currentName != player.Name)
+            if (player != null && !string.IsNullOrEmpty(player.Name) && currentName != player.Name)
             {
                 if (_isGameLoaded && !_isKeyReplaced)
                 {
@@ -109,7 +172,6 @@ namespace MultiLanguage
                     {
                         currentName = player.Name;
                         KeyReplace(player.Name, player.farmName);
-                        //_player = player; _gameAssembly.GetType("StardewValley.Game1").GetField("player", BindingFlags.Static | BindingFlags.Public).GetValue(null);
                     } else
                     {
                         _currentUpdate++;

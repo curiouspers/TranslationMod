@@ -103,7 +103,7 @@ namespace LanguagePatcher
         }
         static void InjectUpdateCallback()
         {
-            var CallbackMethod = typeof(LocalizationBridge).GetMethod("UpdateCallback", new Type[] { typeof(object), typeof(object) });
+            var CallbackMethod = typeof(LocalizationBridge).GetMethod("UpdateCallback", new Type[] { typeof(object) });
             var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
             var injectee = GameAssembly.GetMethod("StardewValley.Game1", "Update", "(Microsoft.Xna.Framework.GameTime)System.Void");
@@ -114,14 +114,8 @@ namespace LanguagePatcher
 
             var callInstruction = processor.Create(OpCodes.Call, Callback);
 
-            var playerField = GameAssembly.GetField("StardewValley.Game1", "player", "StardewValley.Farmer");
-            var activeClickableMenuField = GameAssembly.GetField("StardewValley.Game1", "activeClickableMenu", "StardewValley.Menus.IClickableMenu");
-
             processor.InsertBefore(injecteeInstructions[injecteeInsCount - 1], callInstruction);
             processor.InsertBefore(callInstruction, processor.Create(OpCodes.Ldarg_0));
-            processor.InsertBefore(callInstruction, processor.Create(OpCodes.Ldfld, playerField));
-            processor.InsertBefore(callInstruction, processor.Create(OpCodes.Ldarg_0));
-            processor.InsertBefore(callInstruction, processor.Create(OpCodes.Ldfld, activeClickableMenuField));
         }
         static void InjectLoadedGameCallback()
         {

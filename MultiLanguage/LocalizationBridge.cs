@@ -1,12 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-//using StardewValley;
-//using StardewValley.Menus;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MultiLanguage
 {
@@ -31,9 +25,9 @@ namespace MultiLanguage
             Localization.OnWindowsSizeChanged();
         }
 
-        public static void UpdateCallback(object player, object activeMenu)
+        public static void UpdateCallback(object game)
         {
-            Localization.OnUpdate(player, activeMenu);
+            Localization.OnUpdate(game);
         }
 
         public static void ChangeDropDownOptionCallback(int which, int selection, List<string> option)
