@@ -57,8 +57,8 @@ namespace LanguagePatcher
                 InjectLoadedGameCallback();
                 InjectChangeDropDownOptionsCallback();
                 InjectSetDropDownToProperValueCallback();
-                InjectGetRandomNameCallback();
-                InjectGetOtherFarmerNamesCallback();
+                //InjectGetRandomNameCallback();
+                //InjectGetOtherFarmerNamesCallback();
                 InjectParseTextCallback();
                 InjectDrawObjectDialogue();
                 InjectDrawObjectQuestionDialogue();
@@ -169,56 +169,56 @@ namespace LanguagePatcher
             processor.InsertBefore(injecteeInstructions[0], callInstruction);
             processor.InsertBefore(callInstruction, processor.Create(OpCodes.Ldarg_1));
         }
-        static void InjectGetRandomNameCallback()
-        {
-            var CallbackMethod = typeof(LocalizationBridge).GetMethod("GetRandomNameCallback", new Type[] { });
-            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
+        //static void InjectGetRandomNameCallback()
+        //{
+        //    var CallbackMethod = typeof(LocalizationBridge).GetMethod("GetRandomNameCallback", new Type[] { });
+        //    var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
-            var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetGetMethod());
-            var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetGetMethod());
+        //    var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
+        //    var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetGetMethod());
+        //    var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
+        //    var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetGetMethod());
 
-            var injectee = GameAssembly.GetMethod("StardewValley.Dialogue", "randomName", "()System.String");
-            var injecteeBody = injectee.Body;
-            var injecteeInstructions = injecteeBody.Instructions;
-            var processor = injecteeBody.GetILProcessor();
+        //    var injectee = GameAssembly.GetMethod("StardewValley.Dialogue", "randomName", "()System.String");
+        //    var injecteeBody = injectee.Body;
+        //    var injecteeInstructions = injecteeBody.Instructions;
+        //    var processor = injecteeBody.GetILProcessor();
 
-            var injectionPoint = injecteeInstructions[0];
-            var jmpTarget = processor.Create(OpCodes.Pop);
-            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, Callback));
-            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Dup));
-            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, hasReturnValueImport));
-            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Brfalse, jmpTarget));
-            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, eventReturnValueImport));
-            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Ret));
-            processor.InsertBefore(injectionPoint, jmpTarget);
-        }
-        static void InjectGetOtherFarmerNamesCallback()
-        {
-            var CallbackMethod = typeof(LocalizationBridge).GetMethod("GetOtherFarmerNamesCallback", new Type[] { });
-            var Callback = GameAssembly.MainModule.Import(CallbackMethod);
+        //    var injectionPoint = injecteeInstructions[0];
+        //    var jmpTarget = processor.Create(OpCodes.Pop);
+        //    processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, Callback));
+        //    processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Dup));
+        //    processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, hasReturnValueImport));
+        //    processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Brfalse, jmpTarget));
+        //    processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, eventReturnValueImport));
+        //    processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Ret));
+        //    processor.InsertBefore(injectionPoint, jmpTarget);
+        //}
+        //static void InjectGetOtherFarmerNamesCallback()
+        //{
+        //    var CallbackMethod = typeof(LocalizationBridge).GetMethod("GetOtherFarmerNamesCallback", new Type[] { });
+        //    var Callback = GameAssembly.MainModule.Import(CallbackMethod);
 
-            var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
-            var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetGetMethod());
-            var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
-            var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetGetMethod());
+        //    var hasReturnValue = typeof(DetourEvent).GetProperty("ReturnEarly");
+        //    var hasReturnValueImport = GameAssembly.MainModule.Import(hasReturnValue.GetGetMethod());
+        //    var eventReturnValue = typeof(DetourEvent).GetProperty("ReturnValue");
+        //    var eventReturnValueImport = GameAssembly.MainModule.Import(eventReturnValue.GetGetMethod());
 
-            var injectee = GameAssembly.GetMethod("StardewValley.Utility", "getOtherFarmerNames", "()System.Collections.Generic.List`1");
-            var injecteeBody = injectee.Body;
-            var injecteeInstructions = injecteeBody.Instructions;
-            var processor = injecteeBody.GetILProcessor();
+        //    var injectee = GameAssembly.GetMethod("StardewValley.Utility", "getOtherFarmerNames", "()System.Collections.Generic.List`1");
+        //    var injecteeBody = injectee.Body;
+        //    var injecteeInstructions = injecteeBody.Instructions;
+        //    var processor = injecteeBody.GetILProcessor();
 
-            var injectionPoint = injecteeInstructions[0];
-            var jmpTarget = processor.Create(OpCodes.Pop);
-            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, Callback));
-            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Dup));
-            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, hasReturnValueImport));
-            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Brfalse, jmpTarget));
-            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, eventReturnValueImport));
-            processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Ret));
-            processor.InsertBefore(injectionPoint, jmpTarget);
-        }
+        //    var injectionPoint = injecteeInstructions[0];
+        //    var jmpTarget = processor.Create(OpCodes.Pop);
+        //    processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, Callback));
+        //    processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Dup));
+        //    processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, hasReturnValueImport));
+        //    processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Brfalse, jmpTarget));
+        //    processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Call, eventReturnValueImport));
+        //    processor.InsertBefore(injectionPoint, processor.Create(OpCodes.Ret));
+        //    processor.InsertBefore(injectionPoint, jmpTarget);
+        //}
         static void InjectParseTextCallback()
         {
             var CallbackMethod = typeof(LocalizationBridge).GetMethod("ParseTextCallback", new Type[] { typeof(string), typeof(object), typeof(int) });

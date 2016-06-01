@@ -52,6 +52,8 @@ namespace MultiLanguage
                 return _player;
             }
         }
+        private bool _isTextInput;
+        private List<string> _inputsStrings;
 
         #region Cyrillic
         private CyrPhrase cyrPhrase;
@@ -100,6 +102,35 @@ namespace MultiLanguage
                     } else
                     {
                         _currentUpdate++;
+                    }
+                }
+            }
+            if(activeClickableMenu != null)
+            {
+                var titleType = _gameAssembly.GetType("StardewValley.Menus.TitleMenu");
+                var subMenu = Tools.GetInstanceField(titleType, activeClickableMenu, "subMenu");
+                if(subMenu != null)
+                {
+                    var subMenuType = _gameAssembly.GetType("StardewValley.Menus.CharacterCustomization");
+                    dynamic nameBox = Tools.GetInstanceField(subMenuType, subMenu, "nameBox");
+                    dynamic farmnameBox = Tools.GetInstanceField(subMenuType, subMenu, "farmnameBox");
+                    dynamic favThingBox = Tools.GetInstanceField(subMenuType, subMenu, "favThingBox");
+                    if((nameBox != null && (bool)nameBox.Selected) ||
+                        (farmnameBox != null && (bool)farmnameBox.Selected) ||
+                        (favThingBox != null && (bool)favThingBox.Selected))
+                    {
+                        if (!_inputsStrings.Contains(nameBox.Text))
+                            _inputsStrings.Add(nameBox.Text);
+                    }
+                    if(farmnameBox != null && (bool)farmnameBox.Selected)
+                    {
+                        if (!_inputsStrings.Contains(farmnameBox.Text))
+                            _inputsStrings.Add(farmnameBox.Text);
+                    }
+                    if (favThingBox != null && (bool)favThingBox.Selected)
+                    {
+                        if (!_inputsStrings.Contains(favThingBox.Text))
+                            _inputsStrings.Add(favThingBox.Text);
                     }
                 }
             }
@@ -422,7 +453,10 @@ namespace MultiLanguage
                 if (needTrim)
                     message = message.Trim();
 
-                if (string.IsNullOrEmpty(message) || reToSkip.IsMatch(message) || _translatedStrings.Contains(message.Replace("\r\n", "").Replace("\n", "")))
+                if (string.IsNullOrEmpty(message) || 
+                    reToSkip.IsMatch(message) || 
+                    _inputsStrings.Contains(message) ||
+                    _translatedStrings.Contains(message.Replace("\r\n", "").Replace("\n", "")))
                 {
                     return message;
                 }
@@ -1252,7 +1286,9 @@ namespace MultiLanguage
 
         private void LoadDictionary()
         {
-            _memoryBuffer = new OrderedDictionary();
+            _isTextInput = false;
+            _inputsStrings = new List<string>();
+               _memoryBuffer = new OrderedDictionary();
             _translatedStrings = new List<string>();
             _languages = new Dictionary<string, int>();
             _fuzzyDictionary = new FuzzyStringDictionary();
