@@ -2,6 +2,7 @@
 using Cyriller.Model;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -86,10 +87,20 @@ namespace MultiLanguage
 
         public void OnUpdate(dynamic player, dynamic activeClickableMenu)
         {
-            if(_gameAssembly == null)
+            #region create log-package (Shift+Alt+L)
+            var keyState = Keyboard.GetState();
+            if((keyState.IsKeyDown(Keys.LeftShift) || keyState.IsKeyDown(Keys.RightShift)) && (keyState.IsKeyDown(Keys.LeftAlt) || keyState.IsKeyDown(Keys.RightAlt)) && keyState.IsKeyDown(Keys.L))
+            {
+
+            }
+            #endregion
+            #region load game assembly
+            if (_gameAssembly == null)
             {
                 _gameAssembly = Assembly.LoadFile(Path.Combine(PathOnDisk, Config.ExecutingAssembly));
             }
+            #endregion
+            #region set new player's name
             if (!string.IsNullOrEmpty(player.Name) && currentName != player.Name)
             {
                 if (_isGameLoaded && !_isKeyReplaced)
@@ -105,35 +116,64 @@ namespace MultiLanguage
                     }
                 }
             }
-            if(activeClickableMenu != null)
+            #endregion
+            #region check input text
+            if (activeClickableMenu != null)
             {
-                var titleType = _gameAssembly.GetType("StardewValley.Menus.TitleMenu");
-                var subMenu = Tools.GetInstanceField(titleType, activeClickableMenu, "subMenu");
-                if(subMenu != null)
+                if (activeClickableMenu.GetType().ToString() == "StardewValley.Menus.TitleMenu")
                 {
-                    var subMenuType = _gameAssembly.GetType("StardewValley.Menus.CharacterCustomization");
-                    dynamic nameBox = Tools.GetInstanceField(subMenuType, subMenu, "nameBox");
-                    dynamic farmnameBox = Tools.GetInstanceField(subMenuType, subMenu, "farmnameBox");
-                    dynamic favThingBox = Tools.GetInstanceField(subMenuType, subMenu, "favThingBox");
-                    if((nameBox != null && (bool)nameBox.Selected) ||
-                        (farmnameBox != null && (bool)farmnameBox.Selected) ||
-                        (favThingBox != null && (bool)favThingBox.Selected))
+                    var titleType = _gameAssembly.GetType("StardewValley.Menus.TitleMenu");
+                    var subMenu = Tools.GetInstanceField(titleType, activeClickableMenu, "subMenu");
+                    if (subMenu != null && subMenu.GetType().ToString() == "StardewValley.Menus.CharacterCustomization")
                     {
-                        if (!_inputsStrings.Contains(nameBox.Text))
-                            _inputsStrings.Add(nameBox.Text);
+                        if (!_isTextInput)
+                            _isTextInput = true;
+                        var subMenuType = _gameAssembly.GetType("StardewValley.Menus.CharacterCustomization");
+                        dynamic nameBox = Tools.GetInstanceField(subMenuType, subMenu, "nameBox");
+                        dynamic farmnameBox = Tools.GetInstanceField(subMenuType, subMenu, "farmnameBox");
+                        dynamic favThingBox = Tools.GetInstanceField(subMenuType, subMenu, "favThingBox");
+                        if (nameBox != null && !string.IsNullOrEmpty(nameBox.Text.ToString()))
+                        {
+                            if (!_inputsStrings.Contains(nameBox.Text))
+                                _inputsStrings.Add(nameBox.Text);
+                        }
+                        if (farmnameBox != null && !string.IsNullOrEmpty(farmnameBox.Text.ToString()))
+                        {
+                            if (!_inputsStrings.Contains(farmnameBox.Text))
+                                _inputsStrings.Add(farmnameBox.Text);
+                        }
+                        if (favThingBox != null && !string.IsNullOrEmpty(favThingBox.Text.ToString()))
+                        {
+                            if (!_inputsStrings.Contains(favThingBox.Text))
+                                _inputsStrings.Add(favThingBox.Text);
+                        }
                     }
-                    if(farmnameBox != null && (bool)farmnameBox.Selected)
+                    else if (_isTextInput)
                     {
-                        if (!_inputsStrings.Contains(farmnameBox.Text))
-                            _inputsStrings.Add(farmnameBox.Text);
-                    }
-                    if (favThingBox != null && (bool)favThingBox.Selected)
-                    {
-                        if (!_inputsStrings.Contains(favThingBox.Text))
-                            _inputsStrings.Add(favThingBox.Text);
+                        _isTextInput = false;
+                        _inputsStrings.Clear();
                     }
                 }
+                else if (activeClickableMenu.GetType().ToString() == "StardewValley.Menus.NamingMenu")
+                {
+                    if (!_isTextInput)
+                        _isTextInput = true;
+                    var namingMenuType = _gameAssembly.GetType("StardewValley.Menus.NamingMenu");
+                    dynamic textBox = Tools.GetInstanceField(namingMenuType, activeClickableMenu, "textBox");
+                    if (textBox != null && !string.IsNullOrEmpty(textBox.Text.ToString()))
+                    {
+                        if (!_inputsStrings.Contains(textBox.Text))
+                            _inputsStrings.Add(textBox.Text);
+                    }
+                }
+                else if (_isTextInput)
+                {
+                    _isTextInput = false;
+                    _inputsStrings.Clear();
+                }
             }
+            #endregion
+            #region add language option in Game Menu
             if (activeClickableMenu != null && activeClickableMenu.GetType().ToString() == "StardewValley.Menus.GameMenu")
             {
                 var gameMenuType = _gameAssembly.GetType("StardewValley.Menus.GameMenu");
@@ -166,18 +206,11 @@ namespace MultiLanguage
                     }
                 }
             }
-            else if(activeClickableMenu != null && activeClickableMenu.GetType().ToString() == "StardewValley.Menus.DialogueBox")
-            {
-                var dialogues = _gameAssembly.GetType("StardewValley.Menus.DialogueBox").GetField("dialogues", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(activeClickableMenu);
-            }
+            #endregion
             else if (activeClickableMenu == null)
             {
                 if (_isMenuDrawing)
                     _isMenuDrawing = false;
-            }
-            if(activeClickableMenu != null)
-            {
-
             }
         }
 

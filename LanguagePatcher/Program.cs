@@ -24,7 +24,7 @@ namespace LanguagePatcher
             {
                 while(true)
                 {
-                    Console.WriteLine("Version of your game is not localized. Do you want to patch the game? (y = Yes; n = No");
+                    Console.WriteLine("Version of your game is not localized. Do you want to patch the game? (y = Yes; n = No)");
                     var answer = Console.ReadLine();
                     if (answer == "y")
                     {
