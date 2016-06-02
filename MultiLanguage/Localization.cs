@@ -125,7 +125,7 @@ namespace MultiLanguage
                     graphics.GraphicsDevice.GetBackBufferData(backBuffer);
                     var screenshot = new Texture2D(graphics.GraphicsDevice, width, height);
                     screenshot.SetData(backBuffer);
-                    Stream stream = File.OpenWrite(Path.Combine(reportFolder, @"screenshot" + reportTime.ToString("dd_MM_yyyy_HH_mm_ss") + @".jpg"));
+                    Stream stream = File.OpenWrite(Path.Combine(reportFolder, @"screenshot_" + reportTime.ToString("dd_MM_yyyy_HH_mm_ss") + @".jpg"));
                     screenshot.SaveAsJpeg(stream, width, height);
                     stream.Dispose();
                     screenshot.Dispose();
