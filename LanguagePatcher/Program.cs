@@ -18,6 +18,28 @@ namespace LanguagePatcher
         static AssemblyDefinition GameAssembly { get; set; }
         static void Main(string[] args)
         {
+            
+            Console.WriteLine("  +-------------------------------------------------------------------------+  ");
+            Console.WriteLine("  |    This is BETA version of localization from ZoG, MAY CONTAIN BUGS      |  ");
+            Console.WriteLine("  |                         NOT FOR DISTRIBUTION                            |  ");
+            Console.WriteLine("  |                                                                         |  ");
+            Console.WriteLine("  |  Please if you find a bug press Ctrl+Shift+L to make report!            |  ");
+            Console.WriteLine("  |  Report contains of zip folder with your save files, screenshot         |  ");
+            Console.WriteLine("  |  Send bug reports to sdvtr@ya.ru, so we can fix it ASAP                 |  ");
+            Console.WriteLine("  |  Add SHORT desciption of a problem as e-mail subject.                   |  ");
+            Console.WriteLine("  |               More info at http://bit.ly/SV_RU_INFO                     |  ");
+            Console.WriteLine("  +-------------------------------------------------------------------------+  ");
+            Console.WriteLine("  |       Это BETA версия локализации с ZoG, МОЖЕТ СОДЕРЖАТЬ БАГИ           |  ");
+            Console.WriteLine("  |                        НЕ ДЛЯ РАСПРОСТРАНЕНИЯ                           |  ");
+            Console.WriteLine("  |                                                                         |  ");
+            Console.WriteLine("  |  Если нашли баг пожалуйста нажмите Ctrl+Shift+L чтобы создать отчет!    |  ");
+            Console.WriteLine("  |  Он появится в папке reports, содержит архив с вашим сейвом и скриншот, |  ");
+            Console.WriteLine("  |  Чтобы мы быстро исправили, пришлите архив и скриншот на sdvtr@ya.ru,   |  ");
+            Console.WriteLine("  |  в теме письма укажите КОРОТКОЕ описание проблемы.                      |  ");
+            Console.WriteLine("  |  Подробную информацию можете найти по ссылке http://bit.ly/SV_RU_INFO   |  ");
+            Console.WriteLine("  +-------------------------------------------------------------------------+  ");
+            Console.WriteLine(" ");
+
             LocalizationBridge.Localization = new Localization();
             GameAssembly = AssemblyDefinition.ReadAssembly(LocalizationBridge.Localization.Config.ExecutingAssembly);
             if (!CheckPatchedMark())
