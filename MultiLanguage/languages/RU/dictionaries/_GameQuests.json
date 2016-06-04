@@ -27,6 +27,7 @@
   "__comment": "ItemDeliveryQuest.cs",
   "__comment": "Looking for a delicious @key. I'll pay you when you bring it.@newline        -@key",
   "@key a @key @key. @key@newline        -@key@newline@newline- @numberg on delivery@newline- @key": "@key @key @keyV. @key@newline -@key@newline@newline- @numberg за доставку@newline- @key",
+  "@key a @key @key. @newline        -@key@newline@newline- @numberg on delivery@newline- @key": "@key @key @keyV.@newline -@key@newline@newline- @numberg за доставку@newline- @key",
   "Looking for": "Ищу",
   "I'm in the market for": "Хочу купить",
   "I could really go for": "Я очень хочу получить ",

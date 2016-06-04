@@ -329,6 +329,8 @@ namespace MultiLanguage
                         {
                             if (strI[j + 1] == strS[i + 1] || strI[j + 1].Contains("@key"))
                             {
+                                if (keyWordKey.Contains("@") && keyWord == "" && (strI[j+1].Contains(nl) || strI[j+1].Contains("@")))
+                                    break;
                                 j++;
                             }
                             else if (strI[j].Contains("@key") && strI[j + 1].Contains("@key"))
