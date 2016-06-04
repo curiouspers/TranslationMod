@@ -35,7 +35,7 @@ namespace LanguagePatcher
             Console.WriteLine("  |  Если нашли баг пожалуйста нажмите Ctrl+Shift+L чтобы создать отчет!    |  ");
             Console.WriteLine("  |  Он появится в папке reports, содержит архив с вашим сейвом и скриншот, |  ");
             Console.WriteLine("  |  Чтобы мы быстро исправили, пришлите архив и скриншот на sdvtr@ya.ru,   |  ");
-            Console.WriteLine("  |  в теме письма укажите КОРОТКОЕ описание проблемы.                      |  ");
+            Console.WriteLine("  |  в теме письма укажите КРАТКОЕ описание проблемы.                       |  ");
             Console.WriteLine("  |  Подробную информацию можете найти по ссылке http://bit.ly/SV_RU_INFO   |  ");
             Console.WriteLine("  +-------------------------------------------------------------------------+  ");
             Console.WriteLine(" ");
