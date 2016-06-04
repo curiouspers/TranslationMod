@@ -20,16 +20,16 @@ namespace LanguagePatcher
         {
             
             Console.WriteLine("  +-------------------------------------------------------------------------+  ");
-            Console.WriteLine("  |    This is BETA version of localization from ZoG, MAY CONTAIN BUGS      |  ");
+            Console.WriteLine("  |  This is BETA version of localization from ZoG forum, MAY CONTAIN BUGS  |  ");
             Console.WriteLine("  |                         NOT FOR DISTRIBUTION                            |  ");
             Console.WriteLine("  |                                                                         |  ");
-            Console.WriteLine("  |  Please if you find a bug press Ctrl+Shift+L to make report!            |  ");
-            Console.WriteLine("  |  Report contains of zip folder with your save files, screenshot         |  ");
-            Console.WriteLine("  |  Send bug reports to sdvtr@ya.ru, so we can fix it ASAP                 |  ");
+            Console.WriteLine("  |  If you find a bug - please press Ctrl+Shift+L to make report!          |  ");
+            Console.WriteLine("  |  Report contains of a zip folder with your save file and a screenshot.  |  ");
+            Console.WriteLine("  |  Send bug reports to sdvtr@ya.ru, so we can fix it ASAP.                |  ");
             Console.WriteLine("  |  Add SHORT desciption of a problem as e-mail subject.                   |  ");
             Console.WriteLine("  |               More info at http://bit.ly/SV_RU_INFO                     |  ");
             Console.WriteLine("  +-------------------------------------------------------------------------+  ");
-            Console.WriteLine("  |       Это BETA версия локализации с ZoG, МОЖЕТ СОДЕРЖАТЬ БАГИ           |  ");
+            Console.WriteLine("  |     Это BETA версия локализации с форума ZoG, МОЖЕТ СОДЕРЖАТЬ БАГИ      |  ");
             Console.WriteLine("  |                        НЕ ДЛЯ РАСПРОСТРАНЕНИЯ                           |  ");
             Console.WriteLine("  |                                                                         |  ");
             Console.WriteLine("  |  Если нашли баг пожалуйста нажмите Ctrl+Shift+L чтобы создать отчет!    |  ");
