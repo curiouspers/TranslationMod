@@ -568,85 +568,92 @@ namespace MultiLanguage
                 }
                 if (_fuzzyDictionary.ContainsKey(message))
                 {
-                    var resultTranslate = message;
-                    var fval = _fuzzyDictionary.GetFuzzyKeyValue(message);
-
-                    var tempFKey = fval.Key;
-                    var tempFValue = fval.Value;
-
-                    if (tempFValue.Contains("^") && !tempFKey.Contains("^"))
+                    try
                     {
-                        if (Player.IsMale)
-                        {
-                            tempFValue = tempFValue.Split('^')[0];
-                        }
-                        else tempFValue = tempFValue.Split('^')[1];
-                    }
+                        var resultTranslate = message;
+                        var fval = _fuzzyDictionary.GetFuzzyKeyValue(message);
 
-                    if (tempFValue.Contains("/") &&
-                        !tempFValue.Contains("@number/") &&
-                        !tempFValue.Contains("Бег/Ходьба") &&
-                        !tempFValue.Contains("Проверить/Выполнить") &&
-                        !tempFValue.Contains("24/7") &&
-                        !tempFValue.Contains("http"))
-                    {
-                        var genderSplit = tempFValue.Split(' ', ',', '.', '!', '?', '<', '=', '-', ':', '^')
-                            .Where(s => s.Contains('/'))
-                            .Select(s => new KeyValuePair<string, string>(s, Player.IsMale ? s.Split('/')[0] : s.Split('/')[1]));
-                        foreach (var gend in genderSplit)
+                        var tempFKey = fval.Key;
+                        var tempFValue = fval.Value;
+
+                        if (tempFValue.Contains("^") && !tempFKey.Contains("^"))
                         {
-                            tempFValue = tempFValue.Replace(gend.Key, gend.Value);
+                            if (Player.IsMale)
+                            {
+                                tempFValue = tempFValue.Split('^')[0];
+                            }
+                            else tempFValue = tempFValue.Split('^')[1];
                         }
-                    }
-                    if (tempFValue.Contains("|"))
-                    {                        
-                        dynamic npc = _gameAssembly.GetType("StardewValley.Game1").GetField("currentSpeaker", BindingFlags.Static | BindingFlags.Public).GetValue(null);
-                        if (npc == null && string.IsNullOrEmpty(Player.spouse))
-                        {
-                            var spriteTextType = _gameAssembly.GetType("StardewValley.Game1");
-                            var methodInfo = spriteTextType.GetMethod("getCharacterFromName", BindingFlags.Public | BindingFlags.Static);
-                            npc = methodInfo.Invoke(null, new object[] { Player.spouse });
-                        }
-                        if(npc != null)
+
+                        if (tempFValue.Contains("/") &&
+                            !tempFValue.Contains("@number/") &&
+                            !tempFValue.Contains("Бег/Ходьба") &&
+                            !tempFValue.Contains("Проверить/Выполнить") &&
+                            !tempFValue.Contains("24/7") &&
+                            !tempFValue.Contains("http"))
                         {
                             var genderSplit = tempFValue.Split(' ', ',', '.', '!', '?', '<', '=', '-', ':', '^')
-                                .Where(s => s.Contains('|'))
-                                .Select(s => new KeyValuePair<string, string>(s, npc.gender == 1 ? s.Split('|')[1] : s.Split('|')[0]));
+                                .Where(s => s.Contains('/'))
+                                .Select(s => new KeyValuePair<string, string>(s, Player.IsMale ? s.Split('/')[0] : s.Split('/')[1]));
                             foreach (var gend in genderSplit)
                             {
                                 tempFValue = tempFValue.Replace(gend.Key, gend.Value);
                             }
                         }
-                    }
-
-                    if (!string.IsNullOrEmpty(tempFKey) && !string.IsNullOrEmpty(tempFValue))
-                    {
-                        if (tempFKey.Contains("@"))
+                        if (tempFValue.Contains("|"))
                         {
-                            var diff = GetKeysValue(tempFKey, message);
-                            resultTranslate = StringFormatWithKeys(tempFValue, diff.Select(d => d.Value).ToList());
+                            dynamic npc = _gameAssembly.GetType("StardewValley.Game1").GetField("currentSpeaker", BindingFlags.Static | BindingFlags.Public).GetValue(null);
+                            if (npc == null && string.IsNullOrEmpty(Player.spouse))
+                            {
+                                var spriteTextType = _gameAssembly.GetType("StardewValley.Game1");
+                                var methodInfo = spriteTextType.GetMethod("getCharacterFromName", BindingFlags.Public | BindingFlags.Static);
+                                npc = methodInfo.Invoke(null, new object[] { Player.spouse });
+                            }
+                            if (npc != null)
+                            {
+                                var genderSplit = tempFValue.Split(' ', ',', '.', '!', '?', '<', '=', '-', ':', '^')
+                                    .Where(s => s.Contains('|'))
+                                    .Select(s => new KeyValuePair<string, string>(s, npc.gender == 1 ? s.Split('|')[1] : s.Split('|')[0]));
+                                foreach (var gend in genderSplit)
+                                {
+                                    tempFValue = tempFValue.Replace(gend.Key, gend.Value);
+                                }
+                            }
                         }
-                        else
-                        {
-                            resultTranslate = tempFValue;
-                        }
-                    }
 
-                    if (_memoryBuffer.Count > 500)
-                    {
-                        _memoryBuffer.RemoveAt(0);
+                        if (!string.IsNullOrEmpty(tempFKey) && !string.IsNullOrEmpty(tempFValue))
+                        {
+                            if (tempFKey.Contains("@"))
+                            {
+                                var diff = GetKeysValue(tempFKey, message);
+                                resultTranslate = StringFormatWithKeys(tempFValue, diff.Select(d => d.Value).ToList());
+                            }
+                            else
+                            {
+                                resultTranslate = tempFValue;
+                            }
+                        }
+
+                        if (_memoryBuffer.Count > 500)
+                        {
+                            _memoryBuffer.RemoveAt(0);
+                        }
+                        if (!_memoryBuffer.Contains(message))
+                        {
+                            _memoryBuffer.Add(message, resultTranslate);
+                        }
+                        if (!_translatedStrings.Contains(resultTranslate))
+                        {
+                            _translatedStrings.Add(resultTranslate);
+                            if (_translatedStrings.Count > 500)
+                                _translatedStrings.RemoveAt(0);
+                        }
+                        return resultTranslate;
                     }
-                    if (!_memoryBuffer.Contains(message))
+                    catch
                     {
-                        _memoryBuffer.Add(message, resultTranslate);
-                    }
-                    if (!_translatedStrings.Contains(resultTranslate))
-                    {
-                        _translatedStrings.Add(resultTranslate);
-                        if (_translatedStrings.Count > 500)
-                            _translatedStrings.RemoveAt(0);
-                    }
-                    return resultTranslate;
+                        return message;
+                    }                    
                 }
                 else
                 {
