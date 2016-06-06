@@ -65,7 +65,7 @@ Now it's only 5 variables:
 
 ### Now, how to install it? 
 
-1. You can download compiled archive from here: http://biy.ly/SV_TR, *or* compile it yourself from source code.
+1. You can download compiled archive from here: http://bit.ly/SV_TR, *or* compile it yourself from source code.
 2. List of files and folders that you must copy in root game folder:
 	- [languages]
 	- LanguagePatcher.exe
