@@ -76,6 +76,7 @@ Now it's only 5 variables:
 	- MultiLanguage.dll
 	- ICSharpCode.SharpZipLib.dll
 	- Cyriller.dll
+	- Newtonsoft.Json.dll
 3. Launch LanguagePatcher.exe. This program will check if your game patched, if not it will offer to patch the game. Press "y", then press "Enter".
 Then you can choose: enter "1" to create a new file, named "Stardew Valley(multilang).exe" or "2" to patch original file. In second case you must backup original "Stardew Valley.exe" **beforehand**.
 Then you must see the message: "Patch successfully applied. Enjoy!".
