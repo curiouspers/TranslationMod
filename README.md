@@ -2,7 +2,7 @@
 
 ## Description:
 
-Hello everyone. We are two developers: [WarFollowsMe](github.com/WarFollowsMe) and [Curiouspers](https://github.com/curiouspers)
+Hello everyone. We are two developers: [WarFollowsMe](https://github.com/WarFollowsMe) and [Curiouspers](https://github.com/curiouspers)
 
 We very like Stardew Valley, but real excitement comes only when you play the game comfortably with your native language.
 This is what pushed us forward to make **Stardew Valley Localization** to our native language - Russian. As we dig deeper and deeper into code, we realized that **we can make this tool multilingual, and capable to handle other language packages**.
@@ -106,7 +106,7 @@ Anyway you can test this tool at your own risk with other mod tools using this t
 
 
 ## Developers: 
-* [WarFollowsMe](github.com/WarFollowsMe)
+* [WarFollowsMe](https://github.com/WarFollowsMe)
 * [CuriousPers](https://github.com/curiouspers)
 
 
