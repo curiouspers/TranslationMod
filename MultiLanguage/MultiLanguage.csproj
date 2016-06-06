@@ -272,9 +272,6 @@
     <None Include="languages\EN\dictionaries\_MiniGames.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="languages\EN\dictionaries\_NameGen.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="languages\EN\dictionaries\_NPC.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
