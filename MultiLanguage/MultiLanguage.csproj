@@ -200,93 +200,93 @@
     <None Include="languages\EN\content\TileSheets\fall_townsheet.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="languages\EN\content\TileSheets\furniture.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="languages\EN\content\TileSheets\HospitalTiles.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Compile Include="languages\EN\dictionaries\Achievements.json">
+    <None Include="languages\EN\dictionaries\Achievements.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\animationDescription.json">
+    </None>
+    <None Include="languages\EN\dictionaries\animationDescription.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\Characters.json">
+    </None>
+    <None Include="languages\EN\dictionaries\Characters.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\Dialogues.json">
+    </None>
+    <None Include="languages\EN\dictionaries\Dialogues.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\EngagementDialogue.json">
+    </None>
+    <None Include="languages\EN\dictionaries\EngagementDialogue.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\Events.json">
+    </None>
+    <None Include="languages\EN\dictionaries\Events.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\Festivals.json">
+    </None>
+    <None Include="languages\EN\dictionaries\Festivals.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\Find Results">
+    </None>
+    <None Include="languages\EN\dictionaries\Items.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\Items.json">
+    </None>
+    <None Include="languages\EN\dictionaries\Mails.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\Mails.json">
+    </None>
+    <None Include="languages\EN\dictionaries\NPCGiftTastes.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\NPCGiftTastes.json">
+    </None>
+    <None Include="languages\EN\dictionaries\Quests.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\Quests.json">
+    </None>
+    <None Include="languages\EN\dictionaries\schedules.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\schedules.json">
+    </None>
+    <None Include="languages\EN\dictionaries\TV.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\TV.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_DateStrings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_DateStrings.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_Events.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_Events.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_Game1.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_Game1.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_GameLocation.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_GameLocation.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_GameQuests.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_GameQuests.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_KeyWords.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_KeyWords.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_Locations.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_Locations.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_Menus.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_Menus.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_MiniGames.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_MiniGames.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_NameGen.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_NameGen.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_NPC.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_NPC.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_Object.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_Object.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_TBinStrings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_TBinStrings.json">
+    </None>
+    <None Include="languages\EN\dictionaries\_Utility.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
-    <Compile Include="languages\EN\dictionaries\_Utility.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Compile>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
