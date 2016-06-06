@@ -23,7 +23,7 @@ namespace LanguagePatcher
             Console.WriteLine("  |  This is BETA version of localization from ZoG forum, MAY CONTAIN BUGS  |  ");
             Console.WriteLine("  |                         NOT FOR DISTRIBUTION                            |  ");
             Console.WriteLine("  |                                                                         |  ");
-            Console.WriteLine("  |  If you find a bug - please press Ctrl+Shift+L to make report!          |  ");
+            Console.WriteLine("  |  If you find a bug - please press Shift+Alt+L to make report!          |  ");
             Console.WriteLine("  |  Report contains of a zip folder with your save file and a screenshot.  |  ");
             Console.WriteLine("  |  Send bug reports to sdvtr@ya.ru, so we can fix it ASAP.                |  ");
             Console.WriteLine("  |  Add SHORT desciption of a problem as e-mail subject.                   |  ");
@@ -32,7 +32,7 @@ namespace LanguagePatcher
             Console.WriteLine("  |     Это BETA версия локализации с форума ZoG, МОЖЕТ СОДЕРЖАТЬ БАГИ      |  ");
             Console.WriteLine("  |                        НЕ ДЛЯ РАСПРОСТРАНЕНИЯ                           |  ");
             Console.WriteLine("  |                                                                         |  ");
-            Console.WriteLine("  |  Если нашли баг пожалуйста нажмите Ctrl+Shift+L чтобы создать отчет!    |  ");
+            Console.WriteLine("  |  Если нашли баг пожалуйста нажмите Shift+Alt+L чтобы создать отчет!    |  ");
             Console.WriteLine("  |  Он появится в папке reports, содержит архив с вашим сейвом и скриншот, |  ");
             Console.WriteLine("  |  Чтобы мы быстро исправили, пришлите архив и скриншот на sdvtr@ya.ru,   |  ");
             Console.WriteLine("  |  в теме письма укажите КРАТКОЕ описание проблемы.                       |  ");
