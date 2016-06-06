@@ -79,8 +79,6 @@ namespace LanguagePatcher
                 InjectLoadedGameCallback();
                 InjectChangeDropDownOptionsCallback();
                 InjectSetDropDownToProperValueCallback();
-                //InjectGetRandomNameCallback();
-                //InjectGetOtherFarmerNamesCallback();
                 InjectParseTextCallback();
                 InjectDrawObjectDialogue();
                 InjectDrawObjectQuestionDialogue();
@@ -91,16 +89,19 @@ namespace LanguagePatcher
                 InjectStringBrokeIntoSectionsCallback();
                 InjectSparklingTextCallback();
                 SetPatchedMark();
-                GameAssembly.Write(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), LocalizationBridge.Localization.Config.ExecutingAssembly));                
+                GameAssembly.Write(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), LocalizationBridge.Localization.Config.ExecutingAssembly));
+                Console.WriteLine("Patch successfully applied. Enjoy!");
+                Console.ReadLine();
             }
-
+#if DEBUG
             StartGame(LocalizationBridge.Localization.Config.ExecutingAssembly);
+#endif
         }
 
         static bool CheckPatchedMark()
         {
             var patchedType = GameAssembly.MainModule.GetType("StardewValley.Game1");
-            var patched = patchedType.Fields.Where(f => f.FullName == "System.Boolean StardewValley.Game1::patched").Count() > 0;// (new FieldDefinition("patched", Mono.Cecil.FieldAttributes.Private, GameAssembly.MainModule.Import(typeof(bool))));
+            var patched = patchedType.Fields.Where(f => f.FullName == "System.Boolean StardewValley.Game1::patched").Count() > 0;
             if (patched)
             {
                 return true;
@@ -276,11 +277,6 @@ namespace LanguagePatcher
 
             TypeReference stringType = GameAssembly.MainModule.Import(typeof(string));
             injecteeBody.Variables.Add(new VariableDefinition(stringType));
-            //TypeReference listType = GameAssembly.MainModule.Import(typeof(List<>).MakeGenericType(typeof(string)));
-            //injecteeBody.Variables.Add(new VariableDefinition(listType));
-
-            //var dialogueValue = typeof(DialogueQuestion).GetProperty("Dialogue");
-            //var dialogueValueImport = GameAssembly.MainModule.Import(dialogueValue.GetGetMethod());
 
             foreach (var instruction in injecteeInstructions.ToList())
             {
@@ -292,8 +288,6 @@ namespace LanguagePatcher
 
             var injectionPoint = injecteeInstructions.FirstOrDefault(i => i.OpCode == OpCodes.Callvirt);
             processor.InsertAfter(injectionPoint, processor.Create(OpCodes.Stloc_0));
-            //processor.InsertAfter(injectionPoint, processor.Create(OpCodes.Call, dialogueValueImport));
-            //processor.InsertAfter(injectionPoint, processor.Create(OpCodes.Dup));
             processor.InsertAfter(injectionPoint, processor.Create(OpCodes.Call, Callback));
             processor.InsertAfter(injectionPoint, processor.Create(OpCodes.Ldarg_0));
         }
