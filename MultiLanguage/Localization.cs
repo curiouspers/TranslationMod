@@ -15,6 +15,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace MultiLanguage
 {
@@ -289,7 +290,10 @@ namespace MultiLanguage
                 {
                     Config.LanguageName = selectedLang;
                     _currentLanguage = selectedLang;
-                    //Game1.showGlobalMessage("This change will not take effect until you restart the game");
+                    var spriteTextType = _gameAssembly.GetType("StardewValley.Game1");
+                    var methodInfo = spriteTextType.GetMethod("showGlobalMessage", BindingFlags.Public | BindingFlags.Static);
+                    methodInfo.Invoke(null, new object[] { "This change will not take effect until you restart the game" });
+                    new Thread(() => LoadContent(false)).Start();
                 }
             }
         }
@@ -1394,7 +1398,7 @@ namespace MultiLanguage
         {
             _isTextInput = false;
             _inputsStrings = new List<string>();
-               _memoryBuffer = new OrderedDictionary();
+            _memoryBuffer = new OrderedDictionary();
             _translatedStrings = new List<string>();
             _languages = new Dictionary<string, int>();
             _fuzzyDictionary = new FuzzyStringDictionary();
@@ -1474,7 +1478,18 @@ namespace MultiLanguage
                 }
             }
 
-            #region upload content to the game
+            LoadContent(true);
+
+            if (Config.LanguageName == "RU")
+            {
+                nounCollection = new CyrNounCollection();
+                adjectiveCollection = new CyrAdjectiveCollection();
+                cyrPhrase = new CyrPhrase(nounCollection, adjectiveCollection);
+                cyrNumber = new CyrNumber();
+            }
+        }
+        public void LoadContent(bool onlyNew)
+        {
             var modeContentFolder = Path.Combine(PathOnDisk, "languages", Config.LanguageName, "content");
             var gameContentFolder = Path.Combine(Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory), "Content");// Game1.content.RootDirectory);
             foreach (var directory in Directory.GetDirectories(modeContentFolder))
@@ -1487,33 +1502,24 @@ namespace MultiLanguage
                     var modeFile = new FileInfo(Path.Combine(directory, fileName));
                     if (gameFile.Exists)
                     {
-                        if (gameFile.LastWriteTime != modeFile.LastWriteTime)
+                        if ((onlyNew && gameFile.LastWriteTime != modeFile.LastWriteTime) || !onlyNew)
                         {
                             modeFile.CopyTo(gameFile.FullName, true);
                         }
                     }
-                    if (fileName == "townInterior.xnb" || 
+                    if (fileName == "townInterior.xnb" ||
                         fileName == "HospitalTiles.xnb")
                     {
                         gameFile = new FileInfo(Path.Combine(gameContentFolder, fileName));
                         if (gameFile.Exists)
                         {
-                            if (gameFile.LastWriteTime != modeFile.LastWriteTime)
+                            if ((onlyNew && gameFile.LastWriteTime != modeFile.LastWriteTime) || !onlyNew)
                             {
                                 modeFile.CopyTo(gameFile.FullName, true);
                             }
                         }
                     }
                 }
-            }
-            #endregion
-
-            if (Config.LanguageName == "RU")
-            {
-                nounCollection = new CyrNounCollection();
-                adjectiveCollection = new CyrAdjectiveCollection();
-                cyrPhrase = new CyrPhrase(nounCollection, adjectiveCollection);
-                cyrNumber = new CyrNumber();
             }
         }
     }
