@@ -45,26 +45,6 @@ namespace MultiLanguage
             Localization.OnGameLoaded();
         }
 
-        public static DetourEvent GetRandomNameCallback()
-        {
-            var result = Localization.OnGetRandomName();
-            if(!string.IsNullOrEmpty(result))
-            {
-                return new DetourEvent { ReturnValue = result };
-            }
-            return new DetourEvent();
-        }
-
-        public static DetourEvent GetOtherFarmerNamesCallback()
-        {
-            var result = Localization.OnGetOtherFarmerNames();
-            if (result != null && result.Count > 0)
-            {
-                return new DetourEvent { ReturnValue = result };
-            }
-            return new DetourEvent();
-        }
-
         public static DetourEvent ParseTextCallback(string text, object whichFont, int width)
         {
             var result = Localization.OnParseText(text, whichFont as SpriteFont, width);
