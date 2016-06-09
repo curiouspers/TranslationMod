@@ -113,17 +113,13 @@ Anyway you can test this tool at your own risk with other mod tools using this t
 
 ### If you liked this project you can donate to us, we really appreciate it:
 
-**PayPal:**
-* [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=VN9VEYTE6LUNG)
+[![Paypal](http://icons.iconarchive.com/icons/chrisbanks2/cold-fusion-hd/128/paypal-icon.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=VN9VEYTE6LUNG)
 
-![Donate](https://www.webmoney.ru/img/new/logo-wm.png)
-
-**Webmoney:**
+![WebMoney](https://www.webmoney.ru/img/new/logo-wm.png)
 * Z128309117755
 * R134563815660
 
-**Яндекс-деньги:**
-* [![Donate](http://zeal-optics.ru/wp-content/uploads/2014/12/yandex-money-icon.png)](https://money.yandex.ru/to/410012434852933/100)
+[![Yandex.Money](http://lh3.googleusercontent.com/oS19Ky9c7603VTx2aAnqFZRsy3PELsAOPngXlRRX1yA10WYZdHBK9ID8juuCY96mdlwR=w64)](https://money.yandex.ru/to/410012434852933)
 
 
 ### Licence: 
