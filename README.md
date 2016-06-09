@@ -122,6 +122,9 @@ Anyway you can test this tool at your own risk with other mod tools using this t
 * Z128309117755
 * R134563815660
 
+**Яндекс-деньги:**
+* 410012434852933
+
 
 ### Licence: 
 * **GNU LESSER GENERAL PUBLIC LICENSE**
