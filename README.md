@@ -123,7 +123,7 @@ Anyway you can test this tool at your own risk with other mod tools using this t
 * R134563815660
 
 **Яндекс-деньги:**
-* [![Donate](https://money.yandex.ru/i/yandex_dengi_product_icon_rgb.png)](https://money.yandex.ru/to/410012434852933)
+* [![Donate](http://zeal-optics.ru/wp-content/uploads/2014/12/yandex-money-icon.png)](https://money.yandex.ru/to/410012434852933/100)
 
 
 ### Licence: 
