@@ -301,7 +301,7 @@ namespace MultiLanguage
                                     if (ind > 0 && keyWord.Length == ind + tmp[1].Length)
                                     {
                                         keyWord = keyWord.Substring(0, keyWord.Length - tmp[1].Length);
-                                        tempScore += tmp[1].Length;
+                                        tempScore += tmp[1].Length*3;
                                     }
                                     else
                                     {
